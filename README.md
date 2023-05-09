@@ -17,11 +17,12 @@ More detailed help, demo and source code including documentation in
 Quick start
 -----------
 
-* See complete
-  [working example](https://mirekslouf.github.io/ediff/docs/examples/ex1_ediff.nb.html).
+* See how it works:
+	- Look at [worked example](https://mirekslouf.github.io/ediff/docs/examples/ex1_ediff.nb.html)
+      in Jupyter.
 * Try it yourself:
-  [download complete example](https://www.dropbox.com/scl/fo/pzio12tdj4j2c5v8usi5o/h?dl=0&rlkey=szpwqmvrdp5yeeiarfr2a5ab7)
-  unzip in separate directory, follow `00readme.txt` and run in Jupyter.
+	- Download and unzip the [complete example with data](https://www.dropbox.com/scl/fo/pzio12tdj4j2c5v8usi5o/h?dl=0&rlkey=szpwqmvrdp5yeeiarfr2a5ab7).
+	- Look at `00readme.txt` and run the example in Jupyter.
 
 Versions of EDIFF
 -----------------
