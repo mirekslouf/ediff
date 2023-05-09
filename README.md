@@ -8,12 +8,6 @@ EDIFF :: processing of powder electron diffraction patterns
 	- radial = calculate radial distribution (2D-pattern to 1D-pattern) 
 	- pxrd = calculation of theoretical powder X-ray diffraction patterns
 
-Documentation, help and examples
---------------------------------
-
-More detailed help, demo and source code including documentation in
-[GitHub Pages](https://mirekslouf.github.io/ediff/docs).
-
 Quick start
 -----------
 
@@ -23,6 +17,14 @@ Quick start
 * Try it yourself:
 	- Download and unzip the [complete example with data](https://www.dropbox.com/scl/fo/pzio12tdj4j2c5v8usi5o/h?dl=0&rlkey=szpwqmvrdp5yeeiarfr2a5ab7).
 	- Look at `00readme.txt` and run the example in Jupyter.
+
+Documentation, help and examples
+--------------------------------
+
+* [PyPI](https://pypi.org/project/ediff) repository.
+* [GitHub](https://github.com/mirekslouf/ediff) repository.
+* [GitHub Pages](https://mirekslouf.github.io/ediff/)
+  with [documentation](https://mirekslouf.github.io/ediff/docs).
 
 Versions of EDIFF
 -----------------
