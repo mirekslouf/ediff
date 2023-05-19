@@ -34,3 +34,4 @@ Versions of EDIFF
 * Version 0.0.3 = pxrd module works including profiles
 * Version 0.0.4 = bground module incorporated + slightly improved docstrings
 * Version 0.1.0 = 1st semi-complete version with basic documentation
+* Version 0.1.1 = v.0.1.0 + improved/simplified outputs
