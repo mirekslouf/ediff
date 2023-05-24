@@ -613,17 +613,39 @@ class PXRDcalculation:
         
     @staticmethod    
     def diffractions_to_dframe(intensities):
+        # Prepare hkl indexes
         h = []; k = []; l = []
-        for i in intensities.hkls:
-            h.append(i[0]['hkl'][0])
-            k.append(i[0]['hkl'][1])
-            l.append(i[0]['hkl'][2])
-        df = pd.DataFrame( 
-            np.transpose(
-                [intensities.x, h, k, l, intensities.d_hkls, intensities.y]),
-            columns=['TwoTheta','h','k','l','dhkl','Ihkl'])
-        df.insert(loc=5, column='S', value=1/df.dhkl)
-        df.insert(loc=6, column='q', value=2*np.pi*df.S)
+        # Test if the structure is hexagonal
+        hexagonal = (len(intensities.hkls[0][0]['hkl']) == 4)
+        # ...and if the structure is hexagonal, prepare i-index (hkl) -> (hkil)
+        if hexagonal: i = []
+        # Fill in hkl (or hkil) indexes
+        for ints in intensities.hkls:
+            h.append(ints[0]['hkl'][0])
+            k.append(ints[0]['hkl'][1])
+            if not(hexagonal):
+                l.append(ints[0]['hkl'][2])
+            else:    
+                i.append(ints[0]['hkl'][2])
+                l.append(ints[0]['hkl'][3])
+        # Create DataFrame from all values
+        # (again, we have to consider hexagonal structures => hkil indexes
+        if not(hexagonal):
+            df = pd.DataFrame( 
+                np.transpose(
+                    [intensities.x,
+                     h, k, l, intensities.d_hkls, intensities.y]),
+                columns=['TwoTheta','h','k','l','dhkl','Ihkl'])
+            df.insert(loc=5, column='S', value=1/df.dhkl)
+            df.insert(loc=6, column='q', value=2*np.pi*df.S)
+        else:
+            df = pd.DataFrame( 
+                np.transpose(
+                    [intensities.x,
+                     h, k, i, l, intensities.d_hkls, intensities.y]),
+                columns=['TwoTheta','h','k','i', 'l','dhkl','Ihkl'])
+            df.insert(loc=6, column='S', value=1/df.dhkl)
+            df.insert(loc=7, column='q', value=2*np.pi*df.S)
         return(df)
     
     @staticmethod
@@ -642,18 +664,34 @@ class PXRDcalculation:
         #       ale: float  .N-format je s carkou  '{:,.3f}'.format
         #   trik #2: NElze naformatovat obecny typ jako integer
         #     takze: pro obecne cislo misto NEfunkcniho {:3d} nutno {:3.0f}
-        table = dframe.to_string(
-            formatters={
-                'TwoTheta' : '{:8.3f}'.format,
-                'h'        : '{:3.0f}'.format,
-                'k'        : '{:3.0f}'.format,
-                'l'        : '{:3.0f}'.format,
-                'dhkl'     : '{:7.3f}'.format,
-                'S'        : '{:7.3f}'.format,
-                'q'        : '{:7.3f}'.format,
-                'Ihkl'     : '{:9.3f}'.format
-            }
-        )
+        # ------
+        # Test if the structure is hexagonal
+        hexagonal = (len(dframe.columns) == 9)
+        if not(hexagonal):
+            # (a) Non-hexagonal structure => hkl indexes (standard)
+            table = dframe.to_string(
+                formatters={
+                    'TwoTheta' : '{:8.3f}'.format,
+                    'h'        : '{:3.0f}'.format,
+                    'k'        : '{:3.0f}'.format,
+                    'l'        : '{:3.0f}'.format,
+                    'dhkl'     : '{:7.3f}'.format,
+                    'S'        : '{:7.3f}'.format,
+                    'q'        : '{:7.3f}'.format,
+                    'Ihkl'     : '{:9.3f}'.format})
+        else:
+            # (b) Hexagonal structure => hkil indexes (four, non-standard)
+            table = dframe.to_string(
+                formatters={
+                    'TwoTheta' : '{:8.3f}'.format,
+                    'h'        : '{:3.0f}'.format,
+                    'k'        : '{:3.0f}'.format,
+                    'i'        : '{:3.0f}'.format,
+                    'l'        : '{:3.0f}'.format,
+                    'dhkl'     : '{:7.3f}'.format,
+                    'S'        : '{:7.3f}'.format,
+                    'q'        : '{:7.3f}'.format,
+                    'Ihkl'     : '{:9.3f}'.format})
         return(table)
 
     def add_diffraction_vectors_to_diffractogram(self, df):
