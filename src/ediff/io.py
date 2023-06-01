@@ -33,6 +33,53 @@ def read_image(image_name, itype=None):
         arr = np.asarray(img, dtype=np.uint16)
     return(arr)
 
+
+def set_plot_parameters(
+        size=(8,6), dpi=100, fontsize=8, my_defaults=True, my_rcParams=None):
+    '''
+    Set global plot parameters (mostly for plotting in Jupyter).
+
+    Parameters
+    ----------
+    size : tuple of two floats, optional, the default is (8,6)
+        Size of the figure (width, height) in [cm].
+    dpi : int, optional, the defalut is 100
+        DPI of the figure.
+    fontsize : int, optional, the default is 8
+        Size of the font used in figure labels etc.
+    my_defaults : bool, optional, default is True
+        If True, some reasonable additional defaults are set,
+        namely line widths and formats.
+    my_rcParams : dict, optional, default is None
+        Dictionary in plt.rcParams format
+        containing any other allowed global plot parameters.
+
+    Returns
+    -------
+    None; the result is a modification of the global plt.rcParams variable.
+    '''
+    # (1) Basic arguments -----------------------------------------------------
+    if size:  # Figure size
+        # Convert size in [cm] to required size in [inch]
+        size = (size[0]/2.54, size[1]/2.54)
+        plt.rcParams.update({'figure.figsize' : size})
+    if dpi:  # Figure dpi
+        plt.rcParams.update({'figure.dpi' : dpi})
+    if fontsize:  # Global font size
+        plt.rcParams.update({'font.size' : fontsize})
+    # (2) Additional default parameters ---------------------------------------
+    plt.rcParams.update({
+        'lines.linewidth'    : 0.8,
+        'axes.linewidth'     : 0.6,
+        'xtick.major.width'  : 0.6,
+        'ytick.major.width'  : 0.6,
+        'grid.linewidth'     : 0.6,
+        'grid.linestyle'     : ':'})
+    # (3) Further user-defined parameter in rcParams format -------------------
+    if my_rcParams:  # Other possible rcParams in the form of dictionary
+        plt.rcParams.update(my_rcParams)
+
+
 def plot_radial_distributions(
         data_to_plot, xlimit, ylimit, output_file=None):
     """
@@ -83,7 +130,7 @@ def plot_radial_distributions(
     >>>     xlimit=200, ylimit=300,
     >>>     output_file='sums_final_1d.png')
     """
-    # Read radial distribution files
+    # Initialize
     n = len(data_to_plot)
     rdist = data_to_plot
     # Plot radial distribution files

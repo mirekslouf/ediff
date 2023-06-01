@@ -188,10 +188,7 @@ class PlotParameters:
     rcParams : dict; optional, the default is empty dictionary {}
         The dictionary should have the format of mathplotlib.pyplot.rcParams.
         The argmument is passed to matplotlib.pyplot.rcParams.update.
-        The initialization procedure creates some default rcParams.
-        This argument can override the pre-defined parameters,
-        which means that the default is created anyway
-        and then it can be adjusted here by rcParams argument.
+        This enables to override current rcParams, if necessary.
     '''
     
     def __init__(self, title=None, x_axis='q', xlim=None, rcParams={}):
@@ -204,53 +201,8 @@ class PlotParameters:
         self.title = title
         self.x_axis = x_axis
         self.xlim = xlim
-        self.rcParams = rcParams
-        # Set global plot settings using rcParams
-        self.set_default_rcParams(rcParams)
-
-    @staticmethod
-    def set_default_rcParams(my_rcParams={}):
-        '''
-        A class method defining global plot parameters (plt.rcParams).
-        
-        Parameters
-        ----------
-        my_rcParams : dictionary
-            containing selected plt.rcParams keys)
-            DESCRIPTION. The default is {}.
-
-        Returns
-        -------
-        None, BUT it redefines global variable plt.rcParams!
-
-        Notes:
-        ------
-        * This is a @classmethod (because it is used within the whole class)
-          but it could be a @staticmethod as well (because it does not use
-          cls variable in fact).
-        * The method is employed in two ways:
-            - standard usage of MCREEP package: default rcParams are used
-              (and possibly modified) in objects of PlotParameters class
-            - special usage of MCREEP (more figures, multiplots): default
-              rcParams are used when definining the axes of (multiple)figures
-        '''
-        # (1) Set default rcParams
-        # (Hardcoded, suitable default for standard plots
-        plt.rcParams.update({
-            'figure.figsize'     : (8/2.54,6/2.54),
-            'figure.dpi'         : 500,
-            'font.size'          : 7,
-            'lines.linewidth'    : 0.8,
-            'axes.linewidth'     : 0.6,
-            'xtick.major.width'  : 0.6,
-            'ytick.major.width'  : 0.6,
-            'grid.linewidth'     : 0.6,
-            'grid.linestyle'     : ':'})
-        # (2) Update default with argument rcParams, if it was given
-        # (User-defined in the main program, if necessary
-        # (Useful namely for multiplots
-        plt.rcParams.update(my_rcParams)
-
+        if rcParams: plt.rcParams.update(rcParams)
+       
 class PeakProfiles:
     '''
     Define profile of diffraction peaks.
@@ -543,6 +495,7 @@ class PXRDcalculation:
         '''
         # (0) Redefine plot parameters
         # (so that they were optimized for the interactive plot
+        original_rcParams = plt.rcParams
         plt.rcParams.update({
             'figure.figsize'  : (12/2.54,4/2.54),
             'figure.dpi'      : 200,
@@ -577,6 +530,8 @@ class PXRDcalculation:
         # (5) Final adjustments
         fig.tight_layout()
         fig.show()
+        # (6) Revert to original rcParams.
+        plt.rcParams.update(original_rcParams)
         
     def print_diffractogram(self):
         self.print_diffractions()

@@ -1,0 +1,7 @@
+If you use ediff package in your research, please cite:
+
+Slouf M, Skoupy R, Pavlova E, Krzyzanek V:
+High Resolution Powder Electron Diffraction in Scanning Electron Microscopy
+Materials 14 (2011) 7550. https://doi.org/10.3390/ma14247550
+
+Note: The paper describes {stemdiff} package; {ediff} is a part of it.

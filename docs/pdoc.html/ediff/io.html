@@ -39,6 +39,9 @@
                     <a class="function" href="#read_image">read_image</a>
             </li>
             <li>
+                    <a class="function" href="#set_plot_parameters">set_plot_parameters</a>
+            </li>
+            <li>
                     <a class="function" href="#plot_radial_distributions">plot_radial_distributions</a>
             </li>
     </ul>
@@ -79,7 +82,7 @@
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>
 </span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="kn">import</span> <span class="nn">ediff.radial</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">image_name</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;8bit&#39;</span><span class="p">):</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">image_name</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>    <span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">    Read grayscale image into 2D numpy array.</span>
 </span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">    </span>
@@ -101,90 +104,135 @@
 </span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
 </span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>    <span class="k">return</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 </span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="k">def</span> <span class="nf">plot_radial_distributions</span><span class="p">(</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>        <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">xlimit</span><span class="p">,</span> <span class="n">ylimit</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>    <span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">    Plot one or more 1D-radial distrubution files in one graph.</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="k">def</span> <span class="nf">set_plot_parameters</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">my_rcParams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>    <span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">    Set global plot parameters (mostly for plotting in Jupyter).</span>
 </span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>
 </span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">    Parameters</span>
 </span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="sd">    ----------</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">    data_to_plot : 2D-list </span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">        * list with several rows containing [data, linestyle, label]</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">        * data = data for plotting - they can be one of the following:</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">            - PNG filename = str, a PNG-file = 2D diffraction pattern</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">            - TXT filename = str, a text file = 1D diffraction profile</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">            - 2D-array = a numpy array, containg 2D diffraction pattern</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">            - 1D-array = a numpy array, containing 1D diffraction profile</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">            - Note1: 2D-pattern = a square image/array with intensities</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">            - Note2: 1D-profile = a text file/array with two cols/rows = [R,I],</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">              where R = distance from center, I = diffraction intensity</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">        * linestyle = matplotlib.pyplot format, such as &#39;r-&#39; (red line)</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">        * label = name of the data, which will appear in the plot legend</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    xlimit : int</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">        maximum of the X-axis</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">    ylimit : int</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">        maximum of the Y-axis</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">    output : int, optional, default=None</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">        Name of the output file;</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">        if the *output* argument is given,</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">        the plot is not only shown on screen, but also saved in *output* file. </span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">    Returns</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">    -------</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="sd">    Nothing</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a><span class="sd">        The output is the plot on screen</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">        (and in *output file* if the *output* argument was given).</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">    </span>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">    Technical note</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">    --------------</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a><span class="sd">    This function is quite flexible.</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="sd">    It can plot one radial distribution or more.</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">    It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">    This makes the code a bit more complex, but it is convenient for the user.</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">    A fast comparison of three 1D-distributions from three 2D-diffractograms:</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">    </span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">    &gt;&gt;&gt; ediff.io.plot_radial_distributions(</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">    &gt;&gt;&gt;     data_to_plot = [</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_all_16bit.png&#39;, &#39;k:&#39;,  &#39;All data&#39;],</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_f_16bit.png&#39;,   &#39;b--&#39;, &#39;F data&#39;],</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_fd_16bit.png&#39;,  &#39;r-&#39;,  &#39;FD data&#39;]]</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a><span class="sd">    &gt;&gt;&gt;     xlimit=200, ylimit=300,</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">    &gt;&gt;&gt;     output=&#39;sums_final_1d.png&#39;)</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>    <span class="c1"># Read radial distribution files</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>    <span class="n">rdist</span> <span class="o">=</span> <span class="n">data_to_plot</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>    <span class="c1"># Plot radial distribution files</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>        <span class="c1"># Read data</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># Datafile</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">):</span>  <span class="c1"># ....PNG file, 2D-diffractogram</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>                <span class="n">arr</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ......................................TXT file, 1D-profile</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">read_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># Numpy array</span>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># sqare array, 2D-diffractogram</span>
-</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ..............................non-square rrray, 1D-profile</span>
-</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">data</span>
-</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>        <span class="c1"># Read plot parameters        </span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>        <span class="n">myls</span>    <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>        <span class="n">mylabel</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>        <span class="c1"># Plot data</span>
-</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">R</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">myls</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">mylabel</span><span class="p">)</span>
-</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="c1"># ...adjust plot</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Radial distance [pixel]&#39;</span><span class="p">)</span>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Intensity [grayscale]&#39;</span><span class="p">)</span>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">xlimit</span><span class="p">)</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ylimit</span><span class="p">)</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a>    <span class="c1"># ...save plot as PNG (only if argument [output] was given)</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>    <span class="k">if</span> <span class="n">output</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>    <span class="c1"># ...show plot</span>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">    size : tuple of two floats, optional, the default is (12,9)</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">        Size of the figure (width, height) in [cm].</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">    dpi : int, optional, the defalut is 75</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">        DPI of the figure.</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">    fontsize : int, optional, the default is 10</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">        Size of the font used in figure labels etc.</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">    my_rcParams : dict, optional, default is None</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">        Dictionary in plt.rcParams format</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">        containing any other allowed global plot parameters.</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">    Returns</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">    -------</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    None; the result is a modification of the global plt.rcParams variable.</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">    &#39;&#39;&#39;</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>    <span class="c1"># (1) Basic arguments -----------------------------------------------------</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>    <span class="k">if</span> <span class="n">size</span><span class="p">:</span>  <span class="c1"># Figure size</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>        <span class="c1"># Convert size in [cm] to required size in [inch]</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.54</span><span class="p">,</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.54</span><span class="p">)</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;figure.figsize&#39;</span> <span class="p">:</span> <span class="n">size</span><span class="p">})</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>    <span class="k">if</span> <span class="n">dpi</span><span class="p">:</span>  <span class="c1"># Figure dpi</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;figure.dpi&#39;</span> <span class="p">:</span> <span class="n">dpi</span><span class="p">})</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>    <span class="k">if</span> <span class="n">fontsize</span><span class="p">:</span>  <span class="c1"># Global font size</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;font.size&#39;</span> <span class="p">:</span> <span class="n">fontsize</span><span class="p">})</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>    <span class="c1"># (2) Additional default parameters ---------------------------------------</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>        <span class="s1">&#39;lines.linewidth&#39;</span>    <span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>        <span class="s1">&#39;axes.linewidth&#39;</span>     <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>        <span class="s1">&#39;xtick.major.width&#39;</span>  <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="s1">&#39;ytick.major.width&#39;</span>  <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="s1">&#39;grid.linewidth&#39;</span>     <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>        <span class="s1">&#39;grid.linestyle&#39;</span>     <span class="p">:</span> <span class="s1">&#39;:&#39;</span><span class="p">})</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>    <span class="c1"># (3) Further user-defined parameter in rcParams format -------------------</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>    <span class="k">if</span> <span class="n">my_rcParams</span><span class="p">:</span>  <span class="c1"># Other possible rcParams in the form of dictionary</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">my_rcParams</span><span class="p">)</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="k">def</span> <span class="nf">plot_radial_distributions</span><span class="p">(</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>        <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">xlimit</span><span class="p">,</span> <span class="n">ylimit</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>    <span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">    Plot one or more 1D-radial distrubution files in one graph.</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">    Parameters</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a><span class="sd">    ----------</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a><span class="sd">    data_to_plot : 2D-list </span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a><span class="sd">        * list with several rows containing [data, linestyle, label]</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a><span class="sd">        * data = data for plotting - they can be one of the following:</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="sd">            - PNG filename = str, a PNG-file = 2D diffraction pattern</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a><span class="sd">            - TXT filename = str, a text file = 1D diffraction profile</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">            - 2D-array = a numpy array, containg 2D diffraction pattern</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="sd">            - 1D-array = a numpy array, containing 1D diffraction profile</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">            - Note1: 2D-pattern = a square image/array with intensities</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">            - Note2: 1D-profile = a text file/array with two cols/rows = [R,I],</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">              where R = distance from center, I = diffraction intensity</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">        * linestyle = matplotlib.pyplot format, such as &#39;r-&#39; (red line)</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a><span class="sd">        * label = name of the data, which will appear in the plot legend</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">    xlimit : int</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">        maximum of the X-axis</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">    ylimit : int</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">        maximum of the Y-axis</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a><span class="sd">    output_file : int, optional, default=None</span>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">        Name of the output file;</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a><span class="sd">        if the *output* argument is given,</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">        the plot is not only shown on screen, but also saved in *output* file. </span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">    Returns</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">    -------</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">    Nothing</span>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a><span class="sd">        The output is the plot on screen</span>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">        (and in *output file* if the *output* argument was given).</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">    </span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="sd">    Technical note</span>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">    --------------</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    This function is quite flexible.</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    It can plot one radial distribution or more.</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">    This makes the code a bit more complex, but it is convenient for the user.</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">    A fast comparison of three 1D-distributions from three 2D-diffractograms:</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="sd">    </span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">    &gt;&gt;&gt; ediff.io.plot_radial_distributions(</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">    &gt;&gt;&gt;     data_to_plot = [</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_all_16bit.png&#39;, &#39;k:&#39;,  &#39;All data&#39;],</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_f_16bit.png&#39;,   &#39;b--&#39;, &#39;F data&#39;],</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_fd_16bit.png&#39;,  &#39;r-&#39;,  &#39;FD data&#39;]]</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">    &gt;&gt;&gt;     xlimit=200, ylimit=300,</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">    &gt;&gt;&gt;     output_file=&#39;sums_final_1d.png&#39;)</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>    <span class="c1"># Initialize</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>    <span class="n">rdist</span> <span class="o">=</span> <span class="n">data_to_plot</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>    <span class="c1"># Plot radial distribution files</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>        <span class="c1"># Read data</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># Datafile</span>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">):</span>  <span class="c1"># ....PNG file, 2D-diffractogram</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>                <span class="n">arr</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ......................................TXT file, 1D-profile</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">read_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># Numpy array</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># sqare array, 2D-diffractogram</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ..............................non-square rrray, 1D-profile</span>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">data</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>        <span class="c1"># Read plot parameters        </span>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>        <span class="n">my_format</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>        <span class="n">my_label</span>  <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a>        <span class="c1"># Plot data</span>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>        <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">profile</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">R</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">my_format</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">my_label</span><span class="p">)</span>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>    <span class="c1"># ...adjust plot</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Radial distance [pixel]&#39;</span><span class="p">)</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Intensity [grayscale]&#39;</span><span class="p">)</span>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">xlimit</span><span class="p">)</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ylimit</span><span class="p">)</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>    <span class="c1"># ...save plot as PNG (only if argument [output] was given)</span>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>    <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>    <span class="c1"># ...show plot</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -194,13 +242,13 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">read_image</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">image_name</span>, </span><span class="param"><span class="n">itype</span><span class="o">=</span><span class="s1">&#39;8bit&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">read_image</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">image_name</span>, </span><span class="param"><span class="n">itype</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="read_image-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#read_image"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="read_image-15"><a href="#read_image-15"><span class="linenos">15</span></a><span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">image_name</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s1">&#39;8bit&#39;</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="read_image-15"><a href="#read_image-15"><span class="linenos">15</span></a><span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">image_name</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="read_image-16"><a href="#read_image-16"><span class="linenos">16</span></a>    <span class="sd">&#39;&#39;&#39;</span>
 </span><span id="read_image-17"><a href="#read_image-17"><span class="linenos">17</span></a><span class="sd">    Read grayscale image into 2D numpy array.</span>
 </span><span id="read_image-18"><a href="#read_image-18"><span class="linenos">18</span></a><span class="sd">    </span>
@@ -244,101 +292,182 @@ type of the image: 8 or 16 bit grayscale</li>
 
 
                 </section>
+                <section id="set_plot_parameters">
+                            <input id="set_plot_parameters-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">set_plot_parameters</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>, </span><span class="param"><span class="n">dpi</span><span class="o">=</span><span class="mi">100</span>, </span><span class="param"><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span>, </span><span class="param"><span class="n">my_rcParams</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="set_plot_parameters-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#set_plot_parameters"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="set_plot_parameters-38"><a href="#set_plot_parameters-38"><span class="linenos">38</span></a><span class="k">def</span> <span class="nf">set_plot_parameters</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">my_rcParams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="set_plot_parameters-39"><a href="#set_plot_parameters-39"><span class="linenos">39</span></a>    <span class="sd">&#39;&#39;&#39;</span>
+</span><span id="set_plot_parameters-40"><a href="#set_plot_parameters-40"><span class="linenos">40</span></a><span class="sd">    Set global plot parameters (mostly for plotting in Jupyter).</span>
+</span><span id="set_plot_parameters-41"><a href="#set_plot_parameters-41"><span class="linenos">41</span></a>
+</span><span id="set_plot_parameters-42"><a href="#set_plot_parameters-42"><span class="linenos">42</span></a><span class="sd">    Parameters</span>
+</span><span id="set_plot_parameters-43"><a href="#set_plot_parameters-43"><span class="linenos">43</span></a><span class="sd">    ----------</span>
+</span><span id="set_plot_parameters-44"><a href="#set_plot_parameters-44"><span class="linenos">44</span></a><span class="sd">    size : tuple of two floats, optional, the default is (12,9)</span>
+</span><span id="set_plot_parameters-45"><a href="#set_plot_parameters-45"><span class="linenos">45</span></a><span class="sd">        Size of the figure (width, height) in [cm].</span>
+</span><span id="set_plot_parameters-46"><a href="#set_plot_parameters-46"><span class="linenos">46</span></a><span class="sd">    dpi : int, optional, the defalut is 75</span>
+</span><span id="set_plot_parameters-47"><a href="#set_plot_parameters-47"><span class="linenos">47</span></a><span class="sd">        DPI of the figure.</span>
+</span><span id="set_plot_parameters-48"><a href="#set_plot_parameters-48"><span class="linenos">48</span></a><span class="sd">    fontsize : int, optional, the default is 10</span>
+</span><span id="set_plot_parameters-49"><a href="#set_plot_parameters-49"><span class="linenos">49</span></a><span class="sd">        Size of the font used in figure labels etc.</span>
+</span><span id="set_plot_parameters-50"><a href="#set_plot_parameters-50"><span class="linenos">50</span></a><span class="sd">    my_rcParams : dict, optional, default is None</span>
+</span><span id="set_plot_parameters-51"><a href="#set_plot_parameters-51"><span class="linenos">51</span></a><span class="sd">        Dictionary in plt.rcParams format</span>
+</span><span id="set_plot_parameters-52"><a href="#set_plot_parameters-52"><span class="linenos">52</span></a><span class="sd">        containing any other allowed global plot parameters.</span>
+</span><span id="set_plot_parameters-53"><a href="#set_plot_parameters-53"><span class="linenos">53</span></a>
+</span><span id="set_plot_parameters-54"><a href="#set_plot_parameters-54"><span class="linenos">54</span></a><span class="sd">    Returns</span>
+</span><span id="set_plot_parameters-55"><a href="#set_plot_parameters-55"><span class="linenos">55</span></a><span class="sd">    -------</span>
+</span><span id="set_plot_parameters-56"><a href="#set_plot_parameters-56"><span class="linenos">56</span></a><span class="sd">    None; the result is a modification of the global plt.rcParams variable.</span>
+</span><span id="set_plot_parameters-57"><a href="#set_plot_parameters-57"><span class="linenos">57</span></a><span class="sd">    &#39;&#39;&#39;</span>
+</span><span id="set_plot_parameters-58"><a href="#set_plot_parameters-58"><span class="linenos">58</span></a>    <span class="c1"># (1) Basic arguments -----------------------------------------------------</span>
+</span><span id="set_plot_parameters-59"><a href="#set_plot_parameters-59"><span class="linenos">59</span></a>    <span class="k">if</span> <span class="n">size</span><span class="p">:</span>  <span class="c1"># Figure size</span>
+</span><span id="set_plot_parameters-60"><a href="#set_plot_parameters-60"><span class="linenos">60</span></a>        <span class="c1"># Convert size in [cm] to required size in [inch]</span>
+</span><span id="set_plot_parameters-61"><a href="#set_plot_parameters-61"><span class="linenos">61</span></a>        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.54</span><span class="p">,</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.54</span><span class="p">)</span>
+</span><span id="set_plot_parameters-62"><a href="#set_plot_parameters-62"><span class="linenos">62</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;figure.figsize&#39;</span> <span class="p">:</span> <span class="n">size</span><span class="p">})</span>
+</span><span id="set_plot_parameters-63"><a href="#set_plot_parameters-63"><span class="linenos">63</span></a>    <span class="k">if</span> <span class="n">dpi</span><span class="p">:</span>  <span class="c1"># Figure dpi</span>
+</span><span id="set_plot_parameters-64"><a href="#set_plot_parameters-64"><span class="linenos">64</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;figure.dpi&#39;</span> <span class="p">:</span> <span class="n">dpi</span><span class="p">})</span>
+</span><span id="set_plot_parameters-65"><a href="#set_plot_parameters-65"><span class="linenos">65</span></a>    <span class="k">if</span> <span class="n">fontsize</span><span class="p">:</span>  <span class="c1"># Global font size</span>
+</span><span id="set_plot_parameters-66"><a href="#set_plot_parameters-66"><span class="linenos">66</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;font.size&#39;</span> <span class="p">:</span> <span class="n">fontsize</span><span class="p">})</span>
+</span><span id="set_plot_parameters-67"><a href="#set_plot_parameters-67"><span class="linenos">67</span></a>    <span class="c1"># (2) Additional default parameters ---------------------------------------</span>
+</span><span id="set_plot_parameters-68"><a href="#set_plot_parameters-68"><span class="linenos">68</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+</span><span id="set_plot_parameters-69"><a href="#set_plot_parameters-69"><span class="linenos">69</span></a>        <span class="s1">&#39;lines.linewidth&#39;</span>    <span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span>
+</span><span id="set_plot_parameters-70"><a href="#set_plot_parameters-70"><span class="linenos">70</span></a>        <span class="s1">&#39;axes.linewidth&#39;</span>     <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="set_plot_parameters-71"><a href="#set_plot_parameters-71"><span class="linenos">71</span></a>        <span class="s1">&#39;xtick.major.width&#39;</span>  <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="set_plot_parameters-72"><a href="#set_plot_parameters-72"><span class="linenos">72</span></a>        <span class="s1">&#39;ytick.major.width&#39;</span>  <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="set_plot_parameters-73"><a href="#set_plot_parameters-73"><span class="linenos">73</span></a>        <span class="s1">&#39;grid.linewidth&#39;</span>     <span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+</span><span id="set_plot_parameters-74"><a href="#set_plot_parameters-74"><span class="linenos">74</span></a>        <span class="s1">&#39;grid.linestyle&#39;</span>     <span class="p">:</span> <span class="s1">&#39;:&#39;</span><span class="p">})</span>
+</span><span id="set_plot_parameters-75"><a href="#set_plot_parameters-75"><span class="linenos">75</span></a>    <span class="c1"># (3) Further user-defined parameter in rcParams format -------------------</span>
+</span><span id="set_plot_parameters-76"><a href="#set_plot_parameters-76"><span class="linenos">76</span></a>    <span class="k">if</span> <span class="n">my_rcParams</span><span class="p">:</span>  <span class="c1"># Other possible rcParams in the form of dictionary</span>
+</span><span id="set_plot_parameters-77"><a href="#set_plot_parameters-77"><span class="linenos">77</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">my_rcParams</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Set global plot parameters (mostly for plotting in Jupyter).</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>size</strong> (tuple of two floats, optional, the default is (12,9)):
+Size of the figure (width, height) in [cm].</li>
+<li><strong>dpi</strong> (int, optional, the defalut is 75):
+DPI of the figure.</li>
+<li><strong>fontsize</strong> (int, optional, the default is 10):
+Size of the font used in figure labels etc.</li>
+<li><strong>my_rcParams</strong> (dict, optional, default is None):
+Dictionary in plt.rcParams format
+containing any other allowed global plot parameters.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>None; the result is a modification of the global plt.rcParams variable.</strong></li>
+</ul>
+</div>
+
+
+                </section>
                 <section id="plot_radial_distributions">
                             <input id="plot_radial_distributions-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">plot_radial_distributions</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">data_to_plot</span>, </span><span class="param"><span class="n">xlimit</span>, </span><span class="param"><span class="n">ylimit</span>, </span><span class="param"><span class="n">output</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
+        <span class="name">plot_radial_distributions</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">data_to_plot</span>, </span><span class="param"><span class="n">xlimit</span>, </span><span class="param"><span class="n">ylimit</span>, </span><span class="param"><span class="n">output_file</span><span class="o">=</span><span class="kc">None</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="plot_radial_distributions-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#plot_radial_distributions"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="plot_radial_distributions-37"><a href="#plot_radial_distributions-37"><span class="linenos"> 37</span></a><span class="k">def</span> <span class="nf">plot_radial_distributions</span><span class="p">(</span>
-</span><span id="plot_radial_distributions-38"><a href="#plot_radial_distributions-38"><span class="linenos"> 38</span></a>        <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">xlimit</span><span class="p">,</span> <span class="n">ylimit</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="plot_radial_distributions-39"><a href="#plot_radial_distributions-39"><span class="linenos"> 39</span></a>    <span class="sd">&quot;&quot;&quot;</span>
-</span><span id="plot_radial_distributions-40"><a href="#plot_radial_distributions-40"><span class="linenos"> 40</span></a><span class="sd">    Plot one or more 1D-radial distrubution files in one graph.</span>
-</span><span id="plot_radial_distributions-41"><a href="#plot_radial_distributions-41"><span class="linenos"> 41</span></a>
-</span><span id="plot_radial_distributions-42"><a href="#plot_radial_distributions-42"><span class="linenos"> 42</span></a><span class="sd">    Parameters</span>
-</span><span id="plot_radial_distributions-43"><a href="#plot_radial_distributions-43"><span class="linenos"> 43</span></a><span class="sd">    ----------</span>
-</span><span id="plot_radial_distributions-44"><a href="#plot_radial_distributions-44"><span class="linenos"> 44</span></a><span class="sd">    data_to_plot : 2D-list </span>
-</span><span id="plot_radial_distributions-45"><a href="#plot_radial_distributions-45"><span class="linenos"> 45</span></a><span class="sd">        * list with several rows containing [data, linestyle, label]</span>
-</span><span id="plot_radial_distributions-46"><a href="#plot_radial_distributions-46"><span class="linenos"> 46</span></a><span class="sd">        * data = data for plotting - they can be one of the following:</span>
-</span><span id="plot_radial_distributions-47"><a href="#plot_radial_distributions-47"><span class="linenos"> 47</span></a><span class="sd">            - PNG filename = str, a PNG-file = 2D diffraction pattern</span>
-</span><span id="plot_radial_distributions-48"><a href="#plot_radial_distributions-48"><span class="linenos"> 48</span></a><span class="sd">            - TXT filename = str, a text file = 1D diffraction profile</span>
-</span><span id="plot_radial_distributions-49"><a href="#plot_radial_distributions-49"><span class="linenos"> 49</span></a><span class="sd">            - 2D-array = a numpy array, containg 2D diffraction pattern</span>
-</span><span id="plot_radial_distributions-50"><a href="#plot_radial_distributions-50"><span class="linenos"> 50</span></a><span class="sd">            - 1D-array = a numpy array, containing 1D diffraction profile</span>
-</span><span id="plot_radial_distributions-51"><a href="#plot_radial_distributions-51"><span class="linenos"> 51</span></a><span class="sd">            - Note1: 2D-pattern = a square image/array with intensities</span>
-</span><span id="plot_radial_distributions-52"><a href="#plot_radial_distributions-52"><span class="linenos"> 52</span></a><span class="sd">            - Note2: 1D-profile = a text file/array with two cols/rows = [R,I],</span>
-</span><span id="plot_radial_distributions-53"><a href="#plot_radial_distributions-53"><span class="linenos"> 53</span></a><span class="sd">              where R = distance from center, I = diffraction intensity</span>
-</span><span id="plot_radial_distributions-54"><a href="#plot_radial_distributions-54"><span class="linenos"> 54</span></a><span class="sd">        * linestyle = matplotlib.pyplot format, such as &#39;r-&#39; (red line)</span>
-</span><span id="plot_radial_distributions-55"><a href="#plot_radial_distributions-55"><span class="linenos"> 55</span></a><span class="sd">        * label = name of the data, which will appear in the plot legend</span>
-</span><span id="plot_radial_distributions-56"><a href="#plot_radial_distributions-56"><span class="linenos"> 56</span></a><span class="sd">    xlimit : int</span>
-</span><span id="plot_radial_distributions-57"><a href="#plot_radial_distributions-57"><span class="linenos"> 57</span></a><span class="sd">        maximum of the X-axis</span>
-</span><span id="plot_radial_distributions-58"><a href="#plot_radial_distributions-58"><span class="linenos"> 58</span></a><span class="sd">    ylimit : int</span>
-</span><span id="plot_radial_distributions-59"><a href="#plot_radial_distributions-59"><span class="linenos"> 59</span></a><span class="sd">        maximum of the Y-axis</span>
-</span><span id="plot_radial_distributions-60"><a href="#plot_radial_distributions-60"><span class="linenos"> 60</span></a><span class="sd">    output : int, optional, default=None</span>
-</span><span id="plot_radial_distributions-61"><a href="#plot_radial_distributions-61"><span class="linenos"> 61</span></a><span class="sd">        Name of the output file;</span>
-</span><span id="plot_radial_distributions-62"><a href="#plot_radial_distributions-62"><span class="linenos"> 62</span></a><span class="sd">        if the *output* argument is given,</span>
-</span><span id="plot_radial_distributions-63"><a href="#plot_radial_distributions-63"><span class="linenos"> 63</span></a><span class="sd">        the plot is not only shown on screen, but also saved in *output* file. </span>
-</span><span id="plot_radial_distributions-64"><a href="#plot_radial_distributions-64"><span class="linenos"> 64</span></a>
-</span><span id="plot_radial_distributions-65"><a href="#plot_radial_distributions-65"><span class="linenos"> 65</span></a><span class="sd">    Returns</span>
-</span><span id="plot_radial_distributions-66"><a href="#plot_radial_distributions-66"><span class="linenos"> 66</span></a><span class="sd">    -------</span>
-</span><span id="plot_radial_distributions-67"><a href="#plot_radial_distributions-67"><span class="linenos"> 67</span></a><span class="sd">    Nothing</span>
-</span><span id="plot_radial_distributions-68"><a href="#plot_radial_distributions-68"><span class="linenos"> 68</span></a><span class="sd">        The output is the plot on screen</span>
-</span><span id="plot_radial_distributions-69"><a href="#plot_radial_distributions-69"><span class="linenos"> 69</span></a><span class="sd">        (and in *output file* if the *output* argument was given).</span>
-</span><span id="plot_radial_distributions-70"><a href="#plot_radial_distributions-70"><span class="linenos"> 70</span></a><span class="sd">    </span>
-</span><span id="plot_radial_distributions-71"><a href="#plot_radial_distributions-71"><span class="linenos"> 71</span></a><span class="sd">    Technical note</span>
-</span><span id="plot_radial_distributions-72"><a href="#plot_radial_distributions-72"><span class="linenos"> 72</span></a><span class="sd">    --------------</span>
-</span><span id="plot_radial_distributions-73"><a href="#plot_radial_distributions-73"><span class="linenos"> 73</span></a><span class="sd">    This function is quite flexible.</span>
-</span><span id="plot_radial_distributions-74"><a href="#plot_radial_distributions-74"><span class="linenos"> 74</span></a><span class="sd">    It can plot one radial distribution or more.</span>
-</span><span id="plot_radial_distributions-75"><a href="#plot_radial_distributions-75"><span class="linenos"> 75</span></a><span class="sd">    It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.</span>
-</span><span id="plot_radial_distributions-76"><a href="#plot_radial_distributions-76"><span class="linenos"> 76</span></a><span class="sd">    This makes the code a bit more complex, but it is convenient for the user.</span>
-</span><span id="plot_radial_distributions-77"><a href="#plot_radial_distributions-77"><span class="linenos"> 77</span></a><span class="sd">    A fast comparison of three 1D-distributions from three 2D-diffractograms:</span>
-</span><span id="plot_radial_distributions-78"><a href="#plot_radial_distributions-78"><span class="linenos"> 78</span></a><span class="sd">    </span>
-</span><span id="plot_radial_distributions-79"><a href="#plot_radial_distributions-79"><span class="linenos"> 79</span></a><span class="sd">    &gt;&gt;&gt; ediff.io.plot_radial_distributions(</span>
-</span><span id="plot_radial_distributions-80"><a href="#plot_radial_distributions-80"><span class="linenos"> 80</span></a><span class="sd">    &gt;&gt;&gt;     data_to_plot = [</span>
-</span><span id="plot_radial_distributions-81"><a href="#plot_radial_distributions-81"><span class="linenos"> 81</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_all_16bit.png&#39;, &#39;k:&#39;,  &#39;All data&#39;],</span>
-</span><span id="plot_radial_distributions-82"><a href="#plot_radial_distributions-82"><span class="linenos"> 82</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_f_16bit.png&#39;,   &#39;b--&#39;, &#39;F data&#39;],</span>
-</span><span id="plot_radial_distributions-83"><a href="#plot_radial_distributions-83"><span class="linenos"> 83</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_fd_16bit.png&#39;,  &#39;r-&#39;,  &#39;FD data&#39;]]</span>
-</span><span id="plot_radial_distributions-84"><a href="#plot_radial_distributions-84"><span class="linenos"> 84</span></a><span class="sd">    &gt;&gt;&gt;     xlimit=200, ylimit=300,</span>
-</span><span id="plot_radial_distributions-85"><a href="#plot_radial_distributions-85"><span class="linenos"> 85</span></a><span class="sd">    &gt;&gt;&gt;     output=&#39;sums_final_1d.png&#39;)</span>
-</span><span id="plot_radial_distributions-86"><a href="#plot_radial_distributions-86"><span class="linenos"> 86</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="plot_radial_distributions-87"><a href="#plot_radial_distributions-87"><span class="linenos"> 87</span></a>    <span class="c1"># Read radial distribution files</span>
-</span><span id="plot_radial_distributions-88"><a href="#plot_radial_distributions-88"><span class="linenos"> 88</span></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-89"><a href="#plot_radial_distributions-89"><span class="linenos"> 89</span></a>    <span class="n">rdist</span> <span class="o">=</span> <span class="n">data_to_plot</span>
-</span><span id="plot_radial_distributions-90"><a href="#plot_radial_distributions-90"><span class="linenos"> 90</span></a>    <span class="c1"># Plot radial distribution files</span>
-</span><span id="plot_radial_distributions-91"><a href="#plot_radial_distributions-91"><span class="linenos"> 91</span></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-</span><span id="plot_radial_distributions-92"><a href="#plot_radial_distributions-92"><span class="linenos"> 92</span></a>        <span class="c1"># Read data</span>
-</span><span id="plot_radial_distributions-93"><a href="#plot_radial_distributions-93"><span class="linenos"> 93</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="plot_radial_distributions-94"><a href="#plot_radial_distributions-94"><span class="linenos"> 94</span></a>        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># Datafile</span>
-</span><span id="plot_radial_distributions-95"><a href="#plot_radial_distributions-95"><span class="linenos"> 95</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">):</span>  <span class="c1"># ....PNG file, 2D-diffractogram</span>
-</span><span id="plot_radial_distributions-96"><a href="#plot_radial_distributions-96"><span class="linenos"> 96</span></a>                <span class="n">arr</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-97"><a href="#plot_radial_distributions-97"><span class="linenos"> 97</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-98"><a href="#plot_radial_distributions-98"><span class="linenos"> 98</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ......................................TXT file, 1D-profile</span>
-</span><span id="plot_radial_distributions-99"><a href="#plot_radial_distributions-99"><span class="linenos"> 99</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">read_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-100"><a href="#plot_radial_distributions-100"><span class="linenos">100</span></a>        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># Numpy array</span>
-</span><span id="plot_radial_distributions-101"><a href="#plot_radial_distributions-101"><span class="linenos">101</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># sqare array, 2D-diffractogram</span>
-</span><span id="plot_radial_distributions-102"><a href="#plot_radial_distributions-102"><span class="linenos">102</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-103"><a href="#plot_radial_distributions-103"><span class="linenos">103</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ..............................non-square rrray, 1D-profile</span>
-</span><span id="plot_radial_distributions-104"><a href="#plot_radial_distributions-104"><span class="linenos">104</span></a>                <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">data</span>
-</span><span id="plot_radial_distributions-105"><a href="#plot_radial_distributions-105"><span class="linenos">105</span></a>        <span class="c1"># Read plot parameters        </span>
-</span><span id="plot_radial_distributions-106"><a href="#plot_radial_distributions-106"><span class="linenos">106</span></a>        <span class="n">myls</span>    <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="plot_radial_distributions-107"><a href="#plot_radial_distributions-107"><span class="linenos">107</span></a>        <span class="n">mylabel</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
-</span><span id="plot_radial_distributions-108"><a href="#plot_radial_distributions-108"><span class="linenos">108</span></a>        <span class="c1"># Plot data</span>
-</span><span id="plot_radial_distributions-109"><a href="#plot_radial_distributions-109"><span class="linenos">109</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">R</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">myls</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">mylabel</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-110"><a href="#plot_radial_distributions-110"><span class="linenos">110</span></a>    <span class="c1"># ...adjust plot</span>
-</span><span id="plot_radial_distributions-111"><a href="#plot_radial_distributions-111"><span class="linenos">111</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Radial distance [pixel]&#39;</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-112"><a href="#plot_radial_distributions-112"><span class="linenos">112</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Intensity [grayscale]&#39;</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-113"><a href="#plot_radial_distributions-113"><span class="linenos">113</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">xlimit</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-114"><a href="#plot_radial_distributions-114"><span class="linenos">114</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ylimit</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-115"><a href="#plot_radial_distributions-115"><span class="linenos">115</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-</span><span id="plot_radial_distributions-116"><a href="#plot_radial_distributions-116"><span class="linenos">116</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-</span><span id="plot_radial_distributions-117"><a href="#plot_radial_distributions-117"><span class="linenos">117</span></a>    <span class="c1"># ...save plot as PNG (only if argument [output] was given)</span>
-</span><span id="plot_radial_distributions-118"><a href="#plot_radial_distributions-118"><span class="linenos">118</span></a>    <span class="k">if</span> <span class="n">output</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
-</span><span id="plot_radial_distributions-119"><a href="#plot_radial_distributions-119"><span class="linenos">119</span></a>    <span class="c1"># ...show plot</span>
-</span><span id="plot_radial_distributions-120"><a href="#plot_radial_distributions-120"><span class="linenos">120</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="plot_radial_distributions-80"><a href="#plot_radial_distributions-80"><span class="linenos"> 80</span></a><span class="k">def</span> <span class="nf">plot_radial_distributions</span><span class="p">(</span>
+</span><span id="plot_radial_distributions-81"><a href="#plot_radial_distributions-81"><span class="linenos"> 81</span></a>        <span class="n">data_to_plot</span><span class="p">,</span> <span class="n">xlimit</span><span class="p">,</span> <span class="n">ylimit</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="plot_radial_distributions-82"><a href="#plot_radial_distributions-82"><span class="linenos"> 82</span></a>    <span class="sd">&quot;&quot;&quot;</span>
+</span><span id="plot_radial_distributions-83"><a href="#plot_radial_distributions-83"><span class="linenos"> 83</span></a><span class="sd">    Plot one or more 1D-radial distrubution files in one graph.</span>
+</span><span id="plot_radial_distributions-84"><a href="#plot_radial_distributions-84"><span class="linenos"> 84</span></a>
+</span><span id="plot_radial_distributions-85"><a href="#plot_radial_distributions-85"><span class="linenos"> 85</span></a><span class="sd">    Parameters</span>
+</span><span id="plot_radial_distributions-86"><a href="#plot_radial_distributions-86"><span class="linenos"> 86</span></a><span class="sd">    ----------</span>
+</span><span id="plot_radial_distributions-87"><a href="#plot_radial_distributions-87"><span class="linenos"> 87</span></a><span class="sd">    data_to_plot : 2D-list </span>
+</span><span id="plot_radial_distributions-88"><a href="#plot_radial_distributions-88"><span class="linenos"> 88</span></a><span class="sd">        * list with several rows containing [data, linestyle, label]</span>
+</span><span id="plot_radial_distributions-89"><a href="#plot_radial_distributions-89"><span class="linenos"> 89</span></a><span class="sd">        * data = data for plotting - they can be one of the following:</span>
+</span><span id="plot_radial_distributions-90"><a href="#plot_radial_distributions-90"><span class="linenos"> 90</span></a><span class="sd">            - PNG filename = str, a PNG-file = 2D diffraction pattern</span>
+</span><span id="plot_radial_distributions-91"><a href="#plot_radial_distributions-91"><span class="linenos"> 91</span></a><span class="sd">            - TXT filename = str, a text file = 1D diffraction profile</span>
+</span><span id="plot_radial_distributions-92"><a href="#plot_radial_distributions-92"><span class="linenos"> 92</span></a><span class="sd">            - 2D-array = a numpy array, containg 2D diffraction pattern</span>
+</span><span id="plot_radial_distributions-93"><a href="#plot_radial_distributions-93"><span class="linenos"> 93</span></a><span class="sd">            - 1D-array = a numpy array, containing 1D diffraction profile</span>
+</span><span id="plot_radial_distributions-94"><a href="#plot_radial_distributions-94"><span class="linenos"> 94</span></a><span class="sd">            - Note1: 2D-pattern = a square image/array with intensities</span>
+</span><span id="plot_radial_distributions-95"><a href="#plot_radial_distributions-95"><span class="linenos"> 95</span></a><span class="sd">            - Note2: 1D-profile = a text file/array with two cols/rows = [R,I],</span>
+</span><span id="plot_radial_distributions-96"><a href="#plot_radial_distributions-96"><span class="linenos"> 96</span></a><span class="sd">              where R = distance from center, I = diffraction intensity</span>
+</span><span id="plot_radial_distributions-97"><a href="#plot_radial_distributions-97"><span class="linenos"> 97</span></a><span class="sd">        * linestyle = matplotlib.pyplot format, such as &#39;r-&#39; (red line)</span>
+</span><span id="plot_radial_distributions-98"><a href="#plot_radial_distributions-98"><span class="linenos"> 98</span></a><span class="sd">        * label = name of the data, which will appear in the plot legend</span>
+</span><span id="plot_radial_distributions-99"><a href="#plot_radial_distributions-99"><span class="linenos"> 99</span></a><span class="sd">    xlimit : int</span>
+</span><span id="plot_radial_distributions-100"><a href="#plot_radial_distributions-100"><span class="linenos">100</span></a><span class="sd">        maximum of the X-axis</span>
+</span><span id="plot_radial_distributions-101"><a href="#plot_radial_distributions-101"><span class="linenos">101</span></a><span class="sd">    ylimit : int</span>
+</span><span id="plot_radial_distributions-102"><a href="#plot_radial_distributions-102"><span class="linenos">102</span></a><span class="sd">        maximum of the Y-axis</span>
+</span><span id="plot_radial_distributions-103"><a href="#plot_radial_distributions-103"><span class="linenos">103</span></a><span class="sd">    output_file : int, optional, default=None</span>
+</span><span id="plot_radial_distributions-104"><a href="#plot_radial_distributions-104"><span class="linenos">104</span></a><span class="sd">        Name of the output file;</span>
+</span><span id="plot_radial_distributions-105"><a href="#plot_radial_distributions-105"><span class="linenos">105</span></a><span class="sd">        if the *output* argument is given,</span>
+</span><span id="plot_radial_distributions-106"><a href="#plot_radial_distributions-106"><span class="linenos">106</span></a><span class="sd">        the plot is not only shown on screen, but also saved in *output* file. </span>
+</span><span id="plot_radial_distributions-107"><a href="#plot_radial_distributions-107"><span class="linenos">107</span></a>
+</span><span id="plot_radial_distributions-108"><a href="#plot_radial_distributions-108"><span class="linenos">108</span></a><span class="sd">    Returns</span>
+</span><span id="plot_radial_distributions-109"><a href="#plot_radial_distributions-109"><span class="linenos">109</span></a><span class="sd">    -------</span>
+</span><span id="plot_radial_distributions-110"><a href="#plot_radial_distributions-110"><span class="linenos">110</span></a><span class="sd">    Nothing</span>
+</span><span id="plot_radial_distributions-111"><a href="#plot_radial_distributions-111"><span class="linenos">111</span></a><span class="sd">        The output is the plot on screen</span>
+</span><span id="plot_radial_distributions-112"><a href="#plot_radial_distributions-112"><span class="linenos">112</span></a><span class="sd">        (and in *output file* if the *output* argument was given).</span>
+</span><span id="plot_radial_distributions-113"><a href="#plot_radial_distributions-113"><span class="linenos">113</span></a><span class="sd">    </span>
+</span><span id="plot_radial_distributions-114"><a href="#plot_radial_distributions-114"><span class="linenos">114</span></a><span class="sd">    Technical note</span>
+</span><span id="plot_radial_distributions-115"><a href="#plot_radial_distributions-115"><span class="linenos">115</span></a><span class="sd">    --------------</span>
+</span><span id="plot_radial_distributions-116"><a href="#plot_radial_distributions-116"><span class="linenos">116</span></a><span class="sd">    This function is quite flexible.</span>
+</span><span id="plot_radial_distributions-117"><a href="#plot_radial_distributions-117"><span class="linenos">117</span></a><span class="sd">    It can plot one radial distribution or more.</span>
+</span><span id="plot_radial_distributions-118"><a href="#plot_radial_distributions-118"><span class="linenos">118</span></a><span class="sd">    It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.</span>
+</span><span id="plot_radial_distributions-119"><a href="#plot_radial_distributions-119"><span class="linenos">119</span></a><span class="sd">    This makes the code a bit more complex, but it is convenient for the user.</span>
+</span><span id="plot_radial_distributions-120"><a href="#plot_radial_distributions-120"><span class="linenos">120</span></a><span class="sd">    A fast comparison of three 1D-distributions from three 2D-diffractograms:</span>
+</span><span id="plot_radial_distributions-121"><a href="#plot_radial_distributions-121"><span class="linenos">121</span></a><span class="sd">    </span>
+</span><span id="plot_radial_distributions-122"><a href="#plot_radial_distributions-122"><span class="linenos">122</span></a><span class="sd">    &gt;&gt;&gt; ediff.io.plot_radial_distributions(</span>
+</span><span id="plot_radial_distributions-123"><a href="#plot_radial_distributions-123"><span class="linenos">123</span></a><span class="sd">    &gt;&gt;&gt;     data_to_plot = [</span>
+</span><span id="plot_radial_distributions-124"><a href="#plot_radial_distributions-124"><span class="linenos">124</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_all_16bit.png&#39;, &#39;k:&#39;,  &#39;All data&#39;],</span>
+</span><span id="plot_radial_distributions-125"><a href="#plot_radial_distributions-125"><span class="linenos">125</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_f_16bit.png&#39;,   &#39;b--&#39;, &#39;F data&#39;],</span>
+</span><span id="plot_radial_distributions-126"><a href="#plot_radial_distributions-126"><span class="linenos">126</span></a><span class="sd">    &gt;&gt;&gt;         [&#39;sum_fd_16bit.png&#39;,  &#39;r-&#39;,  &#39;FD data&#39;]]</span>
+</span><span id="plot_radial_distributions-127"><a href="#plot_radial_distributions-127"><span class="linenos">127</span></a><span class="sd">    &gt;&gt;&gt;     xlimit=200, ylimit=300,</span>
+</span><span id="plot_radial_distributions-128"><a href="#plot_radial_distributions-128"><span class="linenos">128</span></a><span class="sd">    &gt;&gt;&gt;     output_file=&#39;sums_final_1d.png&#39;)</span>
+</span><span id="plot_radial_distributions-129"><a href="#plot_radial_distributions-129"><span class="linenos">129</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="plot_radial_distributions-130"><a href="#plot_radial_distributions-130"><span class="linenos">130</span></a>    <span class="c1"># Initialize</span>
+</span><span id="plot_radial_distributions-131"><a href="#plot_radial_distributions-131"><span class="linenos">131</span></a>    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_to_plot</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-132"><a href="#plot_radial_distributions-132"><span class="linenos">132</span></a>    <span class="n">rdist</span> <span class="o">=</span> <span class="n">data_to_plot</span>
+</span><span id="plot_radial_distributions-133"><a href="#plot_radial_distributions-133"><span class="linenos">133</span></a>    <span class="c1"># Plot radial distribution files</span>
+</span><span id="plot_radial_distributions-134"><a href="#plot_radial_distributions-134"><span class="linenos">134</span></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+</span><span id="plot_radial_distributions-135"><a href="#plot_radial_distributions-135"><span class="linenos">135</span></a>        <span class="c1"># Read data</span>
+</span><span id="plot_radial_distributions-136"><a href="#plot_radial_distributions-136"><span class="linenos">136</span></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="plot_radial_distributions-137"><a href="#plot_radial_distributions-137"><span class="linenos">137</span></a>        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># Datafile</span>
+</span><span id="plot_radial_distributions-138"><a href="#plot_radial_distributions-138"><span class="linenos">138</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">):</span>  <span class="c1"># ....PNG file, 2D-diffractogram</span>
+</span><span id="plot_radial_distributions-139"><a href="#plot_radial_distributions-139"><span class="linenos">139</span></a>                <span class="n">arr</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-140"><a href="#plot_radial_distributions-140"><span class="linenos">140</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-141"><a href="#plot_radial_distributions-141"><span class="linenos">141</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ......................................TXT file, 1D-profile</span>
+</span><span id="plot_radial_distributions-142"><a href="#plot_radial_distributions-142"><span class="linenos">142</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">read_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-143"><a href="#plot_radial_distributions-143"><span class="linenos">143</span></a>        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>  <span class="c1"># Numpy array</span>
+</span><span id="plot_radial_distributions-144"><a href="#plot_radial_distributions-144"><span class="linenos">144</span></a>            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># sqare array, 2D-diffractogram</span>
+</span><span id="plot_radial_distributions-145"><a href="#plot_radial_distributions-145"><span class="linenos">145</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">radial</span><span class="o">.</span><span class="n">calc_radial_distribution</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-146"><a href="#plot_radial_distributions-146"><span class="linenos">146</span></a>            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ..............................non-square rrray, 1D-profile</span>
+</span><span id="plot_radial_distributions-147"><a href="#plot_radial_distributions-147"><span class="linenos">147</span></a>                <span class="n">profile</span> <span class="o">=</span> <span class="n">data</span>
+</span><span id="plot_radial_distributions-148"><a href="#plot_radial_distributions-148"><span class="linenos">148</span></a>        <span class="c1"># Read plot parameters        </span>
+</span><span id="plot_radial_distributions-149"><a href="#plot_radial_distributions-149"><span class="linenos">149</span></a>        <span class="n">my_format</span> <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="plot_radial_distributions-150"><a href="#plot_radial_distributions-150"><span class="linenos">150</span></a>        <span class="n">my_label</span>  <span class="o">=</span> <span class="n">rdist</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+</span><span id="plot_radial_distributions-151"><a href="#plot_radial_distributions-151"><span class="linenos">151</span></a>        <span class="c1"># Plot data</span>
+</span><span id="plot_radial_distributions-152"><a href="#plot_radial_distributions-152"><span class="linenos">152</span></a>        <span class="n">R</span><span class="p">,</span><span class="n">I</span> <span class="o">=</span> <span class="n">profile</span>
+</span><span id="plot_radial_distributions-153"><a href="#plot_radial_distributions-153"><span class="linenos">153</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">R</span><span class="p">,</span><span class="n">I</span><span class="p">,</span> <span class="n">my_format</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">my_label</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-154"><a href="#plot_radial_distributions-154"><span class="linenos">154</span></a>    <span class="c1"># ...adjust plot</span>
+</span><span id="plot_radial_distributions-155"><a href="#plot_radial_distributions-155"><span class="linenos">155</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Radial distance [pixel]&#39;</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-156"><a href="#plot_radial_distributions-156"><span class="linenos">156</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Intensity [grayscale]&#39;</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-157"><a href="#plot_radial_distributions-157"><span class="linenos">157</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">xlimit</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-158"><a href="#plot_radial_distributions-158"><span class="linenos">158</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ylimit</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-159"><a href="#plot_radial_distributions-159"><span class="linenos">159</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</span><span id="plot_radial_distributions-160"><a href="#plot_radial_distributions-160"><span class="linenos">160</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+</span><span id="plot_radial_distributions-161"><a href="#plot_radial_distributions-161"><span class="linenos">161</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</span><span id="plot_radial_distributions-162"><a href="#plot_radial_distributions-162"><span class="linenos">162</span></a>    <span class="c1"># ...save plot as PNG (only if argument [output] was given)</span>
+</span><span id="plot_radial_distributions-163"><a href="#plot_radial_distributions-163"><span class="linenos">163</span></a>    <span class="k">if</span> <span class="n">output_file</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</span><span id="plot_radial_distributions-164"><a href="#plot_radial_distributions-164"><span class="linenos">164</span></a>    <span class="c1"># ...show plot</span>
+</span><span id="plot_radial_distributions-165"><a href="#plot_radial_distributions-165"><span class="linenos">165</span></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -367,7 +496,7 @@ where R = distance from center, I = diffraction intensity</li>
 maximum of the X-axis</li>
 <li><strong>ylimit</strong> (int):
 maximum of the Y-axis</li>
-<li><strong>output</strong> (int, optional, default=None):
+<li><strong>output_file</strong> (int, optional, default=None):
 Name of the output file;
 if the <em>output</em> argument is given,
 the plot is not only shown on screen, but also saved in <em>output</em> file.</li>
@@ -395,7 +524,7 @@ A fast comparison of three 1D-distributions from three 2D-diffractograms:</p>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="p">[</span><span class="s1">&#39;sum_f_16bit.png&#39;</span><span class="p">,</span>   <span class="s1">&#39;b--&#39;</span><span class="p">,</span> <span class="s1">&#39;F data&#39;</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="p">[</span><span class="s1">&#39;sum_fd_16bit.png&#39;</span><span class="p">,</span>  <span class="s1">&#39;r-&#39;</span><span class="p">,</span>  <span class="s1">&#39;FD data&#39;</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">xlimit</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">ylimit</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output</span><span class="o">=</span><span class="s1">&#39;sums_final_1d.png&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">output_file</span><span class="o">=</span><span class="s1">&#39;sums_final_1d.png&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 </div>

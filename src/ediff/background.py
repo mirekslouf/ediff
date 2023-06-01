@@ -11,7 +11,7 @@ Interactive background definition.
 # The 1st import command = all modules from bground.ui to THIS module
 #  => now ediff.background knows the same modules as bground.ui
 #  => but NOT yet the classes withing bground.ui - these are imported next
-# The 2nd import ommand = three key classes from bground.ui to THIS module
+# The 2nd import command = three key classes from bground.ui to THIS module
 #  => now ediff.bacground contains the three objects from bground.ui
 #  => THIS module now contains InputData, PlotParams...
 #  => OTHER files can do: import bground.ui; DATA = bground.ui.InputData ...
