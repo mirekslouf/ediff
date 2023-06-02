@@ -15,7 +15,7 @@ Quick start
 	- Look at [worked example](https://mirekslouf.github.io/ediff/docs/examples/ex1_ediff.nb.html)
       in Jupyter.
 * Try it yourself:
-	- Download and unzip the [complete example with data](https://www.dropbox.com/scl/fo/pzio12tdj4j2c5v8usi5o/h?dl=0&rlkey=szpwqmvrdp5yeeiarfr2a5ab7).
+	- Download and unzip the [complete example with data](https://www.dropbox.com/scl/fo/nmsvdtef7xtmb7r2ku5aa/h?dl=0&rlkey=2evadkk009wp248rp2c3ij2nj).
 	- Look at `00readme.txt` and run the example in Jupyter.
 
 Documentation, help and examples
@@ -35,3 +35,4 @@ Versions of EDIFF
 * Version 0.0.4 = bground module incorporated + slightly improved docstrings
 * Version 0.1.0 = 1st semi-complete version with basic documentation
 * Version 0.1.1 = v.0.1.0 + improved/simplified outputs
+* Version 0.1.2 = v.0.1.1 + small improvements of code and documentation
