@@ -25,7 +25,7 @@ def central_square(arr, csquare, xcenter=None, ycenter=None):
         yc-half_csquare:yc+half_csquare].copy()
     return(arr2)
 
-def intensity_center(arr, csquare=20, cintensity=0.8):
+def center_of_intensity(arr, csquare=20, cintensity=0.8):
     '''
     Find center of intensity/mass of an array.
     
@@ -45,8 +45,9 @@ def intensity_center(arr, csquare=20, cintensity=0.8):
         
     Returns
     -------
-    xc,yc : int,int
-        XY-coordinate of the intensity/mass center of the array.
+    xc,yc : float,float
+        XY-coordinates of the intensity/mass center of the array.
+        Round XY-coordinates if you use them for image/array calculations.
     '''
     # Get image/array size
     xsize,ysize = arr.shape
@@ -63,6 +64,22 @@ def intensity_center(arr, csquare=20, cintensity=0.8):
     (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
     # We have centroid of the central square => recalculate to whole image
     (xc,yc) = (xc+xborder,yc+yborder)
-    # Round the calculated values to 2 decimals and return them
-    (xc,yc) = np.round([xc,yc],2)
+    # Return the final center
     return(xc,yc)
+
+def center_of_powder_diffractogram(arr):
+    '''
+    TODO - Pavlina.
+
+    Parameters
+    ----------
+    arr : 2D-numpy array
+        The array containing 2D-diffractogram, whose center will be determined.
+
+    Returns
+    -------
+    xc,yc : float,float
+        XY-coordinates of the intensity/mass center of the array.
+        Round XY-coordinates if you use them for image/array calculations.
+    '''
+    pass
