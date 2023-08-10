@@ -70,7 +70,11 @@ class CenterDetection:
                     
     '''
     
-    def __init__(self, image_path, detection_method, correction_method = None, heq = 0, icut = 0):
+    
+    def __init__(self, image_path, 
+                 detection_method, correction_method = None,
+                 heq = 0, icut = 0):
+        
         # Initialize attributes
         self.image_path = image_path
         self.image = imread(self.image_path, as_gray = True)
