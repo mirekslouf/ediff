@@ -5,19 +5,25 @@ Find center of 2D diffraction pattern.
 '''
 
 import numpy as np
+import skimage as sk
+import matplotlib.pyplot as plt
+
 from skimage.io import imread
 from skimage.exposure import equalize_adapthist
 from skimage.feature import canny
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
-import matplotlib.pyplot as plt
-from screeninfo import get_monitors
-from time import time
 
 import random
 import warnings
-
 warnings.filterwarnings("ignore")
+
+# The following extra module and its functions commented out
+# Reasons: 
+#  1) not necessary, default window sizes are fine and/or adjustable
+#  2) we try to use only standard scientific python modules, if possible
+
+# from screeninfo import get_monitors
 
 
 class CenterDetection:
@@ -74,12 +80,11 @@ class CenterDetection:
         
     
         # Get the list of monitors
-        monitors = get_monitors()
-        
-        screen_width = monitors[0].width
-        screen_height = monitors[0].height
-        self.fig_width = screen_width / 2 / 100  # Convert to inches
-        self.fig_height = screen_height / 100  # Convert to inches
+        # monitors = get_monitors()
+        # screen_width = monitors[0].width
+        # screen_height = monitors[0].height
+        # self.fig_width = screen_width / 2 / 100  # Convert to inches
+        # self.fig_height = screen_height / 100  # Convert to inches
         
 
         # Determine detection method
@@ -278,7 +283,7 @@ class CenterDetection:
         fig.canvas.mpl_connect('key_press_event', onkeypress)
     
         # Show the plot
-        fig.set_size_inches(self.fig_width, self.fig_height)
+        # fig.set_size_inches(self.fig_width, self.fig_height)
         plt.tight_layout()
         plt.show(block=False)
     
@@ -749,7 +754,6 @@ class CenterRefinement(CenterDetection):
         self.heq = heq
         self.icut = icut
 
-        
         # Enhance diffraction pattern to make it more visible
         if self.heq == 1:
            # print('a')
@@ -868,7 +872,7 @@ class CenterRefinement(CenterDetection):
         plt.title('Manually adjust the position of the center using keys.')
 
         # Display the image
-        fig.set_size_inches(self.fig_width, self.fig_height)
+        # fig.set_size_inches(self.fig_width, self.fig_height)
         plt.show(block=False)
         
         # Define the event handler for figure close event
