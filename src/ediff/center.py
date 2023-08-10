@@ -5,17 +5,21 @@ Find center of 2D diffraction pattern.
 '''
 
 import numpy as np
-import matplotlib.pyplot as plt
-
-import skimage as sk
 from skimage.io import imread
+from skimage.exposure import equalize_adapthist
 from skimage.feature import canny
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
+import matplotlib.pyplot as plt
+from screeninfo import get_monitors
+from time import time
 
 import random
+import warnings
 
-#%% DETECT CENTER
+warnings.filterwarnings("ignore")
+
+
 class CenterDetection:
     '''
     Detection of the center of diffraction patterns.
@@ -43,6 +47,10 @@ class CenterDetection:
            - 'manual' : manual corection 
            - 'variance' : correction via variance minimization 
            - 'sum' : correction via sum maximization
+    heq : boolean
+            Allow histogram equalization. The default is 0 (no enhancement)
+    icut : boolean
+        Allow image enhancement. The default is 0 (no enhancement)
 
     
     Returns
@@ -56,11 +64,23 @@ class CenterDetection:
                     
     '''
     
-    def __init__(self, image_path, detection_method, correction_method = None):
+    def __init__(self, image_path, detection_method, correction_method = None, heq = 0, icut = 0):
         # Initialize attributes
         self.image_path = image_path
-        self.image = imread(self.image_path, as_gray =True)
+        self.image = imread(self.image_path, as_gray = True)
         self.correction_method = correction_method
+        self.heq = heq
+        self.icut = icut
+        
+    
+        # Get the list of monitors
+        monitors = get_monitors()
+        
+        screen_width = monitors[0].width
+        screen_height = monitors[0].height
+        self.fig_width = screen_width / 2 / 100  # Convert to inches
+        self.fig_height = screen_height / 100  # Convert to inches
+        
 
         # Determine detection method
         if detection_method == 'manual':
@@ -111,12 +131,14 @@ class CenterDetection:
         '''
         
         # Load image
-        im = plt.imread(self.image_path)
+        im = np.copy(self.image)
         
         # Create a figure and display the image
         fig, ax = plt.subplots()
+
         plt.title("Select 3 points defining one of diffraction circles")
         ax.imshow(im)
+
         
         # User information:
         print("------------------- Manual diffraction pattern detection -----------------")
@@ -130,9 +152,10 @@ class CenterDetection:
         print("Close the figure to terminate. No center will be detected.")
         print("--------------------------------------------------------------------------")
         
+       
         # Enable interactive mode
         plt.ion()
-        
+
         # Initialize the list of coordinates
         self.coords = [] 
         
@@ -155,6 +178,10 @@ class CenterDetection:
             # nonlocal to modify the flag variable in the outer scope
             nonlocal calculate_circle_flag, point_counter, termination_flag
             
+            # Store the zoom level
+            current_xlim = ax.get_xlim()
+            current_ylim = ax.get_ylim()
+
             ## Delete points -- the closest to the cursor
             if event.key == '3':
                 point_counter -= 1
@@ -170,6 +197,11 @@ class CenterDetection:
                     for x, y in self.coords:
                         ax.plot(x, y, 'rx')
                     plt.title("Select 3 points defining one of diffraction circles")
+                    
+                    # Retore the previous zoom level
+                    ax.set_xlim(current_xlim)
+                    ax.set_ylim(current_ylim)
+
                     fig.canvas.draw()
                 else:
                     print("No points to delete. You must select at lease one point.")
@@ -191,6 +223,11 @@ class CenterDetection:
                         for x, y in self.coords:
                             ax.plot(x, y, 'rx')
                         plt.title("Select 3 points defining one of diffraction circles")
+                        
+                        # Retore the previous zoom level
+                        ax.set_xlim(current_xlim)
+                        ax.set_ylim(current_ylim)
+
                         fig.canvas.draw()
                 else:
                     print("No points to delete. You must select at lease one point.")
@@ -212,6 +249,11 @@ class CenterDetection:
     
                         # Visualize the selected point on the image
                         ax.plot(event.xdata, event.ydata, 'rx')
+                        
+                        # Retore the previous zoom level
+                        ax.set_xlim(current_xlim)
+                        ax.set_ylim(current_ylim)
+
                         fig.canvas.draw()
     
                         point_counter += 1
@@ -236,8 +278,8 @@ class CenterDetection:
         fig.canvas.mpl_connect('key_press_event', onkeypress)
     
         # Show the plot
-        manager = plt.get_current_fig_manager()
-        manager.window.showMaximized()
+        fig.set_size_inches(self.fig_width, self.fig_height)
+        plt.tight_layout()
         plt.show(block=False)
     
         # Wait for 'd' key event or close the figure if no points are selected
@@ -262,10 +304,14 @@ class CenterDetection:
         # Calculate the circle if the points are selected
         if calculate_circle_flag:
             self.calculate_circle(plot_results)
+            
+            # Always adjust the center position after manual detection
+            self.ref_interactive(self.x, self.y, self.r)
+            
             return self.x, self.y, self.r
 
         
-    def detection_intensity(self, csquare = 20, cintensity=0.5, plot_results = 1):
+    def detection_intensity(self, csquare = 20, cintensity=0.5, plot_results = 0):
         '''
         Find center of intensity/mass of an array.
         
@@ -321,8 +367,8 @@ class CenterDetection:
         print("--------------------------------------------------------------------------")
 
         # Plot result of the Hough transform
-        if plot_results==1:
-           self.visualize_center(self.x, self.y, self.r, tit ='Maximum intensity') 
+        if plot_results == 1:
+           self.visualize_center(self.x, self.y, self.r, tit ='Maximum intensity', view_enhancement=0) 
         
         # Return results
         return self.x, self.y, self.r
@@ -354,20 +400,36 @@ class CenterDetection:
                                     
         '''
         
+        im = np.copy(self.image)
         # if the brightness of the image is small enough, pixel values greater
         # than 50 will be set to 0 -- removal of the beam stopper influence
-        if sum(sum(self.image)) < 150000:
-            max_indices = np.where(self.image > 50)
-
-            row_idx = max_indices[0]
-            col_idx = max_indices[1]
-
-            self.image[row_idx, col_idx] = 0    
         
-        # Detect edges using the Canny edge detector
-        edges = canny(self.image, 
-                      sigma=0.2, 
-                      low_threshold=80, high_threshold=100)
+        if self.heq == 0:
+            if sum(sum(im)) < 150000:
+                    max_indices = np.where(im > 50)
+        
+                    row_idx = max_indices[0]
+                    col_idx = max_indices[1]
+        
+                    im[row_idx, col_idx] = 0    
+                
+            # Detect edges using the Canny edge detector
+            edges = canny(im, 
+                          sigma=0.2, 
+                          low_threshold=80, high_threshold=100)
+        elif self.heq == 1:
+            if sum(sum(im)) > 150000:
+                max_indices = np.where(im > 0.060)
+
+                row_idx = max_indices[0]
+                col_idx = max_indices[1]
+
+                im[row_idx, col_idx] = 0    
+            
+            # Detect edges using the Canny edge detector
+            edges = canny(im, 
+                          sigma=0.2, 
+                          low_threshold=0.80, high_threshold=1)
         
         # Plot detected edges if required
         if canny_plot==1:
@@ -404,7 +466,7 @@ class CenterDetection:
 
         # Plot result of the Hough transform
         if plot_results==1:
-           self.visualize_center(self.x, self.y, self.r, tit ='Hough transform') 
+           self.visualize_center(self.x, self.y, self.r, tit ='Hough transform', view_enhancement=1) 
         
         # Return results
         return self.x, self.y, self.r
@@ -503,6 +565,7 @@ class CenterDetection:
                        mode='expand', 
                        frameon=False)
             plt.axis('off')
+            plt.tight_layout()
             plt.show(block=False)
         else:
             plt.close('all')
@@ -510,7 +573,7 @@ class CenterDetection:
         return self.x, self.y, self.r
 
 
-    def visualize_center(self, x, y, r, tit):
+    def visualize_center(self, x, y, r, tit, view_enhancement = 0):
         '''         
         Visualize detected diffraction patterns and mark the center.
         
@@ -532,12 +595,11 @@ class CenterDetection:
         None.
                             
         '''
-        self.image = imread(self.image_path, as_gray=True)
+        image = imread(self.image_path, as_gray=False)
 
         # Create figure and axes
         fig, ax = plt.subplots()
-        manager = plt.get_current_fig_manager()
-        manager.window.showMaximized()
+
 
         # Draw circle
         circle = plt.Circle((np.median(x), np.median(y)), 
@@ -555,15 +617,48 @@ class CenterDetection:
                    label = 'Center')
 
         # Display the image
-        ax.imshow(self.image, cmap='gray')
-        plt.title(tit+'\nDetected center of the diffraction pattern')
+        ax.imshow(image)
+        plt.title(tit)
         plt.legend(loc='lower center', 
                    ncol=2, 
                    bbox_to_anchor=(0.5,-0.1), 
                    mode='expand', 
                    frameon=False)        
         plt.axis('off')
+        plt.tight_layout()
         plt.show(block=False)
+        
+        # Edit contrast with a user-predefined parameter
+        if view_enhancement == 1:
+            if self.icut != 0:
+                print("works")
+                # Display the original and equalized images
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.imshow(image, 
+                            cmap='gray')
+                plt.title('Original Image')
+    
+                plt.subplot(1, 2, 2)
+                plt.imshow(self.image, 
+                            cmap='gray')
+                plt.title('Enhanced Image, icut = {:.1f}'.format(self.icut))            
+                plt.show(block=False)
+            
+            elif self.heq == 1:
+                # Display the original and equalized images
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.imshow(image, 
+                            cmap='gray')
+                plt.title('Original Image')
+    
+                plt.subplot(1, 2, 2)
+                plt.imshow(self.image, 
+                            cmap='gray')
+                plt.title('Equalized Histogram')            
+                plt.show(block=False)
+                
          
 
     def central_square(self, arr, csquare, xcenter=None, ycenter=None):
@@ -607,8 +702,8 @@ class CenterDetection:
         
         return(arr2)
  
-        
-#%% REFINE CENTER
+    
+
 class CenterRefinement(CenterDetection):
     ''' SUBCLASS of CircleDetection
     ----------
@@ -618,13 +713,26 @@ class CenterRefinement(CenterDetection):
     
     
     Parameters
-    -------
+    ----------
+    image_path : string
+        direct path to an image with diffraction patterns
+    detection_method : string
+        Selection of a method for center calculation. String codes are:
+            - 'manual' : manual detection via 3 points
+            - 'intensity' : detection via maximum intensity
+            - 'hough' : automatic detection via Hough transform
     correction_method : string
-        Selection of a method for center position correction. Default is None. 
-        tring codes:
-            - 'manual' : manual corection 
-            - 'variance' : correction via variance minimization 
-            - 'sum' : correction via sum maximization
+       Selection of a method for center position correction. Default is None.
+       String codes are:
+           - 'manual' : manual corection 
+           - 'variance' : correction via variance minimization 
+           - 'sum' : correction via sum maximization
+    heq : boolean
+        Allow histogram equalization. The default is 0 (no enhancement)
+    icut : boolean
+        Allow image enhancement. The default is 0 (no enhancement)
+
+
     Returns
     -------
     self.xx : int32
@@ -635,11 +743,28 @@ class CenterRefinement(CenterDetection):
         radius of the detected center
     '''
     
-    def __init__(self, image_path, detection_method, correction_method = None):
+    def __init__(self, image_path, detection_method, heq = 0, icut = 0, correction_method = None):
         # Call the constructor of the base class to initialize its methods
         super().__init__(image_path, detection_method)
+        self.heq = heq
+        self.icut = icut
+
         
-        
+        # Enhance diffraction pattern to make it more visible
+        if self.heq == 1:
+           # print('a')
+            self.image = equalize_adapthist(self.image)
+            # plt.figure()
+            # plt.imshow(self.image)
+            # plt.show(block=False)
+            
+        # Edit contrast with a user-predefined parameter
+        if icut != 0:
+            self.image = np.where(self.image > self.icut, self.icut,  self.image)
+
+            
+            
+            
         if correction_method is not None:
             self.ret = 1
             if correction_method == 'manual':
@@ -651,6 +776,8 @@ class CenterRefinement(CenterDetection):
         else:
             self.ret = 2
         
+        
+
 
     def output(self):
         if self.ret == 1:
@@ -667,11 +794,13 @@ class CenterRefinement(CenterDetection):
         The user can change the position of the center of the diffraction
         pattern and also the radius of the detected pattern using keys:
             
+            - 'm' : while pressed down, MOVE MODE is ON 
             - left / right / top / down arrows : move left / right / top / down
             - '+' : increase radius
             - '-' : decrease radius
             - 'd' : done, termination of the refinement
-        
+        To navigate between views, use keys '<' / '>' to move back / forth
+
         If the interactive figure is closed without any modifications,
         the function returns input variables and the proccess terminates.
         
@@ -697,16 +826,21 @@ class CenterRefinement(CenterDetection):
         
         plt.close('all')
         # Load original image
-        self.image = imread(self.image_path, as_gray=True)
+        im = np.copy(self.image)
         
         # Initialize variables and flags
         xy = np.array((px, py))
         r = np.copy(pr)
         termination_flag = False
-        
+        global move_mode
+        move_mode = False
+
+   
         print(" ")
         print("--------------------------------------------------------------------------")
         print("Interactive refinement. Use these keys:")
+        print("      - 'm' : press down to have the MOVE MODE ON. ")
+        print("              do not press down to have the MOVE MODE OFF. ")
         print("      - 'left arrow' : move left")
         print("      - 'right arrow' : move right")
         print("      - 'top arrow' : move up")
@@ -714,13 +848,13 @@ class CenterRefinement(CenterDetection):
         print("      - '+' : increase circle radius")
         print("      - '-' : decrease circle radius")
         print("      - 'd' : refinement done")
+        print("To navigate between views, use keys '<' / '>' to move back / forth. ")
         print("--------------------------------------------------------------------------")
-        
         
         # Create a figure and display the image
         fig, ax = plt.subplots()
         plt.title("Press keys to adjust the center position")
-        ax.imshow(self.image)
+        ax.imshow(im)
         
         # Enable interactive mode
         plt.ion()
@@ -731,11 +865,10 @@ class CenterRefinement(CenterDetection):
 
         # Plot center point
         center, = ax.plot(px, py, 'rx', markersize=12)
+        plt.title('Manually adjust the position of the center using keys.')
 
         # Display the image
-        plt.title('Manually adjust the position of the center using keys.')
-        manager = plt.get_current_fig_manager()
-        manager.window.showMaximized()
+        fig.set_size_inches(self.fig_width, self.fig_height)
         plt.show(block=False)
         
         # Define the event handler for figure close event
@@ -743,51 +876,71 @@ class CenterRefinement(CenterDetection):
             nonlocal termination_flag
             termination_flag = True
             print('Execution terminated by user.')
-        
-        # Connect the event handler to the figure close event
+            
+        # Connect the event handler to the close event
         fig.canvas.mpl_connect('close_event', onclose)
+    
+        def on_key_release(event):
+            global move_mode
+            if event.key == 'm':
+                move_mode = False
+                #print('Move mode OFF')
+            else:   
+                try:
+                    plt.rcParams['keymap.back'].remove('left')
+                    plt.rcParams['keymap.forward'].remove('right')
+                    plt.rcParams['keymap.back'].append(',')
+                    plt.rcParams['keymap.forward'].append('.')
+                except ValueError:
+                    # Do nothing if 'left' or 'right' is not in the list
+                    pass  
 
+        # Connect the event handler to the key release event
+        fig.canvas.mpl_connect('key_release_event', on_key_release)
+        
         # Define the callback function for key press events
         def onkeypress(event):
             # Use nonlocal to modify the center position in the outer scope
             nonlocal xy, r, termination_flag
-            
+            global move_mode 
+
             # OTHER KEYS USED IN INTERACTIVE FIGURES
             #   event.key == '1': select a point in self.detection_3points()
             #   event.key == '2': delete the most recent point in self.detection_3points()
             #   event.key == '3': delete a point in self.detection_3points()
             #   event.key == 'd': proceed in self.detection_3points()
             
-           
-            # CIRCLE SHIFTS using arrows for up / down / left / right shift
-            if event.key == 'up': 
-                xy[1] -=1
-                print('Moved up')
-            elif event.key == 'down': 
-                xy[1] +=1
-                print('Moved down')
-            elif event.key == 'left':
-                xy[0] -=1
-                print('Moved left')
-            elif event.key == 'right':
-                xy[0] +=1
-                print('Moved right')
-            
-            # CIRCLE RADIUS ADJUSMTENT using + / - to increase / decrease 
-            elif event.key == '+':
-                r +=1
-                print('Radius increased.')
-            elif event.key == '-':
-                r -=1
-                print('Radius decreased')
-            
-            # Terminate the interactive refinement with 'd' key
-            elif event.key == 'd':
-                termination_flag = True
-                print("--------------------------------------------------------------------------")
-                print("Refinement done.")
-                print("--------------------------------------------------------------------------")
+            if event.key == 'm':
+                #print('Move mode ON')
+                move_mode = not move_mode  # Toggle move_mode
+        
+            if move_mode:  # Only perform actions when move_mode is ON
 
+                if event.key in ['up', 'down', 'left', 'right', '+', '-']:
+                    if event.key in ['+', '-']:
+                        r += 1 if event.key == '+' else -1
+                     #   print('Radius', 'increased.' if event.key == '+' else 'decreased.')
+                    else:
+                        # Perform shifts normally
+                        if event.key == 'up':
+                            xy[1] -= 1
+                           # print('Moved up')
+                        elif event.key == 'down':
+                            xy[1] += 1
+                           # print('Moved down')
+                        elif event.key == 'left':
+                            xy[0] -= 1
+                           # print('Moved left')
+                        elif event.key == 'right':
+                            xy[0] += 1
+                           # print('Moved right')
+
+            # Terminate the interactive refinement with 'd' key
+            if event.key == 'd':
+                    termination_flag = True
+                    print("--------------------------------------------------------------------------")
+                    print("Refinement done.")
+                    print("--------------------------------------------------------------------------")
 
             # Update the plot with the new center position
             circle.set_center((xy[0], xy[1]))  # circle
@@ -795,13 +948,13 @@ class CenterRefinement(CenterDetection):
             center.set_data([xy[0]], [xy[1]])  # center
 
             plt.title('Manually adjust the position of the center using keys.')
-            
+         
             # Update the plot
             plt.draw() 
         
         # Connect the callback function to the key press event
         fig.canvas.mpl_connect('key_press_event', onkeypress)
-        
+
         # Enable interaction mode
         plt.ion() 
         
@@ -817,20 +970,20 @@ class CenterRefinement(CenterDetection):
         plt.ioff()
         
         # Display the final figure with the selected center position and radius
-        manager = plt.get_current_fig_manager()
-        manager.window.showMaximized()
+        fig.set_size_inches(self.fig_width, self.fig_height)
+        plt.tight_layout()
         plt.show(block=False)
 
         plt.close('all')
 
         ## Display original and refined images in one figure
-        self.visualize_refinement(px, py, pr, xy, r)
+        # self.visualize_refinement(px, py, pr, xy, r, view_enhancement=0)
               
         # Print results
         print(" ")
         print("--------------- Manual correction of radius and coordinates --------------")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                     float(self.y)))
+        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(xy[0]), 
+                                                                     float(xy[1])))
         print("--------------------------------------------------------------------------")
         
         
@@ -870,20 +1023,40 @@ class CenterRefinement(CenterDetection):
         bckup = [np.copy(px), np.copy(py), np.copy(pr)]
         
         # Load original image
-        image = imread(self.image_path, as_gray=True)
+        im = np.copy(self.image)
         
         # if the brightness of the image is small enough, pixel values greater
         # than 50 will be set to 0 -- removal of the beam stopper
-        if sum(sum(image)) < 150000:
-            max_indices = np.where(image > 50)
-
-            row_idx = max_indices[0]
-            col_idx = max_indices[1]
-
-            image[row_idx, col_idx] = 0   
         
-        image = canny(image, sigma=0.1, low_threshold=50, high_threshold=80)
+        # CASE 1: the user want to enhance the image properties
+        if self.heq != 0 or self.icut !=0:
+            if sum(sum(im)) < 150000:
+                    max_indices = np.where(im > 50)
+                    row_idx = max_indices[0]
+                    col_idx = max_indices[1]
+        
+                    im[row_idx, col_idx] = 0    
+                
+            # Detect edges using the Canny edge detector
+            edges = canny(im, 
+                          sigma=0.2, 
+                          low_threshold=80, high_threshold=100)
+        
+        # CASE 2: the user does not want to enhance the image properties    
+        else:
+            if sum(sum(im)) > 150000:
+                max_indices = np.where(im > 0.060)
+                row_idx = max_indices[0]
+                col_idx = max_indices[1]
 
+                im[row_idx, col_idx] = 0    
+            
+            # Detect edges using the Canny edge detector
+            edges = canny(im, 
+                          sigma=0.9, 
+                          low_threshold=0.80, high_threshold=1)
+        
+        
         # terminate condition of while cycle
         stopper = 0
         
@@ -893,7 +1066,7 @@ class CenterRefinement(CenterDetection):
         py_coords = np.array(py_coords, dtype=int)
         
         # Filter pixel values based on the condition for pixel values
-        filtered_values = image[px_coords, py_coords][image[px_coords, py_coords] >= 20]
+        filtered_values = edges[px_coords, py_coords][edges[px_coords, py_coords] >= 20]
         
         # Calculate variance using the filtered values
         pi_var = np.var(filtered_values)   # currenly the lowest variance
@@ -928,7 +1101,7 @@ class CenterRefinement(CenterDetection):
                     pyc = np.array(pyc, dtype=int)
                     
                     # Filter pixel values based on the condition
-                    fil_val = image[pxc, pyc][image[pxc, pyc] >= 20]
+                    fil_val = edges[pxc, pyc][edges[pxc, pyc] >= 20]
                     
                     # Calculate variance using the filtered values
                     v = np.var(fil_val)
@@ -957,13 +1130,13 @@ class CenterRefinement(CenterDetection):
         plt.close('all')
         
         if plot_results == 1:
-            self.visualize_refinement(bckup[0],  bckup[1], bckup[2], (px,py), pr)
+            self.visualize_refinement(bckup[0],  bckup[1], bckup[2], (px,py), pr, view_enhancement=0)
 
         # Print results
         print(" ")
         print("----- Correction of radius and coordinates via variance minimization -----")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                     float(self.y)))
+        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(px), 
+                                                                     float(py)))
         print("--------------------------------------------------------------------------")
         
 
@@ -1007,7 +1180,8 @@ class CenterRefinement(CenterDetection):
         bckup = [np.copy(px), np.copy(py), np.copy(pr)]
     
         # Load original image
-        image = imread(self.image_path, as_gray=True)
+        # Load original image
+        image = np.copy(self.image)
         image = canny(image, sigma=0.1, low_threshold=50, high_threshold=80)
 
         # initialization
@@ -1022,7 +1196,7 @@ class CenterRefinement(CenterDetection):
         last_radius = pr
     
         # Number of random starting points
-        num_starting_points = 8
+        num_starting_points = 10
     
         # Termination condition
         while stopper < 100:
@@ -1068,9 +1242,9 @@ class CenterRefinement(CenterDetection):
             if best_center == last_center and best_radius == last_radius:
                 no_improv += 1
                 #  print(no_improv)
-                px = px + random.choice([0, -0.5, 0.5])
-                py = py + random.choice([0, -0.5, 0.5])
-                if no_improv == 10:
+                px = px + random.choice([0, -1, 1])
+                py = py + random.choice([0, -1, 1])
+                if no_improv == 20:
                     break
     
             last_center = best_center
@@ -1084,17 +1258,17 @@ class CenterRefinement(CenterDetection):
         
         if plot_results == 1:
             self.visualize_refinement(bckup[0],  bckup[1], bckup[2], 
-                                      (px,py), pr)
+                                      (px,py), pr, view_enhancement=0)
 
         # Print results
         print(" ")
         print("--- Correction of radius and coordinates via intensity sum maximization --")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                     float(self.y)))
+        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(px), 
+                                                                     float(py)))
         print("--------------------------------------------------------------------------")
                 
         return px, py, pr
-
+    
     
     def get_circle_pixels(self, xc, yc, radius, num_points=360):
         '''         
@@ -1163,7 +1337,7 @@ class CenterRefinement(CenterDetection):
         return s
     
     
-    def visualize_refinement(self, px, py, pr, xy, r):
+    def visualize_refinement(self, px, py, pr, xy, r, view_enhancement = 0):
         '''
         Visualize diffraction patterns and center after correction
 
@@ -1179,19 +1353,23 @@ class CenterRefinement(CenterDetection):
             xy-coordinates after correction.
         r : float64
             radius after correction.
+        view_enhancement : boolean
+            Plot original image and enhanced for visual comparison. The default
+            is 0 (do not plot)
 
         Returns
         -------
         None.
 
         '''
+        # Load original image
+        image = imread(self.image_path, as_gray = False)
         
-        ## Display original and refined images in one figure
+        # Display original and refined images in one figure
         fig, ax = plt.subplots(nrows=1, ncols=2)
-        manager = plt.get_current_fig_manager()
-        manager.window.showMaximized()
+
         
-        ax[0].imshow(self.image)
+        ax[0].imshow(image)
         c0 = plt.Circle((px, py), pr, 
                         color='r', 
                         fill=False,
@@ -1210,7 +1388,7 @@ class CenterRefinement(CenterDetection):
                    frameon=False) 
         ax[0].axis('off')
         
-        ax[1].imshow(self.image)
+        ax[1].imshow(image)
         c1 = plt.Circle(xy, r,
                         color='r', 
                         fill=False,
@@ -1228,70 +1406,60 @@ class CenterRefinement(CenterDetection):
                    mode='expand', 
                    frameon=False)  
         ax[1].axis('off')
+        plt.tight_layout()
         plt.show(block=False)
-
-
-#%% OLD SIMPLE FUNCTIONS
-
-# Old interface, kept just for backward compatibility
-# To be removed in one of the next versions
-
-def central_square(arr, csquare, xcenter=None, ycenter=None):
-    '''
-    Return central square from an array
-    '''
-    xsize,ysize = arr.shape
-    # If center of was not given, take geometrical center
-    # (for array selections/slicing, we need integers => round, //
-    xc = round(xcenter) or xsize // 2
-    yc = round(ycenter) or ysize // 2
-    # Half of the central square
-    # (for array selections/slicing, we need integers => //
-    half_csquare = csquare // 2
-    # Create sub-array = just central square around xc,yc
-    arr2 = arr[
-        xc-half_csquare:xc+half_csquare,
-        yc-half_csquare:yc+half_csquare].copy()
-    return(arr2)
-
-def center_of_intensity(arr, csquare=20, cintensity=0.8):
-    '''
-    Find center of intensity/mass of an array.
-    
-    Parameters
-    ----------
-    arr : 2D-numpy array
-        The array, whose intensity center will be determined.
-    csquare : int, optional, default is 20
-        The size/edge of the square in the (geometrical) center.
-        The intensity center will be searched only within the central square.
-        Reasons: To avoid other spots/diffractions and
-        to minimize the effect of possible intensity assymetry around center. 
-    cintensity : float, optional, default is 0.8
-        The intensity fraction.
-        When searching the intensity center, we will consider only
-        pixels with intensity > max.intensity.
         
-    Returns
-    -------
-    xc,yc : float,float
-        XY-coordinates of the intensity/mass center of the array.
-        Round XY-coordinates if you use them for image/array calculations.
-    '''
-    # Get image/array size
-    xsize,ysize = arr.shape
-    # Calculate borders around the central square
-    xborder = (xsize - csquare) // 2
-    yborder = (ysize - csquare) // 2
-    # Create central square = cut off the borders
-    arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
-    # In the central square, set all values below cintenstity to zero
-    arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
-    # Calculate 1st central moments of the image
-    M = sk.measure.moments(arr2,1)
-    # Calculate the intensity center = centroid according to www-help
-    (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
-    # We have centroid of the central square => recalculate to whole image
-    (xc,yc) = (xc+xborder,yc+yborder)
-    # Return the final center
-    return(xc,yc)
+        # Edit contrast with a user-predefined parameter
+        if view_enhancement == 1:
+            if self.icut != 0:
+                print("works")
+                # Display the original and equalized images
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.imshow(image, 
+                            cmap='gray')
+                plt.title('Original Image')
+    
+                plt.subplot(1, 2, 2)
+                plt.imshow(self.image, 
+                            cmap='gray')
+                plt.title('Enhanced Image, icut = {:.1f}'.format(self.icut))            
+                plt.show(block=False)
+            
+            elif self.heq == 1:
+                # Display the original and equalized images
+                plt.figure(figsize=(10, 5))
+                plt.subplot(1, 2, 1)
+                plt.imshow(image, 
+                            cmap='gray')
+                plt.title('Original Image')
+    
+                plt.subplot(1, 2, 2)
+                plt.imshow(self.image, 
+                            cmap='gray')
+                plt.title('Equalized Histogram')            
+                plt.show(block=False)
+
+        
+#%% INITIALIZATION: image + center objects
+image_path='C:\\_Folders\\UPT\\github_programs\\examples\image2.bmp'
+plt.close('all')
+
+    
+#%% USAGE : Detect center and correct its position
+
+# # DETECTION: parameter detection_method
+# # - 'manual' : manual detection via 3 points
+# # - 'intensity' : detection via maximum intensity
+# # - 'hough' : automatic detection via Hough transform
+
+# # CORRECTION: parameter correction_center
+# # - 'manual' : manual correction using keys
+# # - 'variance' : correction via variance minimization
+# # - 'sum' : correction via sum maximization
+
+center_finder = CenterRefinement(image_path, detection_method='hough', correction_method = 'manual', icut=0, heq=0)
+x, y, xx, yy = center_finder.output()
+
+
+
