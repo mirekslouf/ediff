@@ -974,7 +974,7 @@ class CenterRefinement(CenterDetection):
         plt.ioff()
         
         # Display the final figure with the selected center position and radius
-        fig.set_size_inches(self.fig_width, self.fig_height)
+        # fig.set_size_inches(self.fig_width, self.fig_height)
         plt.tight_layout()
         plt.show(block=False)
 
