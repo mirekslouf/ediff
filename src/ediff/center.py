@@ -1,7 +1,9 @@
 '''
 Module ediff.center
 -------------------
-Find center of 2D diffraction pattern.    
+Find center of 2D diffraction pattern. 
+
+CenterDet, aktualizace PS4  
 '''
 
 import numpy as np
@@ -11,6 +13,7 @@ import matplotlib.pyplot as plt
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
 
+import random
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -64,7 +67,8 @@ class CenterDetection:
                        detection_method, 
                        correction_method = None,
                        heq = 0, 
-                       icut = 0):
+                       icut = 0,
+                       cmap = 'gray'):
         
         # Initialize attributes
         self.image_path = image_path
@@ -73,7 +77,9 @@ class CenterDetection:
         self.heq = heq
         self.icut = icut
         self.to_refine = []
+        self.cmap = cmap
         
+        # Run functions
         self.preprocess_images(preInit = 1)
 
 
@@ -129,17 +135,18 @@ class CenterDetection:
         # Load image
         im = self.to_refine
         
+               
+        
         # Create a figure and display the image
         fig, ax = plt.subplots()
-        plt.rcParams.update(plt.rcParamsDefault)
-        
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
         
+ 
         plt.title("Select 3 points defining one of diffraction circles")
-        ax.imshow(im)
-
+        ax.imshow(im, cmap = self.cmap)
+ 
         
         # User information:
         print("------------------- Manual diffraction pattern detection -----------------")
@@ -156,7 +163,7 @@ class CenterDetection:
        
         # Enable interactive mode
         plt.ion()
-
+ 
         # Initialize the list of coordinates
         self.coords = [] 
         
@@ -170,7 +177,7 @@ class CenterDetection:
             nonlocal termination_flag
             termination_flag = True
             print('Execution terminated.')
-
+ 
         
         # Connect the event handler to the figure close event
         fig.canvas.mpl_connect('close_event', onclose)
@@ -183,7 +190,7 @@ class CenterDetection:
             # Store the zoom level
             current_xlim = ax.get_xlim()
             current_ylim = ax.get_ylim()
-
+ 
             ## Delete points -- the closest to the cursor
             if event.key == '3':
                 point_counter -= 1
@@ -195,7 +202,7 @@ class CenterDetection:
     
                     # Redraw the image without the deleted point
                     ax.clear()
-                    ax.imshow(self.to_refine) 
+                    ax.imshow(self.image, cmap = self.cmap)
                     for x, y in self.coords:
                         ax.plot(x, y, 'rx')
                     plt.title("Select 3 points defining one of diffraction circles")
@@ -203,7 +210,7 @@ class CenterDetection:
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
                     ax.set_ylim(current_ylim)
-
+ 
                     fig.canvas.draw()
                 else:
                     print("No points to delete. You must select at lease one point.")
@@ -221,7 +228,7 @@ class CenterDetection:
     
                         # Redraw the image without the deleted point
                         ax.clear()
-                        ax.imshow(self.to_refine)
+                        ax.imshow(self.image, cmap = self.cmap)
                         for x, y in self.coords:
                             ax.plot(x, y, 'rx')
                         plt.title("Select 3 points defining one of diffraction circles")
@@ -229,7 +236,7 @@ class CenterDetection:
                         # Retore the previous zoom level
                         ax.set_xlim(current_xlim)
                         ax.set_ylim(current_ylim)
-
+ 
                         fig.canvas.draw()
                 else:
                     print("No points to delete. You must select at lease one point.")
@@ -255,7 +262,7 @@ class CenterDetection:
                         # Retore the previous zoom level
                         ax.set_xlim(current_xlim)
                         ax.set_ylim(current_ylim)
-
+ 
                         fig.canvas.draw()
     
                         point_counter += 1
@@ -272,6 +279,7 @@ class CenterDetection:
             elif event.key == 'd':
                 if len(self.coords) == 3:
                     calculate_circle_flag = True
+ 
                 else:
                     print("Please select exactly 3 points to calculate the circle.")
                     fig.canvas.draw()
@@ -285,35 +293,30 @@ class CenterDetection:
         
         # Wait for 'd' key event or close the figure if no points are selected
         while not calculate_circle_flag and not termination_flag:
-
+ 
             try:
                 plt.waitforbuttonpress(timeout=0.1)
                 # Store the zoom level
                 current_xlim = ax.get_xlim()
                 current_ylim = ax.get_ylim()
-
+ 
                 # Plot detected diffraction pattern
                 if calculate_circle_flag:
-
+ 
                     self.calculate_circle(plot_results=0)
                     
                     ax.clear()
-                    ax.imshow(self.to_refine)
+                    ax.imshow(self.to_refine, cmap = self.cmap)
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
                     ax.set_ylim(current_ylim)
                 
-
-                    circle = plt.Circle((self.x, self.y), 
-                                        self.r, 
-                                        color='r', 
-                                        fill=False)
+ 
+                    circle = plt.Circle((self.x, self.y), self.r, color='r', fill=False)
                     ax.add_artist(circle)
         
                     # Plot center point
-                    center, = ax.plot(self.x, self.y, 
-                                      marker = 'rx', 
-                                      markersize=12)
+                    center, = ax.plot(self.x, self.y, 'rx', markersize=12)
                     plt.title('Manually adjust the position of the center using keys.')
         
                     # Display the image
@@ -322,6 +325,7 @@ class CenterDetection:
             except:
                 pass
             
+                
     
         # If the termination_flag is True, stop the code
         if termination_flag: 
@@ -333,7 +337,7 @@ class CenterDetection:
         
         # Manually adjust the calculated center coordinates
         self.x, self.y, self.r = self.adjustment_3points(fig, circle, center)
-
+ 
         return self.x, self.y, self.r
 
     
@@ -368,18 +372,12 @@ class CenterDetection:
 
         Returns
         -------
-        x : float
-            adjusted x-coordinate of the center of the diffraction pattern.
-        y : float
-            adjusted y-coordinate of the center of the diffraction pattern.            
+        xy : tuple
+            x,y-coordinates of the center of the diffraction pattern.
         r : integer
             radius of the diffraction pattern.
 
         '''
-        
-        # Remove default left / right arrow key press events
-        plt.rcParams['keymap.back'].remove('left')
-        plt.rcParams['keymap.forward'].remove('right')
         
         print(" ")
         print("--------------------------------------------------------------------------")
@@ -417,19 +415,23 @@ class CenterDetection:
             #   event.key == 'd': proceed in self.detection_3points()
             
             if event.key in ['up', 'down', 'left', 'right', '+', '-']:
-                # Change radius: increase/decrease
                 if event.key in ['+', '-']:
                     r += 1 if event.key == '+' else -1
+                 #   print('Radius', 'increased.' if event.key == '+' else 'decreased.')
                 else:
-                    # Perform shifts  up/down/left/right
+                    # Perform shifts normally
                     if event.key == 'up':
                         xy[1] -= 1
+                       # print('Moved up')
                     elif event.key == 'down':
                         xy[1] += 1
+                       # print('Moved down')
                     elif event.key == 'left':
                         xy[0] -= 1
+                       # print('Moved left')
                     elif event.key == 'right':
                         xy[0] += 1
+                       # print('Moved right')
 
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
@@ -449,7 +451,7 @@ class CenterDetection:
             plt.draw() 
         
         # Disconnect the on_key_press1 event handler from the figure
-        #fig.canvas.mpl_disconnect(fig.canvas.manager.key_press_handler_id)
+        fig.canvas.mpl_disconnect(fig.canvas.manager.key_press_handler_id)
         
         # Connect the callback function to the key press event
         fig.canvas.mpl_connect('key_press_event', onkeypress2)
@@ -472,7 +474,6 @@ class CenterDetection:
         plt.tight_layout()
         plt.show(block=False)
 
-        plt.close()
 
         # Print results
         print(" ")
@@ -485,10 +486,10 @@ class CenterDetection:
         if plot_results==1:
             tit = "Manual center detection"
             self.visualize_center(xy[0], xy[1], r, tit)
-            
-        x, y = xy[0], xy[1]
         
-        return x, y, r
+        plt.close()
+        return xy[0], xy[1], r
+        
         
 
     def detection_intensity(self, csquare=20, cintensity=0.5, plot_results=1):
@@ -711,10 +712,10 @@ class CenterDetection:
             fig, ax = plt.subplots()
             manager = plt.get_current_fig_manager()
             manager.window.showMaximized()
-            ax.imshow(self.image)
+            ax.imshow(self.image, cmap = self.cmap)
             
             # Plot center and points
-            plt.plot(self.x, self.y, 
+            center, = plt.plot(self.x, self.y, 
                      'rx', 
                      label='Center', 
                      markersize=12)
@@ -730,7 +731,7 @@ class CenterDetection:
                                 color='palevioletred', 
                                 fill=False,
                                 label = 'pattern')
-            ax.add_patch(circle)
+            ax.add_artist(circle)
             
             # Set the aspect ratio to equal to have a circular shape
             plt.axis('equal')
@@ -747,7 +748,11 @@ class CenterDetection:
             pass
             #plt.close('all')
         
-        return self.x, self.y, self.r
+        self.center = (self.x, self.y)
+        self.circle = plt.Circle((self.x,self.y),self.r)
+        
+
+        return self.x, self.y, self.r, self.center, self.circle
 
 
     def visualize_center(self, x, y, r, tit):
@@ -790,7 +795,7 @@ class CenterDetection:
                    label = 'Center')
 
         # Display the image
-        ax.imshow(image)
+        ax.imshow(image, cmap = self.cmap)
         plt.title(tit)
         plt.legend(loc='lower center', 
                    ncol=2, 
@@ -884,9 +889,9 @@ class CenterRefinement(CenterDetection):
         radius of the detected center
     '''
     
-    def __init__(self, image_path, detection_method, heq, icut, correction_method = None):
+    def __init__(self, image_path, detection_method, heq, icut, correction_method = None, cmap = 'gray'):
         # Call the constructor of the base class to initialize its methods
-        super().__init__(image_path, detection_method, heq=heq, icut=icut)
+        super().__init__(image_path, detection_method, heq=heq, icut=icut, cmap=cmap)
         # self.preprocess_images(preInit=1)
 
                 
@@ -1170,9 +1175,6 @@ class CenterRefinement(CenterDetection):
             new radius of the circular diffraction pattern
         '''
         
-        plt.close('all')
-        plt.rcParams.update({})
-
         # Load original image
         im = np.copy(self.image)
         
@@ -1198,7 +1200,7 @@ class CenterRefinement(CenterDetection):
         # Create a figure and display the image
         fig, ax = plt.subplots()
         plt.title("Press keys to adjust the center position")
-        ax.imshow(im)
+        ax.imshow(im, cmap = self.cmap)
         
         # Enable interactive mode
         plt.ion()
@@ -1293,7 +1295,9 @@ class CenterRefinement(CenterDetection):
         plt.tight_layout()
         plt.show(block=False)
 
-        plt.close('all')
+        plt.close()
+        
+        self.visualize_refinement(px, py, pr, xy, r)
 
               
         # Print results
@@ -1334,7 +1338,7 @@ class CenterRefinement(CenterDetection):
         pr : float64
             radius of the detected center
         plot_results : integer (default = 1)
-            Plot detected center of the diffraction pattern. The default is 1.
+            Plot Detected center. The default is 1.
         
         Returns
         -------
@@ -1451,7 +1455,7 @@ class CenterRefinement(CenterDetection):
             px, py = best_center
             pr = best_radius
     
-        plt.close('all')
+        # plt.close()
     
         if plot_results == 1:
             self.visualize_refinement(bckup[0], bckup[1], bckup[2], (px, py), pr)
@@ -1490,7 +1494,7 @@ class CenterRefinement(CenterDetection):
         pr : float64
             radius of the detected center.
         plot_results : int, optional
-            Plot detected center of the diffraction pattern. 
+            Plot Detected center. 
             The default is 1.
     
         Returns
@@ -1676,7 +1680,7 @@ class CenterRefinement(CenterDetection):
         fig, ax = plt.subplots(nrows=1, ncols=2)
 
         
-        ax[0].imshow(image)
+        ax[0].imshow(image, cmap = self.cmap)
         c0 = plt.Circle((px, py), pr, 
                         color='r', 
                         fill=False,
@@ -1687,7 +1691,7 @@ class CenterRefinement(CenterDetection):
                       color='r', 
                       marker='x', 
                       s=100)
-        ax[0].set_title('Detected center of the diffraction pattern.')
+        ax[0].set_title('Detected center.')
         ax[0].legend(loc='lower center', 
                    ncol=2, 
                    bbox_to_anchor=(0.5,-0.1), 
@@ -1695,7 +1699,7 @@ class CenterRefinement(CenterDetection):
                    frameon=False) 
         ax[0].axis('off')
         
-        ax[1].imshow(image)
+        ax[1].imshow(image, cmap = self.cmap)
         c1 = plt.Circle(xy, r,
                         color='r', 
                         fill=False,
