@@ -3,7 +3,7 @@ Module ediff.center
 -------------------
 Find center of 2D diffraction pattern. 
 
-CenterDet, aktualizace PS4  
+CenterDet, aktualizace PS5  
 '''
 
 import numpy as np
@@ -139,6 +139,7 @@ class CenterDetection:
         
         # Create a figure and display the image
         fig, ax = plt.subplots()
+        
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
@@ -378,6 +379,10 @@ class CenterDetection:
             radius of the diffraction pattern.
 
         '''
+        
+        # Remove default left / right arrow key press events
+        plt.rcParams['keymap.back'].remove('left')
+        plt.rcParams['keymap.forward'].remove('right')
         
         print(" ")
         print("--------------------------------------------------------------------------")
