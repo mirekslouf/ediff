@@ -3,7 +3,7 @@ Module ediff.center
 -------------------
 Find center of 2D diffraction pattern. 
 
-CenterDet, aktualizace PS5  
+CenterDet, aktualizace PS6  
 '''
 
 import numpy as np
@@ -64,7 +64,7 @@ class CenterDetection:
     '''
     
     def __init__(self, image_path, 
-                       detection_method, 
+                       detection_method = None, 
                        correction_method = None,
                        heq = 0, 
                        icut = 0,
@@ -91,9 +91,10 @@ class CenterDetection:
             self.x, self.y, self.r = self.detection_intensity()
 
         elif detection_method == 'hough':
-            self.x, self.y, self.r = self.detection_Hough()
-            
-    
+            self.x, self.y, self.r = self.detection_Hough()  
+        else:
+            print("Incorrect method for detection selected")
+                
     def detection_3points(self, plot_results=1):
         '''         
         In the input image, select manually 3 points defining a circle using
@@ -203,7 +204,7 @@ class CenterDetection:
     
                     # Redraw the image without the deleted point
                     ax.clear()
-                    ax.imshow(self.image, cmap = self.cmap)
+                    ax.imshow(self.to_refine, cmap = self.cmap)
                     for x, y in self.coords:
                         ax.plot(x, y, 'rx')
                     plt.title("Select 3 points defining one of diffraction circles")
@@ -229,7 +230,7 @@ class CenterDetection:
     
                         # Redraw the image without the deleted point
                         ax.clear()
-                        ax.imshow(self.image, cmap = self.cmap)
+                        ax.imshow(self.to_refine, cmap = self.cmap)
                         for x, y in self.coords:
                             ax.plot(x, y, 'rx')
                         plt.title("Select 3 points defining one of diffraction circles")
@@ -497,7 +498,7 @@ class CenterDetection:
         
         
 
-    def detection_intensity(self, csquare=20, cintensity=0.5, plot_results=1):
+    def detection_intensity(self, csquare=20, cintensity=0.5, plot_results=0):
         '''
         Find center of intensity/mass of an array.
         
