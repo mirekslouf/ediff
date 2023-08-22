@@ -13,12 +13,11 @@ import matplotlib.pyplot as plt
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
 
-import random
 import warnings
 warnings.filterwarnings("ignore")
 
 
-class CenterDetection:
+class CenterEstimator:
     '''
     Detection of the center of diffraction patterns.
     
@@ -45,12 +44,17 @@ class CenterDetection:
            - 'manual' : manual corection 
            - 'variance' : correction via variance minimization 
            - 'sum' : correction via sum maximization
-    heq : boolean
-            Allow histogram equalization. The default is 0 (no enhancement)
-    icut : integer
-        Allow image enhancement and define icut value (pixels of higher intensity
-        than will be set to the icut value). The default is 0 (no enhancement)
-
+    heq : boolean, optional, default is False
+        Allow histogram equalization.
+        The equalization is virtual, the original image is unchanged.
+    icut : integer, optional, default is None
+        Intensity cut to enhance image contrast.
+        Example: icut=300, all pixels intensities >300 are set to 300.
+    cmap : str, optional, default is 'gray'
+        Name of matplotlib colormap.
+        Any valid colormap ('viridis','magma') can be used.
+    messages : bool, optional, default is False
+        Print to terminal additional messages about program run.
     
     Returns
     -------    
@@ -66,9 +70,10 @@ class CenterDetection:
     def __init__(self, image_path, 
                        detection_method = None, 
                        correction_method = None,
-                       heq = 0, 
-                       icut = 0,
-                       cmap = 'gray'):
+                       heq = False, 
+                       icut = None,
+                       cmap = 'gray',
+                       messages = False):
         
         # Initialize attributes
         self.image_path = image_path
@@ -78,10 +83,10 @@ class CenterDetection:
         self.icut = icut
         self.to_refine = []
         self.cmap = cmap
+        self.messages = messages
         
         # Run functions
         self.preprocess_images(preInit = 1)
-
 
         # Determine detection method
         if detection_method == 'manual':
@@ -129,39 +134,36 @@ class CenterDetection:
         self.y : float64
             y-coordinate of the detected center
         self.r : float64
-            radius of the detected center (if available, othervise returns None)
+            radius of the detected center
+            (if available, othervise returns None)
                                     
         '''
         
         # Load image
         im = self.to_refine
-        
-               
-        
+    
         # Create a figure and display the image
         fig, ax = plt.subplots()
         
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
-        
  
         plt.title("Select 3 points defining one of diffraction circles")
         ax.imshow(im, cmap = self.cmap)
  
-        
         # User information:
-        print("------------------- Manual diffraction pattern detection -----------------")
-        print("--------------------------------------------------------------------------")
-        print("Select 3 points to define a circular diffraction pattern.")
-        print("Use these keys for the selection:")
-        print("      - '1' : select a point")
-        print("      - '2' : delete the most recent")
-        print("      - '3' : delete the point closest to the cursor")
-        print("      - 'd' : proceed (selection done)")
-        print("Close the figure to terminate. No center will be detected.")
-        print("--------------------------------------------------------------------------")
-        
+        if self.messages:
+            print("--- Manual diffraction pattern detection ---")
+            print()
+            print("Select 3 points to define a circle in the diffractogram:")
+            print("Use these keys for the selection:")
+            print("  - '1' : define a point at current cursor position")
+            print("  - '2' : delete the last point")
+            print("  - '3' : delete the point closest to the cursor")
+            print("  - 'd' : done = finished = go to the next step")
+            print()
+            print("Close the figure to terminate. No center will be detected.")
        
         # Enable interactive mode
         plt.ion()
@@ -178,7 +180,8 @@ class CenterDetection:
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
-            print('Execution terminated.')
+            if self.messages:
+                print('Execution terminated.')
  
         
         # Connect the event handler to the figure close event
@@ -198,7 +201,9 @@ class CenterDetection:
                 point_counter -= 1
                 if len(self.coords) > 0:
                     pointer_x, pointer_y = event.xdata, event.ydata
-                    distances = [np.sqrt((x - pointer_x)**2 + (y - pointer_y)**2) for x, y in self.coords]
+                    distances = [
+                        np.sqrt((x - pointer_x)**2 + (y - pointer_y)**2)
+                        for x, y in self.coords]
                     closest_index = np.argmin(distances)
                     del self.coords[closest_index]
     
@@ -207,7 +212,10 @@ class CenterDetection:
                     ax.imshow(self.to_refine, cmap = self.cmap)
                     for x, y in self.coords:
                         ax.plot(x, y, 'rx')
-                    plt.title("Select 3 points defining one of diffraction circles")
+                    my_plot_title = (
+                        "Select 3 points to define "
+                        "one of diffraction circles.")
+                    plt.title(my_plot_title)
                     
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
@@ -215,7 +223,7 @@ class CenterDetection:
  
                     fig.canvas.draw()
                 else:
-                    print("No points to delete. You must select at lease one point.")
+                    print("No points to delete.")
     
             ## Delete recent point (last added) -- independent on the cursor
             if event.key == '2':
@@ -224,16 +232,20 @@ class CenterDetection:
                     point_counter -= 1
                     if len(self.coords) > 0:
                         # Delete the last point in the list
-                        del self.coords[-1]  
-                        print('The most recently selected point deleted.')
-                        print('Please select a new one.')
+                        del self.coords[-1]
+                        if self.messages:
+                            print('The most recently selected point deleted.')
+                            print('Please select a new one.')
     
                         # Redraw the image without the deleted point
                         ax.clear()
                         ax.imshow(self.to_refine, cmap = self.cmap)
                         for x, y in self.coords:
                             ax.plot(x, y, 'rx')
-                        plt.title("Select 3 points defining one of diffraction circles")
+                        my_plot_title = (
+                            "Select 3 points to define "
+                            "one of diffraction circles.")
+                        plt.title(my_plot_title)
                         
                         # Retore the previous zoom level
                         ax.set_xlim(current_xlim)
@@ -241,7 +253,7 @@ class CenterDetection:
  
                         fig.canvas.draw()
                 else:
-                    print("No points to delete. You must select at lease one point.")
+                    print("No points to delete.")
                     
             ## Select points 
             elif event.key == '1':
@@ -252,8 +264,7 @@ class CenterDetection:
                     
                     if new_point in self.coords:
                         # Do not allow multiple selection of one point
-                        print("Warning: The selected point already exists.")
-                        print("Please select a new point.")      
+                        print("The selected point already exists.")
                     else:
                         # Add selected point
                         self.coords.append(new_point)
@@ -269,13 +280,15 @@ class CenterDetection:
     
                         point_counter += 1
                 else: # 3 points selected
-                    print("3 points already selected. Press 'd' to continue.")
+                    print("3 points already selected.")
     
                 if len(self.coords) == 3:
                     # Turn off interactive mode
                     plt.ioff()
     
-                    print("3 points selected. Press 'd' to calculate the center position.")
+                    if self.messages:
+                        print("3 points selected.")
+                        print("Press 'd' to calculate the center position.")
     
             # Calculate circle or terminate
             elif event.key == 'd':
@@ -283,7 +296,7 @@ class CenterDetection:
                     calculate_circle_flag = True
  
                 else:
-                    print("Please select exactly 3 points to calculate the circle.")
+                    print("Select exactly 3 points to calculate the circle.")
                     fig.canvas.draw()
     
         # Connect the callback function to the key press event
@@ -314,7 +327,8 @@ class CenterDetection:
                     ax.set_ylim(current_ylim)
                 
  
-                    circle = plt.Circle((self.x, self.y), self.r, color='r', fill=False)
+                    circle = plt.Circle(
+                        (self.x, self.y), self.r, color='r', fill=False)
                     ax.add_artist(circle)
         
                     # Plot center point
@@ -325,10 +339,9 @@ class CenterDetection:
                     plt.draw()
                     plt.show(block = False)
             except:
+                # TODO: podrobnejsi osetreni vyjimek...
                 pass
             
-                
-    
         # If the termination_flag is True, stop the code
         if termination_flag: 
              print("No points selected. Returned None values.")
@@ -358,8 +371,6 @@ class CenterDetection:
         If the interactive figure is closed without any modifications,
         the function returns input variables and the proccess terminates.
         
-        
-            
         Parameters
         ----------
         fig : figure.Figure object
@@ -385,20 +396,19 @@ class CenterDetection:
         plt.rcParams['keymap.back'].remove('left')
         plt.rcParams['keymap.forward'].remove('right')
         
-        print(" ")
-        print("--------------------------------------------------------------------------")
-        print("Interactive refinement. Use these keys:")
-        print("      - 'left arrow' : move left")
-        print("      - 'right arrow' : move right")
-        print("      - 'top arrow' : move up")
-        print("      - 'bottom arrow' : move down")
-        print("      - '+' : increase circle radius")
-        print("      - '-' : decrease circle radius")
-        print("      - 'd' : refinement done")
-        print("DISCLAIMER: for the purpose of the center shift, the default shortcuts ")
-        print("for left and right arrows were removed.")
-        print("--------------------------------------------------------------------------")
-        
+        if self.messages:
+            print("--- Interactive center refinement ---")
+            print("Use these keys:")
+            print("  - 'leftArrow'  : move left")
+            print("  - 'RightArrow' : move right")
+            print("  - 'UpArrow'    : move up")
+            print("  - 'DownArrow'  : move down")
+            print("  - '+' : increase circle radius")
+            print("  - '-' : decrease circle radius")
+            print("  - 'd' : refinement done")
+            print("Technical note:")
+            print("  the default shortcuts for LeftArrow and RightArrow")
+            print("  temporarily overriden, but corresponding icons do work.")
         
         # Initialize variables and flags
         xy = np.array((self.x, self.y))
@@ -416,14 +426,13 @@ class CenterDetection:
 
             # OTHER KEYS USED IN INTERACTIVE FIGURES
             #   event.key == '1': select a point in self.detection_3points()
-            #   event.key == '2': delete the most recent point in self.detection_3points()
-            #   event.key == '3': delete a point in self.detection_3points()
+            #   event.key == '2': delete the last point in self.detection...
+            #   event.key == '3': delete a point in self.detection...
             #   event.key == 'd': proceed in self.detection_3points()
             
             if event.key in ['up', 'down', 'left', 'right', '+', '-']:
                 if event.key in ['+', '-']:
                     r += 1 if event.key == '+' else -1
-                 #   print('Radius', 'increased.' if event.key == '+' else 'decreased.')
                 else:
                     # Perform shifts normally
                     if event.key == 'up':
@@ -442,16 +451,15 @@ class CenterDetection:
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
                     termination_flag = True
-                    print("--------------------------------------------------------------------------")
-                    print("Refinement done.")
-                    print("--------------------------------------------------------------------------")
-                
+                    if self.messages:
+                        print("--- Refinement done. ---")
+                    
             # Update the plot with the new center position
             circle.set_center((xy[0], xy[1]))  # circle
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
 
-            plt.title('Manually adjust the position of the center using keys.')
+            plt.title('Adjust the center position using keys.')
          
             # Update the plot
             plt.draw() 
@@ -480,18 +488,15 @@ class CenterDetection:
         plt.tight_layout()
         plt.show(block=False)
 
-
         # Print results
-        print(" ")
-        print("------------------- Manually updated center coordinates ------------------")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(xy[0]), 
-                                                                     float(xy[1])))
-        print("--------------------------------------------------------------------------")
+        if self.messages:
+            print("CenterEstimator :: manual detection + adjustment")
+            print(f"Center coordinates: {xy[0]:.2f} {xy[1]:.2f}")
         
         # Plot results
         if plot_results==1:
-            tit = "Manual center detection"
-            self.visualize_center(xy[0], xy[1], r, tit)
+            my_title = "Manual center detection"
+            self.visualize_center(xy[0], xy[1], r, my_title)
         
         plt.close()
         return xy[0], xy[1], r
@@ -707,11 +712,9 @@ class CenterDetection:
         self.r = ar*br*cr/((ar+br+cr)*(-ar+br+cr)*(ar-br+cr)*(ar+br-cr))**0.5
         
         # Print results
-        print(" ")
-        print("----------------- Manual detection of center coordinates -----------------")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                     float(self.y)))
-        print("--------------------------------------------------------------------------")
+        if self.messages:
+            print("CenterEstimator :: manual center detection")
+            print(f"Center coordinates: {self.x:.2f} {self.y:.2f}")
                     
         if plot_results==1:
             # Create and manage the figure
@@ -856,8 +859,8 @@ class CenterDetection:
  
     
 
-class CenterRefinement(CenterDetection):
-    ''' SUBCLASS of CircleDetection
+class CenterLocator(CenterEstimator):
+    ''' SUBCLASS of CircleEstimator
     ----------
     
     Automatic adjustment of the center position of diffraction patterns,
@@ -895,28 +898,42 @@ class CenterRefinement(CenterDetection):
         radius of the detected center
     '''
     
-    def __init__(self, image_path, detection_method, heq, icut, correction_method = None, cmap = 'gray'):
-        # Call the constructor of the base class to initialize its methods
-        super().__init__(image_path, detection_method, heq=heq, icut=icut, cmap=cmap)
+    def __init__(self, image_path,
+                 detection_method, correction_method=None, 
+                 heq=False, icut=None, cmap='gray',
+                 messages=False, final_replot=False):
+        
+        # (1) Call the constructor of the base class to initialize its methods
+        super().__init__(image_path,
+            detection_method, correction_method,
+            heq=heq, icut=icut, cmap=cmap, messages=messages)
+        
+        # TODO: co je tohle? je to jeste aktualni? smazat?
         # self.preprocess_images(preInit=1)
 
-                
+        # (2) Define additional parameter
+        self.final_replot = final_replot
+
+        # (3) Run correction method and get refined parameters
         if correction_method is not None:
             self.ret = 1
             if correction_method == 'manual':
-                self.xx, self.yy, self.rr = self.ref_interactive(self.x, self.y, self.r)
+                self.xx, self.yy, self.rr = \
+                    self.ref_interactive(self.x, self.y, self.r)
             elif correction_method == 'variance':
-                self.xx, self.yy, self.rr = self.ref_minimize_var(self.x, self.y, self.r)
+                self.xx, self.yy, self.rr = \
+                    self.ref_minimize_var(self.x, self.y, self.r)
             elif correction_method == 'sum':
-                self.xx, self.yy, self.rr = self.ref_maximize_sum(self.x, self.y, self.r)
+                self.xx, self.yy, self.rr = \
+                    self.ref_maximize_sum(self.x, self.y, self.r)
         else:
             self.ret = 2
-        
 
     def preprocess_images(self, preInit=0, preHough=0, preManual=0, preVar = 0, 
                           preSum = 0, preInt=0):
-        """ FOR AUTOMATIC METHODS OPTIMIZATION AND MORE UNIVERSAL SOLUTIONS
-            >>> to be finished later, as it is not the most important thing now
+        """
+        FOR AUTOMATIC METHODS OPTIMIZATION AND MORE UNIVERSAL SOLUTIONS
+        >>> to be finished later, as it is not the most important thing now
             
         Function for input image preprocessing based on the methods 
         defined in the class initialization - self.detection_method, 
@@ -951,15 +968,17 @@ class CenterRefinement(CenterDetection):
         if preInit == 1:
             # Enhance diffraction pattern to make it more visible
             if self.heq == 1:
-                print("Histogram equalized.")
+                if self.messages:
+                    print("Histogram equalized.")
                 image = sk.exposure.equalize_adapthist(image)
                 # plt.figure()
                 # plt.imshow(image)
                 # plt.show(block=False)
                 
             # Edit contrast with a user-predefined parameter
-            if self.icut != 0:
-                print("Contrast enhanced.")
+            if self.icut is not None:
+                if self.messages:
+                    print("Contrast enhanced.")
                 image = np.where(image > self.icut, self.icut, image)
             
             self.to_refine = image
@@ -975,7 +994,8 @@ class CenterRefinement(CenterDetection):
                 
                 # Beam stopper present in image
                 if np.median(csq)<100 and np.median(csq) > 0:
-                    print('Beamstopper removed.')
+                    if self.messages:
+                        print('Beamstopper removed.')
                     max_indices = np.where(self.to_refine > np.median(csq))
         
                     row_idx = max_indices[0]
@@ -1303,7 +1323,8 @@ class CenterRefinement(CenterDetection):
 
         plt.close()
         
-        self.visualize_refinement(px, py, pr, xy, r)
+        if self.final_replot:
+            self.visualize_refinement(px, py, pr, xy, r)
 
               
         # Print results
@@ -1464,7 +1485,9 @@ class CenterRefinement(CenterDetection):
         # plt.close()
     
         if plot_results == 1:
-            self.visualize_refinement(bckup[0], bckup[1], bckup[2], (px, py), pr)
+            if self.final_replot:
+                self.visualize_refinement(
+                    bckup[0], bckup[1], bckup[2], (px, py), pr)
     
         # Print results
         print(" ")
@@ -1542,7 +1565,11 @@ class CenterRefinement(CenterDetection):
             prev_intensity_sum = max_intensity_sum
             
             # Refine center while keeping radius constant
-            neighbors = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if dx != 0 or dy != 0]
+            neighbors = [
+                (dx, dy) 
+                for dx in [-1, 0, 1] 
+                for dy in [-1, 0, 1] 
+                if dx != 0 or dy != 0]
             for dx, dy in neighbors:
                 nx, ny = px + dx, py + dy
                 curr_intensity_sum = self.intensity_sum(image, nx, ny, pr)
@@ -1577,15 +1604,15 @@ class CenterRefinement(CenterDetection):
         
         # Refinement visualization
         if plot_results == 1:
-            self.visualize_refinement(bckup[0], bckup[1], bckup[2], (py, px), pr)
+            if self.final_replot:
+                self.visualize_refinement(
+                    bckup[0], bckup[1], bckup[2], (py, px), pr)
     
         # Print results
-        print(" ")
-        print("--- Correction of radius and coordinates via intensity sum maximization --")
-        print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(px), 
-                                                                     float(py)))
-        print("--------------------------------------------------------------------------")
-        
+        if self.messages:
+            print("CenterLocator: manual detection + adjustment:")
+            print(f"Estimated center {px:.2f} {py:.2f}")
+                
         return py, px, best_radius
     
     
