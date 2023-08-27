@@ -225,9 +225,11 @@ class CenterEstimator:
                     ax.clear()
                     ax.imshow(self.to_refine, cmap = self.cmap)
                     for x, y in self.coords:
+
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
                                    s=self.marker_size)
+
                     my_plot_title = (
                         "Select 3 points to define "
                         "one of diffraction circles.")
@@ -260,6 +262,7 @@ class CenterEstimator:
                             ax.scatter(x, y,
                                        c='r', marker='x', 
                                        s=self.marker_size)
+
                         my_plot_title = (
                             "Select 3 points to define "
                             "one of diffraction circles.")
@@ -358,12 +361,14 @@ class CenterEstimator:
                     # Display the image
                     plt.draw()
                     plt.show(block = False)
+
             except KeyboardInterrupt:
                 print("Execution manually interrupted by user.")
                 break
             except ValueError as e:
                 print("ValueError:", e)
                 break
+
             
         # If the termination_flag is True, stop the code
         if termination_flag: 
@@ -526,8 +531,7 @@ class CenterEstimator:
         # If the termination_flag is True, stop the code
         if termination_flag: 
             plt.close()  # Close the figure
-            sys.exit()
-         
+
         # Print results
         if self.messages:
             print("CenterEstimator :: manual detection + adjustment")
@@ -955,6 +959,7 @@ class CenterLocator(CenterEstimator):
         # (2) Define additional parameter
         self.final_replot = final_replot
         self.messages = messages
+
 
         # (3) Run correction method and get refined parameters
         if correction_method is not None:
@@ -1386,12 +1391,7 @@ class CenterLocator(CenterEstimator):
         plt.show(block=False)
 
         plt.close()
-        
-        # If the termination_flag is True, stop the code
-        if termination_flag: 
-             print("No points selected. Returned None values.")
-             sys.exit()
-         
+
         if self.final_replot:
             self.visualize_refinement(px, py, pr, xy, r)
 
@@ -1651,6 +1651,11 @@ class CenterLocator(CenterEstimator):
             for dx, dy in neighbors:
                 nx, ny = px + dx, py + dy
                 curr_intensity_sum = self.intensity_sum(image, nx, ny, pr)
+                
+                # Check for improvement of criterion
+                if curr_intensity_sum > max_intensity_sum:
+                    max_intensity_sum = curr_intensity_sum
+                    best_center = (nx, ny)
                 
                 # Check for improvement of criterion
                 if curr_intensity_sum > max_intensity_sum:
