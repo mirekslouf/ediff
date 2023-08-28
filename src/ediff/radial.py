@@ -8,7 +8,7 @@ to a 1D powder diffraction pattern = radially averaged intensity distribution.
 import numpy as np
 from skimage import measure
 
-def calc_radial_distribution(arr, output_file=None):
+def calc_radial_distribution(arr, center=None, output_file=None):
     """
     Calculate 1D radially averaged distrubution profile
     from 2D diffraction pattern.
@@ -16,7 +16,16 @@ def calc_radial_distribution(arr, output_file=None):
     Parameters
     ----------
     arr : 2D-numpy array
-        The numpy array which contains the 2D-PNBD pattern.
+        The numpy array which contains the 2D-diffractogram.
+    center : tuple/list of two floats, optional, default is None
+        The accurate coordinates of the 2D-diffractogram.
+        This argument should be determined by ediff.center.CenterLocator
+        to get the best results.
+        If not given (= it is None), the center is determined
+        an approximate procedure using intensity center,
+        without any refinement;
+        this is imprecise, especially in case of
+        diffraction patterns with a beamstopper.
     output_file : str, optional, default is None
         Name of the output file.
         If given, the calculated 1D profile is saved to *output_file*.
@@ -27,11 +36,20 @@ def calc_radial_distribution(arr, output_file=None):
         * R = radial_distance = dist. from the diffractogram center [pixels]
         * I = intensity = intensities at given distances [arbitrary units]
     """
-    # 1) Find center
-    # (We employ function from skimage.measure (not from stemdiff.io),
-    # (because we want float/non-integer values from the whole array.
-    M =  measure.moments(arr,1)
-    (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+    # 1) Get the center of 2D-diffractogram.
+    if center is None:
+        # If center argument was not given,
+        # we ESTIMATE center as mass/intensity center of the array.
+        # We use simple functions from skimage.measure,
+        # do not consider central square and do not use refinement.
+        # This is usually sufficient for 4D-STEM/PNBD diffractograms,
+        # but it fails if the diffraction image contains a beamstopper.
+        M =  measure.moments(arr,1)
+        (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+    else:
+        # If center accurate center coordinates were given,
+        # it is much better (and hopefully more accurate) and we use them.
+        (xc,yc) = center
     # 2) Get image dimensions
     (width,height) = arr.shape
     # 3) 2D-pole/meshgrid with calculated radial distances

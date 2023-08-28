@@ -228,6 +228,7 @@ class CenterEstimator:
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
                                    s=self.marker_size)
+
                     my_plot_title = (
                         "Select 3 points to define "
                         "one of diffraction circles.")
@@ -260,6 +261,7 @@ class CenterEstimator:
                             ax.scatter(x, y,
                                        c='r', marker='x', 
                                        s=self.marker_size)
+
                         my_plot_title = (
                             "Select 3 points to define "
                             "one of diffraction circles.")
@@ -364,6 +366,7 @@ class CenterEstimator:
             except ValueError as e:
                 print("ValueError:", e)
                 break
+
             
         # If the termination_flag is True, stop the code
         if termination_flag: 
@@ -488,7 +491,7 @@ class CenterEstimator:
                 termination_flag = True
                 if self.messages:
                     print("--- Refinement done. ---")
-                    
+
             # Update the plot with the new center position
             circle.set_center((xy[0], xy[1]))  # circle
             circle.set_radius(r)               # radius
@@ -526,8 +529,7 @@ class CenterEstimator:
         # If the termination_flag is True, stop the code
         if termination_flag: 
             plt.close()  # Close the figure
-            sys.exit()
-         
+
         # Print results
         if self.messages:
             print("CenterEstimator :: manual detection + adjustment")
@@ -951,10 +953,10 @@ class CenterLocator(CenterEstimator):
             detection_method, correction_method,
             heq=heq, icut=icut, cmap=cmap, messages=messages)
         
-
         # (2) Define additional parameter
         self.final_replot = final_replot
         self.messages = messages
+
 
         # (3) Run correction method and get refined parameters
         if correction_method is not None:
@@ -971,6 +973,7 @@ class CenterLocator(CenterEstimator):
             else:
                 print("Incorrect method for correction selected")
                 sys.exit()
+
         else:
             self.ret = 2
 
@@ -1389,7 +1392,7 @@ class CenterLocator(CenterEstimator):
         
         # If the termination_flag is True, stop the code
         if termination_flag: 
-             print("No points selected. Returned None values.")
+             print("Not enough points selected. Returned None values.")
              sys.exit()
          
         if self.final_replot:
@@ -1647,6 +1650,7 @@ class CenterLocator(CenterEstimator):
                 (dx, dy) 
                 for dx in [-0.5, 0, 0.5] 
                 for dy in [-0.5, 0, 0.5] 
+
                 if dx != 0 or dy != 0]
             for dx, dy in neighbors:
                 nx, ny = px + dx, py + dy
