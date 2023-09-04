@@ -225,6 +225,7 @@ class CenterEstimator:
                     ax.clear()
                     ax.imshow(self.to_refine, cmap = self.cmap)
                     for x, y in self.coords:
+
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
                                    s=self.marker_size)
@@ -360,6 +361,7 @@ class CenterEstimator:
                     # Display the image
                     plt.draw()
                     plt.show(block = False)
+
             except KeyboardInterrupt:
                 print("Execution manually interrupted by user.")
                 break
@@ -953,6 +955,7 @@ class CenterLocator(CenterEstimator):
             detection_method, correction_method,
             heq=heq, icut=icut, cmap=cmap, messages=messages)
         
+
         # (2) Define additional parameter
         self.final_replot = final_replot
         self.messages = messages
@@ -1395,6 +1398,7 @@ class CenterLocator(CenterEstimator):
              print("Not enough points selected. Returned None values.")
              sys.exit()
          
+
         if self.final_replot:
             self.visualize_refinement(px, py, pr, xy, r)
 
@@ -1655,6 +1659,11 @@ class CenterLocator(CenterEstimator):
             for dx, dy in neighbors:
                 nx, ny = px + dx, py + dy
                 curr_intensity_sum = self.intensity_sum(image, nx, ny, pr)
+                
+                # Check for improvement of criterion
+                if curr_intensity_sum > max_intensity_sum:
+                    max_intensity_sum = curr_intensity_sum
+                    best_center = (nx, ny)
                 
                 # Check for improvement of criterion
                 if curr_intensity_sum > max_intensity_sum:
