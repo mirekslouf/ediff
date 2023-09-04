@@ -21,7 +21,7 @@ def calc_radial_distribution(arr, center=None, output_file=None):
         The accurate coordinates of the 2D-diffractogram.
         This argument should be determined by ediff.center.CenterLocator
         to get the best results.
-        If not given (= it is None), the center is determined
+        If not given (= if it defaults to None), the center is determined
         an approximate procedure using intensity center,
         without any refinement;
         this is imprecise, especially in case of
