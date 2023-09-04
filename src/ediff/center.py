@@ -1584,7 +1584,7 @@ class CenterLocator(CenterEstimator):
         return px, py, pr
     
     
-    def ref_maximize_sum(self, px, py, pr, plot_results=1):
+    def ref_maximize_sum(self, px, py, pr, plot_results=1,search_radius=5.0):
         ''' 
         Adjust center position based on gradient optimization method
         via maximization of intensity sum.
@@ -1629,6 +1629,7 @@ class CenterLocator(CenterEstimator):
         
         # Starting values to be modified 
         max_intensity_sum = self.intensity_sum(image, px, py, pr)
+
         best_center = (px, py)
         
         # Convergence criterion for termination of gradient optimization 
@@ -1644,42 +1645,41 @@ class CenterLocator(CenterEstimator):
         #     the convergence threshold
         no_improvement_count = 0
         
-        # iterative refinement of the center of a circle while keeping 
+        # iterative refinement of the center of a circle while keeping
         # the radius constant.
         for iteration in range(max_iterations):
             prev_intensity_sum = max_intensity_sum
-            
+    
             # Refine center while keeping radius constant
             neighbors = [
-                (dx, dy) 
-                for dx in [-0.5, 0, 0.5] 
-                for dy in [-0.5, 0, 0.5] 
-
+                (dx, dy)
+                for dx in [-0.5, 0, 0.5]
+                for dy in [-0.5, 0, 0.5]
                 if dx != 0 or dy != 0]
             for dx, dy in neighbors:
                 nx, ny = px + dx, py + dy
-                curr_intensity_sum = self.intensity_sum(image, nx, ny, pr)
-                
-                # Check for improvement of criterion
-                if curr_intensity_sum > max_intensity_sum:
-                    max_intensity_sum = curr_intensity_sum
-                    best_center = (nx, ny)
-                
-                # Check for improvement of criterion
-                if curr_intensity_sum > max_intensity_sum:
-                    max_intensity_sum = curr_intensity_sum
-                    best_center = (nx, ny)
-            
+                # Check if the point is within the expanded search radius
+                if (
+                    px - search_radius <= nx <= px + search_radius and
+                    py - search_radius <= ny <= py + search_radius
+                ):
+                    curr_intensity_sum = self.intensity_sum(image, nx, ny, pr)
+                    
+                    # Check for improvement of criterion
+                    if curr_intensity_sum > max_intensity_sum:
+                        max_intensity_sum = curr_intensity_sum
+                        best_center = (nx, ny)
+    
             # Check for convergence and improvement (termination conditions)
             impr = abs(max_intensity_sum - prev_intensity_sum)
             if impr < convergence_threshold:
                 no_improvement_count += 1
-                px, py, pr = px+np.random.uniform(-0.2,0.2), \
-                             py+np.random.uniform(-0.2,0.2), \
-                             pr+np.random.uniform(-0.5,0.5)
-                if no_improvement_count >= 10:
+                px, py, pr = px + np.random.uniform(-0.1, 0.1), \
+                             py + np.random.uniform(-0.1, 0.1), \
+                             pr + np.random.uniform(-0.1, 0.1)
+                if no_improvement_count >= 20:
                     break
-            
+    
             # Update center coordinates
             px, py = best_center
         
@@ -1687,7 +1687,7 @@ class CenterLocator(CenterEstimator):
         # constant. It iterates through different radius adjustments to find
         # a radius that maximizes the intensity sum of pixels
         best_radius = pr
-        for dr in [-1, -0.5, 0, 0.5, 1]:
+        for dr in range(-3,3):
             new_radius = pr + dr
             curr_intensity_sum = self.intensity_sum(image, px, py, new_radius)
             
@@ -1696,18 +1696,24 @@ class CenterLocator(CenterEstimator):
                 max_intensity_sum = curr_intensity_sum
                 best_radius = new_radius
         
+        if (abs(px-bckup[0])>=6 
+            and abs(py-bckup[1])>=2):
+            temp = np.copy(px)
+            px = np.copy(py);
+            py = np.copy(temp);
+ 
         # Refinement visualization
         if plot_results == 1:
             if self.final_replot:
                 self.visualize_refinement(
-                    bckup[0], bckup[1], bckup[2], (py, px), pr)
+                    bckup[0], bckup[1], bckup[2], (px, py), pr)
     
         # Print results
         if self.messages:
             print("CenterLocator: manual detection + adjustment:")
             print(f"Estimated center {px:.2f} {py:.2f}")
                 
-        return py, px, best_radius
+        return px, py, best_radius
     
     
     def get_circle_pixels(self, xc, yc, radius, num_points=360):
@@ -1739,9 +1745,17 @@ class CenterLocator(CenterEstimator):
         # Generate angles from 0 to 2*pi
         theta = np.linspace(0, 2*np.pi, num=num_points)  
         
-        # Calculate x,y-coordinates of points
-        x = xc + radius * np.cos(theta)  
-        y = yc + radius * np.sin(theta)
+        # Calculate x,y-coordinates of points on the inner border
+        x_inner = xc + (radius - 0.5) * np.cos(theta)
+        y_inner = yc + (radius - 0.5) * np.sin(theta)
+        
+        # Calculate x,y-coordinates of points on the actual circle border
+        x_actual = xc + radius * np.cos(theta)
+        y_actual = yc + radius * np.sin(theta)
+        
+        # Return all coordinates in a tuple
+        x = (x_inner, x_actual)
+        y = (y_inner, y_actual)
         
         return x, y
           
