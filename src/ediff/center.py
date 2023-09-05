@@ -1829,29 +1829,29 @@ class CenterLocator(CenterEstimator):
                         color='r', 
                         fill=False, 
                         label='detected', 
-                        linewidth=2)
+                        linewidth=1)
         ax.add_patch(c0)
         ax.scatter(px, py, 
                    label='d-center', 
                    color='r', 
                    marker='x', 
-                   s=100, linewidths=2)  # Blue marker
+                   s=100, linewidths=1)  # Blue marker
         
         # Refined Image
         c1 = plt.Circle(xy, r, 
                         color='g', 
                         fill=False, 
                         label='refined',
-                        linewidth=2)  # Green circle
+                        linewidth=1)  # Green circle
         ax.add_patch(c1)
         ax.scatter(xy[0], xy[1], 
                    label='r-center', 
                    color='g', 
                    marker='x', 
-                   linewidths=2, s=100)  # Green marker
+                   linewidths=1, s=100)  # Green marker
         
         ax.set_title('Center Detection and Correction')
-        ax.legend(loc='lower center', ncol=2, bbox_to_anchor=(0.5, -0.1), mode='expand', frameon=False)
+        ax.legend(loc='upper left', frameon=True)
         ax.axis('off')
         
         plt.tight_layout()
