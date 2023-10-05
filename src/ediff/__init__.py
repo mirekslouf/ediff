@@ -1,9 +1,7 @@
-# Python package initialization file.
-
 '''
-EDIFF package
--------------
+Package: EDIFF
+--------------
 Utilities for simple processing of electron diffraction patterns.
 '''
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
