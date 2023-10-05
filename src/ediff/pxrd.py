@@ -682,6 +682,9 @@ class PXRDcalculation:
         else:
             print('X-axis - unknown quantity and units...')
         # (4) Set the remaining plot details
+        # (change Jupyter default transparent color to white
+        plt.gcf().patch.set_facecolor('white')
+        # (do the rest: XY-labels, grid, tight_layout...
         plt.xlabel(xlabel_str)
         plt.ylabel('Intensity')
         plt.grid()
