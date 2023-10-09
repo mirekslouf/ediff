@@ -162,6 +162,8 @@ def plot_radial_distributions(
     plt.legend()
     plt.grid()
     plt.tight_layout()
+    # ...change Jupyter default transparent color to white
+    plt.gcf().patch.set_facecolor('white')
     # ...save plot as PNG (only if argument [output] was given)
     if output_file: plt.savefig(output_file, dpi=300)
     # ...show plot
