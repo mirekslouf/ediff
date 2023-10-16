@@ -394,11 +394,13 @@ class CenterEstimator:
         # Disconnect key press events
         fig.canvas.mpl_disconnect(cid0) 
         
+        # local variables save
+        self.center = center
+        
+        
         # Manually adjust the calculated center coordinates
         self.x, self.y, self.r = self.adjustment_3points(fig, circle, center)
-        
-        # self.x, self.y, self.r = [np.round(value) for value in (
-        #                             self.x, self.y, self.r)]
+
  
         return self.x, self.y, self.r
 
@@ -493,16 +495,16 @@ class CenterEstimator:
                 else:
                     # Perform shifts normally
                     if event.key == 'up':
-                        xy[1] -= 1
+                        xy[1] -= 0.5
                        # print('Moved up')
                     elif event.key == 'down':
-                        xy[1] += 1
+                        xy[1] += 0.5
                        # print('Moved down')
                     elif event.key == 'left':
-                        xy[0] -= 1
+                        xy[0] -= 0.5
                        # print('Moved left')
                     elif event.key == 'right':
-                        xy[0] += 1
+                        xy[0] += 0.5
                        # print('Moved right')
 
             # Terminate the interactive refinement with 'd' key
@@ -739,7 +741,6 @@ class CenterEstimator:
             radius of the detected center
                                     
         '''
-        
         # Extract the coordinates of the points        
         x = [self.coords[0][0], self.coords[1][0], self.coords[2][0]]
         y = [self.coords[0][1], self.coords[1][1], self.coords[2][1]]
@@ -974,6 +975,7 @@ class CenterLocator(CenterEstimator):
             if correction_method == 'manual':
                 if detection_method == 'manual':
                     self.xx, self.yy, self.rr = self.x, self.y, self.r
+                    self.x, self.y, self.r = self.backip[0], self.backip[1], self.r
                     if self.final_replot:
                         self.visualize_refinement(
                             self.backip[0], self.backip[1], self.r, 
@@ -1235,7 +1237,7 @@ class CenterLocator(CenterEstimator):
             self.r, self.rr = np.round(self.r), np.round(self.rr)
             
             # Return values of center coordinates
-            return (np.round(self.x), np.round(self.y), 
+            return (np.round(self.x,1), np.round(self.y,1), 
                     np.round(self.xx,1), np.round(self.yy,1))  
         else:
             # Convert to float
@@ -1244,7 +1246,7 @@ class CenterLocator(CenterEstimator):
                     [float(value) for value in (self.x, self.y, self.r)]
 
             # Return values of center coordinates
-            return (np.round(self.x), np.round(self.y), None, None)
+            return (np.round(self.x,1), np.round(self.y,1), None, None)
         
     
     def ref_interactive(self, px, py, pr):
@@ -1362,16 +1364,16 @@ class CenterLocator(CenterEstimator):
                 else:
                     # Perform shifts normally
                     if event.key == 'up':
-                        xy[1] -= 1
+                        xy[1] -= 0.5
                        # print('Moved up')
                     elif event.key == 'down':
-                        xy[1] += 1
+                        xy[1] += 0.5
                        # print('Moved down')
                     elif event.key == 'left':
-                        xy[0] -= 1
+                        xy[0] -= 0.5
                        # print('Moved left')
                     elif event.key == 'right':
-                        xy[0] += 1
+                        xy[0] += 0.5
                        # print('Moved right')
 
             # Terminate the interactive refinement with 'd' key
@@ -1650,10 +1652,10 @@ class CenterLocator(CenterEstimator):
         # Convergence criterion for termination of gradient optimization 
         # (1) small positive value that serves as a threshold to determine 
         #     when the optimization process has converged
-        convergence_threshold = 0.1*max_intensity_sum
+        convergence_threshold = 0.05*max_intensity_sum
         
         # (2) maximum number of iterations of optimization
-        max_iterations = 10
+        max_iterations = 50
         
         # (3) keep track of the number of consecutive iterations where there 
         #     is no improvement in the objective function beyond 
@@ -1662,10 +1664,10 @@ class CenterLocator(CenterEstimator):
          
         # iterative refinement of the center of a circle while keeping
         # the radius constant.
-        step = 0.3
+        step = 0.2
         neighbors = [(float(dx), float(dy))
-            for dx in np.arange(-1, 1 + step, step)
-            for dy in np.arange(-1, 1 + step, step)]
+            for dx in np.arange(-1.0, 1.0 + step, step)
+            for dy in np.arange(-1.0, 1.0 + step, step)]
 
         for iteration in range(max_iterations):    
             # Refine center while keeping radius constant
@@ -1690,7 +1692,7 @@ class CenterLocator(CenterEstimator):
             # Check for improvement of criterion -- in each iteration just once,
             # as the algorithm checks the neighbourhood of the best center (in
             # each iteration, the center is updated if possible)
-            if max(curr_intensity_sum) >= max_intensity_sum:                           
+            if max(curr_intensity_sum) > max_intensity_sum:                           
                 max_intensity_sum = max(curr_intensity_sum)
                 
                 # Calculate the new best coordinates of the center
@@ -1698,7 +1700,6 @@ class CenterLocator(CenterEstimator):
                 (nx, ny) = tuple(map(lambda x, y: float(x) + float(y), 
                                      best_center, n))
                 best_center = px, py = (np.copy(nx), np.copy(ny))
-            
     
             # Update maximum intensity sum 
             max_intensity_sum = self.intensity_sum(image, 
@@ -1711,42 +1712,43 @@ class CenterLocator(CenterEstimator):
             # constant. It iterates through different radius adjustments to find
             # a radius that maximizes the intensity sum of pixels
             
-            # radi_intensity_sum = []
-            # radii = np.arange(-1, 1 + step, step)
-            # for dr in radii:
-            #     new_radius = best_radius + dr
-            #     radi_intensity_sum.append(self.intensity_sum(image, 
-            #                                                 best_center[0], 
-            #                                                 best_center[1], 
-            #                                                 new_radius))
+            radi_intensity_sum = []
+            radii = np.arange(-1.0, 1.0 + step, step)
+            for dr in radii:
+                new_radius = best_radius + dr
+                radi_intensity_sum.append(self.intensity_sum(image, 
+                                                            best_center[0], 
+                                                            best_center[1], 
+                                                            new_radius))
                 
-            # # Find the maximum value coordinates within curr_sum
-            # rx, _ = np.unravel_index(np.argmax(radi_intensity_sum),
-            #                           [len(radi_intensity_sum),1])
+            # Find the maximum value coordinates within curr_sum
+            rx, _ = np.unravel_index(np.argmax(radi_intensity_sum),
+                                      [len(radi_intensity_sum),1])
 
-            # # Check for improvement of criterion
-            # if max(radi_intensity_sum) > max_intensity_sum:
-            #     max_intensity_sum = max(radi_intensity_sum)
+            # Check for improvement of criterion
+            if max(radi_intensity_sum) > max_intensity_sum:
+                max_intensity_sum = max(radi_intensity_sum)
                 
-            #     n = radii[rx]
-            #     nr = best_radius+n
+                n = radii[rx]
+                nr = best_radius+n
                 
-            #     best_radius = pr = np.copy(nr)
+                best_radius = pr = np.copy(nr)
                 
             
             # Check for convergence and improvement (termination conditions)
             impr = abs(max_intensity_sum - curr)
             if impr < convergence_threshold:
                 no_improvement_count += 1
-                if no_improvement_count == 5:
+                if no_improvement_count == 25:
                     break
+                
 
         
         # Avoid incorrect/redundant refinement
         ## (1) swapped coordinates
-        if ((bckup[0] > bckup[1] and not best_center[0] > best_center[1])
-            or  (bckup[0] < bckup[1] and not best_center[0] < best_center[1])):
-            best_center = best_center[::-1]
+        # if ((bckup[0] > bckup[1] and not best_center[0] > best_center[1])
+        #     or  (bckup[0] < bckup[1] and not best_center[0] < best_center[1])):
+        #     best_center = best_center[::-1]
         
         ## (2) worsened final maximum intensity sum than the initial one
         if np.round(init_sum,-2) > np.round(max_intensity_sum,-2):
@@ -1830,7 +1832,7 @@ class CenterLocator(CenterEstimator):
         pyc = np.array(pyc, dtype=int)
         
         # Calculate sum using the filtered values
-        s = np.sum(image[pxc, pyc])
+        s = np.sum(image[pyc, pxc])/len(pxc)
         return s
 
    
