@@ -70,6 +70,9 @@ class CenterEstimator:
         y-coordinate of the detected center
     self.r : float64
         radius of the detected center (if available, othervise returns None)
+        
+    
+    tady jsem udelala zmenu
                     
     '''
     
