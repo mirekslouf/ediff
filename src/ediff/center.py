@@ -1997,6 +1997,10 @@ class IntensityCenter:
         xc,yc : float,float
             XY-coordinates of the intensity/mass center of the array.
             Round XY-coordinates if you use them for image/array calculations.
+            
+        Note
+        ----
+        Testovaci zmena.
         '''
         # Get image/array size
         xsize,ysize = arr.shape
