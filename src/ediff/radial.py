@@ -6,7 +6,7 @@ to a 1D powder diffraction pattern = radially averaged intensity distribution.
 '''
 
 import numpy as np
-from skimage import measure
+import ediff.center
 
 def calc_radial_distribution(arr, center=None, output_file=None):
     """
@@ -36,7 +36,8 @@ def calc_radial_distribution(arr, center=None, output_file=None):
         * R = radial_distance = dist. from the diffractogram center [pixels]
         * I = intensity = intensities at given distances [arbitrary units]
     """
-    # 1) Get the center of 2D-diffractogram.
+    
+    # (1) Get the center of 2D-diffractogram.
     if center is None:
         # If center argument was not given,
         # we ESTIMATE center as mass/intensity center of the array.
@@ -44,25 +45,28 @@ def calc_radial_distribution(arr, center=None, output_file=None):
         # do not consider central square and do not use refinement.
         # This is usually sufficient for 4D-STEM/PNBD diffractograms,
         # but it fails if the diffraction image contains a beamstopper.
-        M =  measure.moments(arr,1)
-        (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+        xc,yc = ediff.center.IntensityCenter.center_of_intensity(
+           arr, csquare=50, cintensity=0.8)
     else:
         # If center accurate center coordinates were given,
-        # it is much better (and hopefully more accurate) and we use them.
+        # it is much better (and more accurate) and we use them.
         (xc,yc) = center
-    # 2) Get image dimensions
+    
+    # (2) Get image dimensions
     (width,height) = arr.shape
-    # 3) 2D-pole/meshgrid with calculated radial distances
+    
+    # (3) Calculate radial distribution
+    # --- (3a) Prepare 2D-array/meshgrid with calculated radial distances
     # (trick 1: the array/meshgrid will be employed for mask
     # (it has the same size as the original array for rad.distr.calculation
     [X,Y] = np.meshgrid(np.arange(width)-xc, np.arange(height)-yc)
     R = np.sqrt(np.square(X) + np.square(Y))
-    # 4) Initialize variables
+    # --- (3b) Initialize variables
     radial_distance = np.arange(1,np.max(R),1)
     intensity       = np.zeros(len(radial_distance))
     index           = 0
     bin_size        = 2
-    # 5) Calcualte radial profile
+    # --- (3c) Calcualte radial profile
     # (Gradual calculation of average intenzity
     # (in circles with increasing distance from the center 
     # (trick 2: to create the circles, we will employ mask from trick 1
@@ -71,7 +75,8 @@ def calc_radial_distribution(arr, center=None, output_file=None):
         values = arr[mask]
         intensity[index] = np.mean(values)
         index += 1 
-    # 6) Save profile to array, save it to file if requested, and return it
+    
+    # (4) Save profile to array, save it to file if requested, and return it
     profile = np.array([radial_distance, intensity])
     if output_file: save_radial_distribution(profile, output_file)
     return(profile)

@@ -1945,69 +1945,75 @@ class HandlerCircle(HandlerBase):
                         transform=trans)
         return [marker]
         
-
-        
-#%% OLD SIMPLE FUNCTIONS
-
-# Old interface, kept just for backward compatibility
-# To be removed in one of the next versions
-
-def central_square(arr, csquare, xcenter=None, ycenter=None):
-    '''
-    Return central square from an array
-    '''
-    xsize,ysize = arr.shape
-    # If center of was not given, take geometrical center
-    # (for array selections/slicing, we need integers => round, //
-    xc = round(xcenter) or xsize // 2
-    yc = round(ycenter) or ysize // 2
-    # Half of the central square
-    # (for array selections/slicing, we need integers => //
-    half_csquare = csquare // 2
-    # Create sub-array = just central square around xc,yc
-    arr2 = arr[
-        xc-half_csquare:xc+half_csquare,
-        yc-half_csquare:yc+half_csquare].copy()
-    return(arr2)
-
-def center_of_intensity(arr, csquare=20, cintensity=0.8):
-    '''
-    Find center of intensity/mass of an array.
     
-    Parameters
-    ----------
-    arr : 2D-numpy array
-        The array, whose intensity center will be determined.
-    csquare : int, optional, default is 20
-        The size/edge of the square in the (geometrical) center.
-        The intensity center will be searched only within the central square.
-        Reasons: To avoid other spots/diffractions and
-        to minimize the effect of possible intensity assymetry around center. 
-    cintensity : float, optional, default is 0.8
-        The intensity fraction.
-        When searching the intensity center, we will consider only
-        pixels with intensity > max.intensity.
-        
-    Returns
-    -------
-    xc,yc : float,float
-        XY-coordinates of the intensity/mass center of the array.
-        Round XY-coordinates if you use them for image/array calculations.
+    
+class IntensityCenter: 
     '''
-    # Get image/array size
-    xsize,ysize = arr.shape
-    # Calculate borders around the central square
-    xborder = (xsize - csquare) // 2
-    yborder = (ysize - csquare) // 2
-    # Create central square = cut off the borders
-    arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
-    # In the central square, set all values below cintenstity to zero
-    arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
-    # Calculate 1st central moments of the image
-    M = sk.measure.moments(arr2,1)
-    # Calculate the intensity center = centroid according to www-help
-    (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
-    # We have centroid of the central square => recalculate to whole image
-    (xc,yc) = (xc+xborder,yc+yborder)
-    # Return the final center
-    return(xc,yc)
+    Simple center determination for a symmetric diffractogram.
+    
+    * The center is determined as a center of intensity.
+    * This works well for simple, symmetric diffraction patters, which are:
+      (i) without beamstopper, (ii) pre-centered, and (iii) powder-like.
+    * A real-life example of a simple symmetric diffractogram:
+      a good powder electron diffraction pattern from STEMDIFF software.
+    * This class is a legacy from previous EDIFF versions;
+      it is kept mostly for backward compatibility.
+      The functions in this class can be (and should be)
+      replaced by a simple call of ediff.center.CenterLocator object.
+      
+    >>> # Center determination in a simple symmetric diffraction pattern
+    >>> # (center = just center_of_intensity, no refinement
+    >>>
+    >>> # (1) Old way = this (old, legacy) IntensityCenter class:
+    >>> xc,yc = ediff.center.IntensityCenter.center_of_intensity(
+    >>>     arr, csquare=30, cintensity=0.8)
+    >>>
+    >>> # (2) New way = newer (and more universal) CenterLocator class:
+    >>> xc,yc = ediff.center.CenterLocator(
+    >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
+    '''
+    
+    
+    def center_of_intensity(arr, csquare=20, cintensity=0.8):
+        '''
+        Find center of intensity/mass of an array.
+        
+        Parameters
+        ----------
+        arr : 2D-numpy array
+            The array, whose intensity center will be determined.
+        csquare : int, optional, default is 20
+            The size/edge of the square in the (geometrical) center.
+            The intensity center is searched only within the central square.
+            Reasons: To avoid other spots/diffractions and
+            to minimize the effect of an intensity assymetry around center. 
+        cintensity : float, optional, default is 0.8
+            The intensity fraction.
+            When searching the intensity center, we will consider only
+            pixels with intensity > max.intensity.
+            
+        Returns
+        -------
+        xc,yc : float,float
+            XY-coordinates of the intensity/mass center of the array.
+            Round XY-coordinates if you use them for image/array calculations.
+        '''
+        # Get image/array size
+        xsize,ysize = arr.shape
+        # Calculate borders around the central square
+        xborder = (xsize - csquare) // 2
+        yborder = (ysize - csquare) // 2
+        # Create central square = cut off the borders
+        arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
+        # In the central square, set all values below cintenstity to zero
+        arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
+        # Calculate 1st central moments of the image
+        M = sk.measure.moments(arr2,1)
+        # Calculate the intensity center = centroid according to www-help
+        (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+        # We have centroid of the central square => recalculate to whole image
+        (xc,yc) = (xc+xborder,yc+yborder)
+        # IMPORTANT: switch xc,yc => arrays(rows,cols) x images(cols,rows
+        (xc,yc) = (yc,xc)
+        # Return the final center
+        return(xc,yc)
