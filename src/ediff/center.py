@@ -1996,11 +1996,7 @@ class IntensityCenter:
         -------
         xc,yc : float,float
             XY-coordinates of the intensity/mass center of the array.
-            Round XY-coordinates if you use them for image/array calculations.
-            
-        Note
-        ----
-        Testovaci zmena.
+            Round XY-coordinates if you use them for image/array calculations.    
         '''
         # Get image/array size
         xsize,ysize = arr.shape
@@ -2017,7 +2013,5 @@ class IntensityCenter:
         (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
         # We have centroid of the central square => recalculate to whole image
         (xc,yc) = (xc+xborder,yc+yborder)
-        # IMPORTANT: switch xc,yc => arrays(rows,cols) x images(cols,rows
-        (xc,yc) = (yc,xc)
-        # Return the final center
+        ## Return the final center
         return(xc,yc)

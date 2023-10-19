@@ -58,20 +58,22 @@ def calc_radial_distribution(arr, center=None, output_file=None):
     # (3) Calculate radial distribution
     # --- (3a) Prepare 2D-array/meshgrid with calculated radial distances
     # (trick 1: the array/meshgrid will be employed for mask
-    # (it has the same size as the original array for rad.distr.calculation
-    [X,Y] = np.meshgrid(np.arange(width)-xc, np.arange(height)-yc)
+    # (...the meshgrid size = the same as the original array size
+    # (...note: when creating meshgrid, xc,yc must be switched
+    # (   it is not so clear why, but it was verified repeatedly
+    [X,Y] = np.meshgrid(np.arange(width)-yc, np.arange(height)-xc)
     R = np.sqrt(np.square(X) + np.square(Y))
     # --- (3b) Initialize variables
     radial_distance = np.arange(1,np.max(R),1)
     intensity       = np.zeros(len(radial_distance))
     index           = 0
-    bin_size        = 2
+    bin_size        = 1
     # --- (3c) Calcualte radial profile
     # (Gradual calculation of average intenzity
     # (in circles with increasing distance from the center 
     # (trick 2: to create the circles, we will employ mask from trick 1
     for i in radial_distance:
-        mask = np.greater(R, i - bin_size/2) & np.less(R, i + bin_size/2)
+        mask = np.greater(R, i - bin_size) & np.less(R, i + bin_size)
         values = arr[mask]
         intensity[index] = np.mean(values)
         index += 1 
