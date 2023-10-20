@@ -3,7 +3,7 @@ Module ediff.center
 -------------------
 Find center of 2D diffraction pattern. 
 
-CenterDet, aktualizace 06-10-23 CentDet update, methods compatibility
+Update 20-10-23 CentDet update, resolving issues with swapped x, y coordinates
 '''
 
 import numpy as np
@@ -1868,7 +1868,7 @@ class CenterLocator(CenterEstimator):
         pyc = np.array(pyc, dtype=int)
         
         # Calculate sum using the filtered values
-        s = np.var(image[pxc, pyc])
+        s = np.var(image[pyc, pxc])
         return s
     
 
