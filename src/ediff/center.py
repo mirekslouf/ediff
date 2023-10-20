@@ -587,11 +587,12 @@ class CenterEstimator:
         xc,yc : float,float
             XY-coordinates of the intensity/mass center of the array.
             Round XY-coordinates if you use them for image/array calculations.
+            
+            
         '''  
         
         # Get image/array size
-        image = np.copy(self.to_refine)
-        arr = np.copy(image)
+        arr = np.copy(self.image)
         xsize,ysize = arr.shape
         
         # Calculate borders around the central square
@@ -613,13 +614,14 @@ class CenterEstimator:
         # We have centroid of the central square => recalculate to whole image
         (self.x, self.y) = (self.x + xborder, self.y + yborder)
         self.r = 100
-        
+            
         # User information:
         if self.messages:
             print("--------- Diffraction pattern detection via intensity detection ----------")
             print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
                                                                          float(self.y)))
             print("--------------------------------------------------------------------------")
+
 
         # Plot result of the Hough transform
         if plot_results == 1:
@@ -2005,8 +2007,8 @@ class IntensityCenter:
             
         Note
         ----
-        Testovaci zmena.
         '''
+        
         # Get image/array size
         xsize,ysize = arr.shape
         # Calculate borders around the central square
