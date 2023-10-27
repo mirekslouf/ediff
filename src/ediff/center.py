@@ -394,13 +394,11 @@ class CenterEstimator:
         # Disconnect key press events
         fig.canvas.mpl_disconnect(cid0) 
         
-        # local variables save
-        self.center = center
-        
-        
         # Manually adjust the calculated center coordinates
         self.x, self.y, self.r = self.adjustment_3points(fig, circle, center)
-
+        
+        # self.x, self.y, self.r = [np.round(value) for value in (
+        #                             self.x, self.y, self.r)]
  
         return self.x, self.y, self.r
 
@@ -495,16 +493,16 @@ class CenterEstimator:
                 else:
                     # Perform shifts normally
                     if event.key == 'up':
-                        xy[1] -= 0.5
+                        xy[1] -= 1
                        # print('Moved up')
                     elif event.key == 'down':
-                        xy[1] += 0.5
+                        xy[1] += 1
                        # print('Moved down')
                     elif event.key == 'left':
-                        xy[0] -= 0.5
+                        xy[0] -= 1
                        # print('Moved left')
                     elif event.key == 'right':
-                        xy[0] += 0.5
+                        xy[0] += 1
                        # print('Moved right')
 
             # Terminate the interactive refinement with 'd' key
@@ -712,8 +710,7 @@ class CenterEstimator:
             print("--------------------------------------------------------------------------")
         
         
-        self.x, self.y, self.r = float(self.x[0]), float(self.y[0]), float(self.r[0])
-
+        self.x, self.y, self.r = self.x[0], self.y[0], self.r[0]
         # Return results, convert coordinates to float
         return self.x, self.y, self.r
 
@@ -742,6 +739,7 @@ class CenterEstimator:
             radius of the detected center
                                     
         '''
+        
         # Extract the coordinates of the points        
         x = [self.coords[0][0], self.coords[1][0], self.coords[2][0]]
         y = [self.coords[0][1], self.coords[1][1], self.coords[2][1]]
@@ -976,7 +974,6 @@ class CenterLocator(CenterEstimator):
             if correction_method == 'manual':
                 if detection_method == 'manual':
                     self.xx, self.yy, self.rr = self.x, self.y, self.r
-                    self.x, self.y, self.r = self.backip[0], self.backip[1], self.r
                     if self.final_replot:
                         self.visualize_refinement(
                             self.backip[0], self.backip[1], self.r, 
@@ -1238,7 +1235,7 @@ class CenterLocator(CenterEstimator):
             self.r, self.rr = np.round(self.r), np.round(self.rr)
             
             # Return values of center coordinates
-            return (np.round(self.x,1), np.round(self.y,1), 
+            return (np.round(self.x), np.round(self.y), 
                     np.round(self.xx,1), np.round(self.yy,1))  
         else:
             # Convert to float
@@ -1247,7 +1244,7 @@ class CenterLocator(CenterEstimator):
                     [float(value) for value in (self.x, self.y, self.r)]
 
             # Return values of center coordinates
-            return (np.round(self.x,1), np.round(self.y,1), None, None)
+            return (np.round(self.x), np.round(self.y), None, None)
         
     
     def ref_interactive(self, px, py, pr):
@@ -1285,6 +1282,7 @@ class CenterLocator(CenterEstimator):
         r : float64
             new radius of the circular diffraction pattern
         '''
+        
         # Load original image
         im = np.copy(self.to_refine)
         
@@ -1315,7 +1313,6 @@ class CenterLocator(CenterEstimator):
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
-        
         circle = plt.Circle(
             (px, py), pr, color='r', fill=False)
         ax.add_artist(circle)
@@ -1324,7 +1321,7 @@ class CenterLocator(CenterEstimator):
         center, = ax.plot(self.x, self.y, 'rx', markersize=12)
                     
 
-        plt.title('Manually adjust the center position.', 
+        plt.title('Manually adjust the position of the center using keys.', 
                   fontsize=20)
 
         ax.imshow(im, cmap = self.cmap)
@@ -1365,16 +1362,16 @@ class CenterLocator(CenterEstimator):
                 else:
                     # Perform shifts normally
                     if event.key == 'up':
-                        xy[1] -= 0.5
+                        xy[1] -= 1
                        # print('Moved up')
                     elif event.key == 'down':
-                        xy[1] += 0.5
+                        xy[1] += 1
                        # print('Moved down')
                     elif event.key == 'left':
-                        xy[0] -= 0.5
+                        xy[0] -= 1
                        # print('Moved left')
                     elif event.key == 'right':
-                        xy[0] += 0.5
+                        xy[0] += 1
                        # print('Moved right')
 
             # Terminate the interactive refinement with 'd' key
@@ -1388,7 +1385,8 @@ class CenterLocator(CenterEstimator):
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
 
-            plt.title("Manually adjust the center position.", fontsize=20)
+            plt.title('Manually adjust the position of the center using keys.', 
+                      fontsize=20)
          
             # Update the plot
             plt.draw() 
@@ -1652,10 +1650,10 @@ class CenterLocator(CenterEstimator):
         # Convergence criterion for termination of gradient optimization 
         # (1) small positive value that serves as a threshold to determine 
         #     when the optimization process has converged
-        convergence_threshold = 0.05*max_intensity_sum
+        convergence_threshold = 0.1*max_intensity_sum
         
         # (2) maximum number of iterations of optimization
-        max_iterations = 50
+        max_iterations = 10
         
         # (3) keep track of the number of consecutive iterations where there 
         #     is no improvement in the objective function beyond 
@@ -1664,10 +1662,10 @@ class CenterLocator(CenterEstimator):
          
         # iterative refinement of the center of a circle while keeping
         # the radius constant.
-        step = 0.2
+        step = 0.3
         neighbors = [(float(dx), float(dy))
-            for dx in np.arange(-1.0, 1.0 + step, step)
-            for dy in np.arange(-1.0, 1.0 + step, step)]
+            for dx in np.arange(-1, 1 + step, step)
+            for dy in np.arange(-1, 1 + step, step)]
 
         for iteration in range(max_iterations):    
             # Refine center while keeping radius constant
@@ -1692,7 +1690,7 @@ class CenterLocator(CenterEstimator):
             # Check for improvement of criterion -- in each iteration just once,
             # as the algorithm checks the neighbourhood of the best center (in
             # each iteration, the center is updated if possible)
-            if max(curr_intensity_sum) > max_intensity_sum:                           
+            if max(curr_intensity_sum) >= max_intensity_sum:                           
                 max_intensity_sum = max(curr_intensity_sum)
                 
                 # Calculate the new best coordinates of the center
@@ -1700,6 +1698,7 @@ class CenterLocator(CenterEstimator):
                 (nx, ny) = tuple(map(lambda x, y: float(x) + float(y), 
                                      best_center, n))
                 best_center = px, py = (np.copy(nx), np.copy(ny))
+            
     
             # Update maximum intensity sum 
             max_intensity_sum = self.intensity_sum(image, 
@@ -1712,36 +1711,35 @@ class CenterLocator(CenterEstimator):
             # constant. It iterates through different radius adjustments to find
             # a radius that maximizes the intensity sum of pixels
             
-            radi_intensity_sum = []
-            radii = np.arange(-1.0, 1.0 + step, step)
-            for dr in radii:
-                new_radius = best_radius + dr
-                radi_intensity_sum.append(self.intensity_sum(image, 
-                                                            best_center[0], 
-                                                            best_center[1], 
-                                                            new_radius))
+            # radi_intensity_sum = []
+            # radii = np.arange(-1, 1 + step, step)
+            # for dr in radii:
+            #     new_radius = best_radius + dr
+            #     radi_intensity_sum.append(self.intensity_sum(image, 
+            #                                                 best_center[0], 
+            #                                                 best_center[1], 
+            #                                                 new_radius))
                 
-            # Find the maximum value coordinates within curr_sum
-            rx, _ = np.unravel_index(np.argmax(radi_intensity_sum),
-                                      [len(radi_intensity_sum),1])
+            # # Find the maximum value coordinates within curr_sum
+            # rx, _ = np.unravel_index(np.argmax(radi_intensity_sum),
+            #                           [len(radi_intensity_sum),1])
 
-            # Check for improvement of criterion
-            if max(radi_intensity_sum) > max_intensity_sum:
-                max_intensity_sum = max(radi_intensity_sum)
+            # # Check for improvement of criterion
+            # if max(radi_intensity_sum) > max_intensity_sum:
+            #     max_intensity_sum = max(radi_intensity_sum)
                 
-                n = radii[rx]
-                nr = best_radius+n
+            #     n = radii[rx]
+            #     nr = best_radius+n
                 
-                best_radius = pr = np.copy(nr)
+            #     best_radius = pr = np.copy(nr)
                 
             
             # Check for convergence and improvement (termination conditions)
             impr = abs(max_intensity_sum - curr)
             if impr < convergence_threshold:
                 no_improvement_count += 1
-                if no_improvement_count == 25:
+                if no_improvement_count == 5:
                     break
-                
 
         
         # Avoid incorrect/redundant refinement
@@ -1832,7 +1830,7 @@ class CenterLocator(CenterEstimator):
         pyc = np.array(pyc, dtype=int)
         
         # Calculate sum using the filtered values
-        s = np.sum(image[pyc, pxc])/len(pxc)
+        s = np.sum(image[pxc, pyc])
         return s
 
    
@@ -1947,69 +1945,73 @@ class HandlerCircle(HandlerBase):
                         transform=trans)
         return [marker]
         
-
-        
-#%% OLD SIMPLE FUNCTIONS
-
-# Old interface, kept just for backward compatibility
-# To be removed in one of the next versions
-
-def central_square(arr, csquare, xcenter=None, ycenter=None):
-    '''
-    Return central square from an array
-    '''
-    xsize,ysize = arr.shape
-    # If center of was not given, take geometrical center
-    # (for array selections/slicing, we need integers => round, //
-    xc = round(xcenter) or xsize // 2
-    yc = round(ycenter) or ysize // 2
-    # Half of the central square
-    # (for array selections/slicing, we need integers => //
-    half_csquare = csquare // 2
-    # Create sub-array = just central square around xc,yc
-    arr2 = arr[
-        xc-half_csquare:xc+half_csquare,
-        yc-half_csquare:yc+half_csquare].copy()
-    return(arr2)
-
-def center_of_intensity(arr, csquare=20, cintensity=0.8):
-    '''
-    Find center of intensity/mass of an array.
     
-    Parameters
-    ----------
-    arr : 2D-numpy array
-        The array, whose intensity center will be determined.
-    csquare : int, optional, default is 20
-        The size/edge of the square in the (geometrical) center.
-        The intensity center will be searched only within the central square.
-        Reasons: To avoid other spots/diffractions and
-        to minimize the effect of possible intensity assymetry around center. 
-    cintensity : float, optional, default is 0.8
-        The intensity fraction.
-        When searching the intensity center, we will consider only
-        pixels with intensity > max.intensity.
-        
-    Returns
-    -------
-    xc,yc : float,float
-        XY-coordinates of the intensity/mass center of the array.
-        Round XY-coordinates if you use them for image/array calculations.
+    
+class IntensityCenter: 
     '''
-    # Get image/array size
-    xsize,ysize = arr.shape
-    # Calculate borders around the central square
-    xborder = (xsize - csquare) // 2
-    yborder = (ysize - csquare) // 2
-    # Create central square = cut off the borders
-    arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
-    # In the central square, set all values below cintenstity to zero
-    arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
-    # Calculate 1st central moments of the image
-    M = sk.measure.moments(arr2,1)
-    # Calculate the intensity center = centroid according to www-help
-    (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
-    # We have centroid of the central square => recalculate to whole image
-    (xc,yc) = (xc+xborder,yc+yborder)
-    # Return the final center
-    return(xc,yc)
+    Simple center determination for a symmetric diffractogram.
+    
+    * The center is determined as a center of intensity.
+    * This works well for simple, symmetric diffraction patters, which are:
+      (i) without beamstopper, (ii) pre-centered, and (iii) powder-like.
+    * A real-life example of a simple symmetric diffractogram:
+      a good powder electron diffraction pattern from STEMDIFF software.
+    * This class is a legacy from previous EDIFF versions;
+      it is kept mostly for backward compatibility.
+      The functions in this class can be (and should be)
+      replaced by a simple call of ediff.center.CenterLocator object.
+      
+    >>> # Center determination in a simple symmetric diffraction pattern
+    >>> # (center = just center_of_intensity, no refinement
+    >>>
+    >>> # (1) Old way = this (old, legacy) IntensityCenter class:
+    >>> xc,yc = ediff.center.IntensityCenter.center_of_intensity(
+    >>>     arr, csquare=30, cintensity=0.8)
+    >>>
+    >>> # (2) New way = newer (and more universal) CenterLocator class:
+    >>> xc,yc = ediff.center.CenterLocator(
+    >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
+    '''
+    
+    
+    def center_of_intensity(arr, csquare=20, cintensity=0.8):
+        '''
+        Find center of intensity/mass of an array.
+        
+        Parameters
+        ----------
+        arr : 2D-numpy array
+            The array, whose intensity center will be determined.
+        csquare : int, optional, default is 20
+            The size/edge of the square in the (geometrical) center.
+            The intensity center is searched only within the central square.
+            Reasons: To avoid other spots/diffractions and
+            to minimize the effect of an intensity assymetry around center. 
+        cintensity : float, optional, default is 0.8
+            The intensity fraction.
+            When searching the intensity center, we will consider only
+            pixels with intensity > max.intensity.
+            
+        Returns
+        -------
+        xc,yc : float,float
+            XY-coordinates of the intensity/mass center of the array.
+            Round XY-coordinates if you use them for image/array calculations.    
+        '''
+        # Get image/array size
+        xsize,ysize = arr.shape
+        # Calculate borders around the central square
+        xborder = (xsize - csquare) // 2
+        yborder = (ysize - csquare) // 2
+        # Create central square = cut off the borders
+        arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
+        # In the central square, set all values below cintenstity to zero
+        arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
+        # Calculate 1st central moments of the image
+        M = sk.measure.moments(arr2,1)
+        # Calculate the intensity center = centroid according to www-help
+        (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+        # We have centroid of the central square => recalculate to whole image
+        (xc,yc) = (xc+xborder,yc+yborder)
+        ## Return the final center
+        return(xc,yc)
