@@ -2019,3 +2019,4 @@ class IntensityCenter:
         (xc,yc) = (xc+xborder,yc+yborder)
         ## Return the final center
         return(xc,yc)
+
