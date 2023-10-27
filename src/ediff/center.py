@@ -1929,6 +1929,8 @@ class CenterLocator(CenterEstimator):
         plt.tight_layout()
         plt.show(block=False)
 
+
+
 class HandlerCircle(HandlerBase):
     '''
     Help class for visualization. Not to be used outside of the module.
@@ -1944,9 +1946,9 @@ class HandlerCircle(HandlerBase):
                         linewidth=orig_handle.get_linewidth(),
                         transform=trans)
         return [marker]
-        
-    
-    
+
+
+
 class IntensityCenter: 
     '''
     Simple center determination for a symmetric diffractogram.
@@ -1972,6 +1974,7 @@ class IntensityCenter:
     >>> xc,yc = ediff.center.CenterLocator(
     >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
     '''
+
     
     
     def center_of_intensity(arr, csquare=20, cintensity=0.8):
