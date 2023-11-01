@@ -1,6 +1,5 @@
 EDIFF :: processing of powder electron diffraction patterns
 -----------------------------------------------------------
-
 * EDIFF is under development, but key modules do work:
     - io = input/output data treatment
 	- bkgr = background subtraction
@@ -8,9 +7,13 @@ EDIFF :: processing of powder electron diffraction patterns
 	- radial = calculate radial distribution (2D-pattern to 1D-pattern) 
 	- pxrd = calculation of theoretical powder X-ray diffraction patterns
 
+Installation
+------------
+* `pip install bground` = interactive background subtraction
+* `pip install ediff`   = EDIFF program itself (uses bground internally)
+
 Quick start
 -----------
-
 * See how it works:
 	- Look at [worked example](https://mirekslouf.github.io/ediff/docs/examples/ex1_ediff.nb.html)
       in Jupyter.
@@ -20,7 +23,6 @@ Quick start
 
 Documentation, help and examples
 --------------------------------
-
 * [PyPI](https://pypi.org/project/ediff) repository.
 * [GitHub](https://github.com/mirekslouf/ediff) repository.
 * [GitHub Pages](https://mirekslouf.github.io/ediff/)
@@ -36,3 +38,4 @@ Versions of EDIFF
 * Version 0.1.0 = 1st semi-complete version with basic documentation
 * Version 0.1.1 = v.0.1.0 + improved/simplified outputs
 * Version 0.1.2 = v.0.1.1 + small improvements of code and documentation
+* Version 0.2   = important improvements of center.py
