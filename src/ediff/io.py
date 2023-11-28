@@ -114,13 +114,17 @@ def plot_radial_distributions(
         The output is the plot on screen
         (and in *output file* if the *output* argument was given).
     
-    Technical note
-    --------------
-    This function is quite flexible.
-    It can plot one radial distribution or more.
-    It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.
-    This makes the code a bit more complex, but it is convenient for the user.
-    A fast comparison of three 1D-distributions from three 2D-diffractograms:
+    Technical notes
+    ---------------
+    * This function is quite flexible.
+    * It can plot one radial distribution or more.
+    * It can take data from PNG-files, TXT-files, 2D-arrays and 1D-arrays.
+    * If the input is a PNG-file or2D-array,
+      the center is just *estimated* as as the center of intensity;
+      therefore, this works only for good diffractograms with a central spot.
+    * This makes the code a more complex, but it is convenient for the user.
+    * An example of fast comparison of three 1D-distributions
+      taken from three 2D-diffractograms in the form of 16-bit PNG images:
     
     >>> ediff.io.plot_radial_distributions(
     >>>     data_to_plot = [

@@ -1,7 +1,8 @@
 EDIFF :: Documentation and examples
 -----------------------------------
 
-Quick start = [Jupyter notebook](./examples/ex1_ediff.nb.html)
+Quick start =
+[Jupyter notebook]()
 which shows complete data processing.
 
 External

@@ -7,8 +7,8 @@ Utilities for processing of electron diffraction patterns.
     - 2D powder electron diffraction pattern
 * Output:
     - 1D powder electron diffraction pattern
-    - i.e. radial profile of the original pattern with background subtraction
-    - the final profile is usually calibrated and compared with calculated PXRD
+    - the 1D pattern/profile is obtained by radial averaging of 2D pattern
+    - the final 1D profile can be calibrated and compared with calculated PXRD
 
 EDIFF modules:
 
@@ -18,10 +18,10 @@ EDIFF modules:
 * ediff.pxrd = calculate 1D-PXRD pattern for a known structure
 * ediff.radial = calculate 1D-radial profile from 2D-diffraction pattern
 
-EDIFF auxiliary package BGROUND and its modules:
+Auxiliary package BGROUND:
 
-* the package enables simple interactive background correction
-* it is imported in this file so that it could be used as a part of EDIFF
+* the package enables simple, semi-automated, interactive background correction
+* it is imported during ediff initialization and accessible as ediff.background
 '''
 
 __version__ = "0.2.1"
