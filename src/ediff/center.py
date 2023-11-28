@@ -122,7 +122,7 @@ class CenterEstimator:
             sys.exit()
 
             
-    def detection_intensity(self, csquare=20, cintensity=0.5, plot_results=0):
+    def detection_intensity(self, csquare=50, cintensity=0.8, plot_results=0):
         '''
         Find center of intensity/mass of an array.
         
