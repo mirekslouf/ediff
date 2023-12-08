@@ -1004,6 +1004,8 @@ class CenterLocator(CenterEstimator):
             elif correction_method == 'sum':
                 self.xx, self.yy, self.rr = \
                     self.ref_maximize_sum(self.x, self.y, self.r)
+                if detection_method == 'manual':
+                    self.xx, self.yy = self.yy, self.xx
             else:
                 print("Incorrect method for correction selected")
                 sys.exit()
@@ -1963,7 +1965,6 @@ class HandlerCircle(HandlerBase):
         return [marker]
         
 
-        
 class IntensityCenter: 
     '''
     Simple center determination for a symmetric diffractogram.
@@ -1990,7 +1991,7 @@ class IntensityCenter:
     >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
     '''
     
-    
+    @staticmethod
     def center_of_intensity(arr, csquare=20, cintensity=0.8):
         '''
         Find center of intensity/mass of an array.
