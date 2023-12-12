@@ -84,6 +84,8 @@ class CenterEstimator:
                        heq = False, 
                        icut = None,
                        cmap = 'gray',
+                       csquare=50,
+                       cintensity=0.8,
                        messages = False):
         
         # Initialize attributes
@@ -113,7 +115,7 @@ class CenterEstimator:
             self.x, self.y, self.r = self.detection_3points()
             
         elif detection_method == 'intensity':
-            self.x, self.y, self.r = self.detection_intensity()
+            self.x, self.y, self.r = self.detection_intensity(csquare, cintensity)
 
         elif detection_method == 'hough':
             self.x, self.y, self.r = self.detection_Hough()  
@@ -122,7 +124,7 @@ class CenterEstimator:
             sys.exit()
 
             
-    def detection_intensity(self, csquare=50, cintensity=0.8, plot_results=0):
+    def detection_intensity(self, csquare, cintensity, plot_results=0):
         '''
         Find center of intensity/mass of an array.
         
@@ -619,7 +621,7 @@ class CenterEstimator:
             except KeyboardInterrupt:
                 # If the user manually closes the figure, terminate the loop
                 termination_flag = True
-         
+                
         # Turn off interactive mode
         plt.ioff()
         
@@ -826,9 +828,7 @@ class CenterEstimator:
             plt.axis('off')
             plt.tight_layout()
             plt.show(block=False)
-        else:
-            pass
-            #plt.close('all')
+
         
         self.center = (self.x, self.y)
         self.circle = plt.Circle((self.x,self.y),self.r)
@@ -949,7 +949,7 @@ class CenterLocator(CenterEstimator):
        Selection of a method for center position correction. Default is None.
        String codes are:
            - 'manual' : manual corection 
-           - 'variance' : correction via variance minimization 
+           - 'var' : correction via variance minimization 
            - 'sum' : correction via sum maximization
     heq : boolean
         Allow histogram equalization. The default is 0 (no enhancement)
@@ -979,37 +979,38 @@ class CenterLocator(CenterEstimator):
         
 
         # (2) Define additional parameter
-        self.final_replot = final_replot
         self.messages = messages
         self.image_path = image_path
 
 
-        # (3) Run correction method and get refined parameters
+       # (3) Run correction method and get refined parameters
         if correction_method is not None:
             self.ret = 1
             if correction_method == 'manual':
-                if detection_method == 'manual':
-                    self.xx, self.yy, self.rr = self.x, self.y, self.r
-                    self.x, self.y, self.r = self.backip[0], self.backip[1], self.r
-                    if self.final_replot:
-                        self.visualize_refinement(
-                            self.backip[0], self.backip[1], self.r, 
-                            (self.xx, self.yy), self.r)
-                else:
-                    self.xx, self.yy, self.rr = \
-                        self.ref_interactive(self.x, self.y, self.r)
-            elif correction_method == 'variance':
-                self.xx, self.yy, self.rr = \
-                    self.ref_minimize_var(self.x, self.y, self.r)
-            elif correction_method == 'sum':
-                self.xx, self.yy, self.rr = \
-                    self.ref_maximize_sum(self.x, self.y, self.r)
+                self.yy, self.xx, self.rr = self.x, self.y, self.r
+                self.y, self.x, self.r = self.backip[0], self.backip[1], self.r
+            elif correction_method in ['var', 'sum']:
+                ref_method = getattr(self, f'ref_{correction_method}')
+                self.xx, self.yy, self.rr = ref_method(self.x, self.y, self.r)
                 if detection_method == 'manual':
                     self.xx, self.yy = self.yy, self.xx
+                    self.x, self.y = self.y, self.x
             else:
                 print("Incorrect method for correction selected")
                 sys.exit()
-
+            
+            # Swap coordinates if necessary
+            if detection_method == 'manual':
+                self.xx, self.yy = self.yy, self.xx
+                self.x, self.y = self.y, self.x
+            elif detection_method == 'hough':
+                self.x, self.y = self.y, self.x
+                self.xx, self.yy = self.yy, self.xx
+    
+            # Visualize refinement if required
+            if final_replot:
+                self.visualize_refinement(self.y, self.x, self.r, 
+                                          (self.yy, self.xx), self.rr)
         else:
             self.ret = 2
 
@@ -1300,6 +1301,7 @@ class CenterLocator(CenterEstimator):
         r : float64
             new radius of the circular diffraction pattern
         '''
+        
         # Load original image
         im = np.copy(self.to_refine)
         
@@ -1441,15 +1443,11 @@ class CenterLocator(CenterEstimator):
         if self.messages:
             print("CenterEstimator :: manual detection + adjustment")
             print(f"Center coordinates: {xy[0]:.2f} {xy[1]:.2f}")
-        
-        # Plot results
-        if self.final_replot:
-            self.visualize_refinement(px, py, pr, xy, r)
-                
+                       
         return xy[0], xy[1], r
 
         
-    def ref_minimize_var(self, px, py, pr, plot_results = 0):
+    def ref_var(self, px, py, pr, plot_results = 0):
         '''         
         Adjust center coordinates of a detected circular diffraction pattern.
         The center adjustment is based on variance minimization.
@@ -1602,11 +1600,6 @@ class CenterLocator(CenterEstimator):
         if np.round(init_var,-2) < np.round(min_intensity_var,-2):
             print("Refinement redundant.")
             best_center = np.copy(bckup)
-
-        # Refinement visualization
-        if self.final_replot:
-            self.visualize_refinement(
-                   bckup[0], bckup[1], bckup[2], (best_center), best_radius)
     
         # Print results
         if self.messages:
@@ -1616,7 +1609,7 @@ class CenterLocator(CenterEstimator):
         return best_center[0], best_center[1], best_radius
     
     
-    def ref_maximize_sum(self, px, py, pr, plot_results=1):
+    def ref_sum(self, px, py, pr, plot_results=1):
         ''' 
         Adjust center position based on gradient optimization method
         via maximization of intensity sum.
@@ -1769,12 +1762,6 @@ class CenterLocator(CenterEstimator):
         if np.round(init_sum,-2) > np.round(max_intensity_sum,-2):
             print("Refinement redundant.")
             best_center = np.copy(bckup)
-
-        # Refinement visualization
-        if plot_results == 1:
-            if self.final_replot:
-                self.visualize_refinement(
-                    bckup[0], bckup[1], bckup[2], (best_center), best_radius)
     
         # Print results
         if self.messages:
@@ -2031,6 +2018,7 @@ class IntensityCenter:
         (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
         # We have centroid of the central square => recalculate to whole image
         (xc,yc) = (xc+xborder,yc+yborder)
+        
         ## Return the final center
         return(xc,yc)
 
