@@ -2,9 +2,12 @@
 Module ediff.center
 -------------------
 Find center of 2D diffraction pattern. 
-
-CenterDet, aktualizace 06-10-23 CentDet update, methods compatibility
 '''
+
+# CenterDet
+# PS 2023-10-06: CentDet update, methods compatibility
+# MS 2023-11-26: Improved code formatting and docs + TODO notes for PS  
+    
 
 import numpy as np
 import skimage as sk
@@ -17,9 +20,8 @@ import ediff.io
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
 
-
-import warnings
 import sys
+import warnings
 warnings.filterwarnings("ignore")
 
 
@@ -27,13 +29,17 @@ class CenterEstimator:
     '''
     Detection of the center of diffraction patterns.
     
-    - Perform Hough transform to detect circles in image
-    - Manually selected 3 points defining a circular diffraction pattern 
-      to calculate center coordinates
-    - Visualize results
+    The center can be estimated in one of the following ways:
     
-    SUBCLASS : CenterAdjustment
-    - adjust position of the detected center 
+    * Center of the intensity/mass in selected area.
+    * Center from three points (defined interactivelly)
+      which define one ring in a powder electron diffraction pattern.
+    * Center estimated from Hough transform,
+      which detects circles in the diffraction pattern.
+    
+    SUBCLASS : CenterLocator
+    
+    * the subclass refines the position of the estimated center 
         
     Parameters
     ----------
@@ -63,14 +69,13 @@ class CenterEstimator:
         Print to terminal additional messages about program run.
     
     Returns
-    -------    
-    self.x : float64
+    -------
+    self.x : float
         x-coordinate of the detected center
-    self.y : float64
+    self.y : float
         y-coordinate of the detected center
-    self.r : float64
-        radius of the detected center (if available, othervise returns None)
-                    
+    self.r : float
+        radius of the detected center (if available, othervise returns None)        
     '''
     
     def __init__(self, input_image, 
@@ -79,6 +84,8 @@ class CenterEstimator:
                        heq = False, 
                        icut = None,
                        cmap = 'gray',
+                       csquare=50,
+                       cintensity=0.8,
                        messages = False):
         
         # Initialize attributes
@@ -108,15 +115,91 @@ class CenterEstimator:
             self.x, self.y, self.r = self.detection_3points()
             
         elif detection_method == 'intensity':
-            self.x, self.y, self.r = self.detection_intensity()
+            self.x, self.y, self.r = self.detection_intensity(csquare, cintensity)
 
         elif detection_method == 'hough':
             self.x, self.y, self.r = self.detection_Hough()  
         else:
             print("Incorrect method for detection selected")
             sys.exit()
+
             
+    def detection_intensity(self, csquare, cintensity, plot_results=0):
+        '''
+        Find center of intensity/mass of an array.
+        
+        Parameters
+        ----------
+        arr : 2D-numpy array
+            The array, whose intensity center will be determined.
+        csquare : int, optional, default is 20
+            The size/edge of the square in the (geometrical) center.
+            The intensity center will be searched only within the central square.
+            Reasons: To avoid other spots/diffractions and
+            to minimize the effect of possible intensity assymetry around center. 
+        cintensity : float, optional, default is 0.8
+            The intensity fraction.
+            When searching the intensity center, we will consider only
+            pixels with intensity > max.intensity.
+            
+        Returns
+        -------
+        xc,yc : float,float
+            XY-coordinates of the intensity/mass center of the array.
+            Round XY-coordinates if you use them for image/array calculations.
+        '''  
+        
+        # (1) Get image/array size
+        image = np.copy(self.to_refine)
+        arr = np.copy(image)
+        xsize,ysize = arr.shape
+        
+        # (2) Calculate borders around the central square
+        xborder = (xsize - csquare) // 2
+        yborder = (ysize - csquare) // 2
+        
+        # (3) Create the central square,
+        # from which the intensity center will be detected
+        arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
+        
+        # (4) In the central square,
+        # set all values below cintenstity to zero
+        arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
+        
+        # (5) Determine the intensity center from image moments
+        # see image moments in...
+        # skimage: https://scikit-image.org/docs/dev/api/skimage.measure.html
+        # wikipedia: https://en.wikipedia.org/wiki/Image_moment -> Centroid
+        # ---
+        # (a) Calculate 1st central moments of the image
+        M = moments(arr2,1)
+        # (b) Calculate the intensity center = centroid according to www-help
+        (self.x, self.y) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
+        # (c) We have centroid of the central square
+        # but we have to recalculate it to the whole image
+        (self.x, self.y) = (self.x + xborder, self.y + yborder)
+        # (d) Radius of a diffraction ring is hardcoded to 100 here
+        # TODO: consider improving/correcting/removing in the future
+        self.r = 100
+        
+        # (6) User information (if required)
+        if self.messages:
+            print("--- IntensityCenter = center of intensity/mass ---")
+            print(f"Center coordinates [x, y]: [{self.x:.3f}, {self.y:.3f}]")
+            print("---")
+
+        # (7) Plot results (if required)
+        if plot_results == 1:
+           self.visualize_center(self.x, self.y, self.r) 
                 
+        # (8) Return the results:
+        # a) XY-coordinates of the center
+        # b) radius of the circle/diff.ring,
+        #    from which the center was determined
+        # ! radius of the circle is just hardcoded here - see TODO note above
+        return(self.x, self.y, self.r)
+
+            
     def detection_3points(self, plot_results=1):
         '''         
         In the input image, select manually 3 points defining a circle using
@@ -171,10 +254,9 @@ class CenterEstimator:
         ax.imshow(im, cmap = self.cmap)
         ax.axis('off')
 
- 
         # User information:
         if self.messages:
-            print("--- Manual diffraction pattern detection ---")
+            print("--- ThreePoints = semi-automated center detection ---")
             print()
             print("Select 3 points to define a circle in the diffractogram:")
             print("Use these keys for the selection:")
@@ -184,8 +266,11 @@ class CenterEstimator:
             print("  - 'd' : done = finished = go to the next step")
             print()
             print("Close the figure to terminate. No center will be detected.")
+            print("---")
        
         # Enable interactive mode
+        # (figure is updated after every plotting command
+        # (so that calling figure.show() is not necessary
         plt.ion()
  
         # Initialize the list of coordinates
@@ -227,11 +312,10 @@ class CenterEstimator:
                     closest_index = np.argmin(distances)
                     del self.coords[closest_index]
     
-                    # Redraw the image without the deleted point
+                    ## Redraw the image without the deleted point
                     ax.clear()
                     ax.imshow(self.to_refine, cmap = self.cmap)
                     for x, y in self.coords:
-
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
                                    s=self.marker_size)
@@ -245,13 +329,12 @@ class CenterEstimator:
                     ax.set_xlim(current_xlim)
                     ax.set_ylim(current_ylim)
                     ax.axis('off')
-
- 
+                    
                     fig.canvas.draw()
                 else:
                     print("No points to delete.")
     
-            ## Delete recent point (last added) -- independent on the cursor
+            # Delete recent point (last added) -- independent on the cursor
             if event.key == '2':
                 # Check if there are points to delete
                 if point_counter > 0:  
@@ -304,7 +387,7 @@ class CenterEstimator:
                                    c='r', marker='x', 
                                    s=self.marker_size)
 
-                        # Retore the previous zoom level
+                        # Restore the previous zoom level
                         ax.set_xlim(current_xlim)
                         ax.set_ylim(current_ylim)
                         ax.axis('off')
@@ -340,8 +423,7 @@ class CenterEstimator:
         ax.axis('off')
 
         plt.show(block=False)
-
-        
+      
         # Wait for 'd' key event or close the figure if no points are selected
         while not calculate_circle_flag and not termination_flag:
  
@@ -361,8 +443,7 @@ class CenterEstimator:
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
                     ax.set_ylim(current_ylim)
-                
- 
+                 
                     circle = plt.Circle(
                         (self.x, self.y), self.r, color='r', fill=False)
                     ax.add_artist(circle)
@@ -383,8 +464,7 @@ class CenterEstimator:
             except ValueError as e:
                 print("ValueError:", e)
                 break
-
-            
+           
         # If the termination_flag is True, stop the code
         if termination_flag: 
              print("No points selected. Returned None values.")
@@ -396,13 +476,15 @@ class CenterEstimator:
         
         # local variables save
         self.center = center
-        
-        
+               
         # Manually adjust the calculated center coordinates
         self.x, self.y, self.r = self.adjustment_3points(fig, circle, center)
 
- 
-        return self.x, self.y, self.r
+        # Return the results:
+        # a) XY-coordinates of the center
+        # b) radius of the circle/diff.ring,
+        #    from which the center was determined
+        return(self.x, self.y, self.r)
 
     
     def adjustment_3points(self, fig, circle, center, plot_results=0):
@@ -539,7 +621,7 @@ class CenterEstimator:
             except KeyboardInterrupt:
                 # If the user manually closes the figure, terminate the loop
                 termination_flag = True
-         
+                
         # Turn off interactive mode
         plt.ioff()
         
@@ -559,74 +641,8 @@ class CenterEstimator:
         
     
         return xy[0], xy[1], r
-        
-        
-    def detection_intensity(self, csquare=20, cintensity=0.5, plot_results=0):
-        '''
-        Find center of intensity/mass of an array.
-        
-        Parameters
-        ----------
-        arr : 2D-numpy array
-            The array, whose intensity center will be determined.
-        csquare : int, optional, default is 20
-            The size/edge of the square in the (geometrical) center.
-            The intensity center will be searched only within the central square.
-            Reasons: To avoid other spots/diffractions and
-            to minimize the effect of possible intensity assymetry around center. 
-        cintensity : float, optional, default is 0.8
-            The intensity fraction.
-            When searching the intensity center, we will consider only
-            pixels with intensity > max.intensity.
-            
-        Returns
-        -------
-        xc,yc : float,float
-            XY-coordinates of the intensity/mass center of the array.
-            Round XY-coordinates if you use them for image/array calculations.
-        '''  
-        
-        # Get image/array size
-        image = np.copy(self.to_refine)
-        arr = np.copy(image)
-        xsize,ysize = arr.shape
-        
-        # Calculate borders around the central square
-        xborder = (xsize - csquare) // 2
-        yborder = (ysize - csquare) // 2
-        
-        # Create central square = cut off the borders
-        arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
-        
-        # In the central square, set all values below cintenstity to zero
-        arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
-        
-        # Calculate 1st central moments of the image
-        M = moments(arr2,1)
-        
-        # Calculate the intensity center = centroid according to www-help
-        (self.x, self.y) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
-        
-        # We have centroid of the central square => recalculate to whole image
-        (self.x, self.y) = (self.x + xborder, self.y + yborder)
-        self.r = 100
-        
-        # User information:
-        if self.messages:
-            print("--------- Diffraction pattern detection via intensity detection ----------")
-            print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                         float(self.y)))
-            print("--------------------------------------------------------------------------")
-
-        # Plot result of the Hough transform
-        if plot_results == 1:
-           self.visualize_center(self.x, self.y, self.r) 
-        
-        
-        # Return results
-        return self.x, self.y, self.r
-
     
+        
     def detection_Hough(self, plot_results=0):
         '''        
         Perform Hough transform to detect center of diffraction patterns.
@@ -812,9 +828,7 @@ class CenterEstimator:
             plt.axis('off')
             plt.tight_layout()
             plt.show(block=False)
-        else:
-            pass
-            #plt.close('all')
+
         
         self.center = (self.x, self.y)
         self.circle = plt.Circle((self.x,self.y),self.r)
@@ -935,7 +949,7 @@ class CenterLocator(CenterEstimator):
        Selection of a method for center position correction. Default is None.
        String codes are:
            - 'manual' : manual corection 
-           - 'variance' : correction via variance minimization 
+           - 'var' : correction via variance minimization 
            - 'sum' : correction via sum maximization
     heq : boolean
         Allow histogram equalization. The default is 0 (no enhancement)
@@ -965,35 +979,38 @@ class CenterLocator(CenterEstimator):
         
 
         # (2) Define additional parameter
-        self.final_replot = final_replot
         self.messages = messages
         self.image_path = image_path
 
 
-        # (3) Run correction method and get refined parameters
+       # (3) Run correction method and get refined parameters
         if correction_method is not None:
             self.ret = 1
             if correction_method == 'manual':
+                self.yy, self.xx, self.rr = self.x, self.y, self.r
+                self.y, self.x, self.r = self.backip[0], self.backip[1], self.r
+            elif correction_method in ['var', 'sum']:
+                ref_method = getattr(self, f'ref_{correction_method}')
+                self.xx, self.yy, self.rr = ref_method(self.x, self.y, self.r)
                 if detection_method == 'manual':
-                    self.xx, self.yy, self.rr = self.x, self.y, self.r
-                    self.x, self.y, self.r = self.backip[0], self.backip[1], self.r
-                    if self.final_replot:
-                        self.visualize_refinement(
-                            self.backip[0], self.backip[1], self.r, 
-                            (self.xx, self.yy), self.r)
-                else:
-                    self.xx, self.yy, self.rr = \
-                        self.ref_interactive(self.x, self.y, self.r)
-            elif correction_method == 'variance':
-                self.xx, self.yy, self.rr = \
-                    self.ref_minimize_var(self.x, self.y, self.r)
-            elif correction_method == 'sum':
-                self.xx, self.yy, self.rr = \
-                    self.ref_maximize_sum(self.x, self.y, self.r)
+                    self.xx, self.yy = self.yy, self.xx
+                    self.x, self.y = self.y, self.x
             else:
                 print("Incorrect method for correction selected")
                 sys.exit()
-
+            
+            # Swap coordinates if necessary
+            if detection_method == 'manual':
+                self.xx, self.yy = self.yy, self.xx
+                self.x, self.y = self.y, self.x
+            elif detection_method == 'hough':
+                self.x, self.y = self.y, self.x
+                self.xx, self.yy = self.yy, self.xx
+    
+            # Visualize refinement if required
+            if final_replot:
+                self.visualize_refinement(self.y, self.x, self.r, 
+                                          (self.yy, self.xx), self.rr)
         else:
             self.ret = 2
 
@@ -1220,10 +1237,9 @@ class CenterLocator(CenterEstimator):
         y : float
             y-coordinate of the center detected via detection_method
         xx : float
-            x-coordinate of the center detected via correction_method
+            x-coordinate of the center detected via refinement_method
         yy : float
-           y-coordinate of the center detected via detection_method
-           
+            y-coordinate of the center detected via refinement_method
         """
         
         if self.ret == 1:
@@ -1285,6 +1301,7 @@ class CenterLocator(CenterEstimator):
         r : float64
             new radius of the circular diffraction pattern
         '''
+        
         # Load original image
         im = np.copy(self.to_refine)
         
@@ -1426,15 +1443,11 @@ class CenterLocator(CenterEstimator):
         if self.messages:
             print("CenterEstimator :: manual detection + adjustment")
             print(f"Center coordinates: {xy[0]:.2f} {xy[1]:.2f}")
-        
-        # Plot results
-        if self.final_replot:
-            self.visualize_refinement(px, py, pr, xy, r)
-                
+                       
         return xy[0], xy[1], r
 
         
-    def ref_minimize_var(self, px, py, pr, plot_results = 0):
+    def ref_var(self, px, py, pr, plot_results = 0):
         '''         
         Adjust center coordinates of a detected circular diffraction pattern.
         The center adjustment is based on variance minimization.
@@ -1587,11 +1600,6 @@ class CenterLocator(CenterEstimator):
         if np.round(init_var,-2) < np.round(min_intensity_var,-2):
             print("Refinement redundant.")
             best_center = np.copy(bckup)
-
-        # Refinement visualization
-        if self.final_replot:
-            self.visualize_refinement(
-                   bckup[0], bckup[1], bckup[2], (best_center), best_radius)
     
         # Print results
         if self.messages:
@@ -1601,7 +1609,7 @@ class CenterLocator(CenterEstimator):
         return best_center[0], best_center[1], best_radius
     
     
-    def ref_maximize_sum(self, px, py, pr, plot_results=1):
+    def ref_sum(self, px, py, pr, plot_results=1):
         ''' 
         Adjust center position based on gradient optimization method
         via maximization of intensity sum.
@@ -1754,12 +1762,6 @@ class CenterLocator(CenterEstimator):
         if np.round(init_sum,-2) > np.round(max_intensity_sum,-2):
             print("Refinement redundant.")
             best_center = np.copy(bckup)
-
-        # Refinement visualization
-        if plot_results == 1:
-            if self.final_replot:
-                self.visualize_refinement(
-                    bckup[0], bckup[1], bckup[2], (best_center), best_radius)
     
         # Print results
         if self.messages:
@@ -1950,7 +1952,6 @@ class HandlerCircle(HandlerBase):
         return [marker]
         
 
-        
 class IntensityCenter: 
     '''
     Simple center determination for a symmetric diffractogram.
@@ -1977,7 +1978,7 @@ class IntensityCenter:
     >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
     '''
     
-    
+    @staticmethod
     def center_of_intensity(arr, csquare=20, cintensity=0.8):
         '''
         Find center of intensity/mass of an array.
@@ -2017,6 +2018,7 @@ class IntensityCenter:
         (xc,yc) = (M[1,0]/M[0,0], M[0,1]/M[0,0])
         # We have centroid of the central square => recalculate to whole image
         (xc,yc) = (xc+xborder,yc+yborder)
+        
         ## Return the final center
         return(xc,yc)
 

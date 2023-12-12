@@ -49,7 +49,22 @@
 
                         <div class="docstring"><h2 id="module-ediffbackground">Module <a href="">ediff.background</a></h2>
 
-<p>Interactive background definition.</p>
+<p>Interactive background definition.    </p>
+
+<ul>
+<li>This module just imports key objects from external bground package.</li>
+<li>Therefore, it is just a formal incorporation of bground package to ediff.</li>
+</ul>
+
+<p>The source code is the whole module is rather brief,
+but it contains a detailed explanation of how it works.</p>
+
+<ul>
+<li>See the source code of <a href="">ediff.background</a>
+if you are interested in technical details concerning the import.</li>
+<li>See documentation of bground package at <a href="https://pypi.org/project/bground">https://pypi.org/project/bground</a>
+to find out how the background correction works.</li>
+</ul>
 </div>
 
                         <input id="mod-background-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -60,26 +75,37 @@
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="sd">Module ediff.background</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">-----------------------</span>
 </span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">Interactive background definition.    </span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="sd">&#39;&#39;&#39;</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="c1"># The module just imports key objects from external bground module.</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="c1"># This is a formal incorporation of bground module to ediff.background module.</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="c1"># How it works? = comment to the next two import commands:</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="c1"># The 1st import command = all modules from bground.ui to THIS module</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="c1">#  =&gt; now ediff.background knows the same modules as bground.ui</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1">#  =&gt; but NOT yet the classes within bground.ui - these are imported next</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="c1"># The 2nd import command = three key classes from bground.ui to THIS module</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="c1">#  =&gt; now ediff.bacground contains the three objects from bground.ui</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="c1">#  =&gt; THIS module now contains InputData, PlotParams, InteractivePlot</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="c1"># Now the users of this module can do:</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="c1">#  &gt;&gt;&gt; import ediff.background</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="c1">#  &gt;&gt;&gt; DATA  = ediff.background.InputData ...</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="c1">#  &gt;&gt;&gt; PPAR  = ediff.background.PlotParams ...</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="c1">#  &gt;&gt;&gt; IPLOT = ediff.background.InteractivePlot ...</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="kn">import</span> <span class="nn">bground.ui</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="kn">from</span> <span class="nn">bground.ui</span> <span class="kn">import</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">PlotParams</span><span class="p">,</span> <span class="n">InteractivePlot</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">* This module just imports key objects from external bground package.</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">* Therefore, it is just a formal incorporation of bground package to ediff.</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">The source code is the whole module is rather brief,</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="sd">but it contains a detailed explanation of how it works.</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">* See the source code of ediff.background</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="sd">  if you are interested in technical details concerning the import.</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">* See documentation of bground package at https://pypi.org/project/bground</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="sd"> to find out how the background correction works.</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="c1"># Explanation of the following two import commands</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="c1"># </span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="c1"># The 1st import command = all modules from bground.ui to THIS module</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="c1">#  - now ediff.background knows the same modules as bground.ui</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="c1">#   - but NOT yet the classes within bground.ui - these are imported next</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="c1"># The 2nd import command = three key classes from bground.ui to THIS module</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="c1">#   - now ediff.bacground contains the three objects from bground.ui</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="c1">#   - THIS module now contains InputData, PlotParams, InteractivePlot</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="c1">#</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="c1"># Final conclusion =&gt; the users can do:</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="c1">#</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="c1"># &gt;&gt;&gt; import ediff.background</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="c1"># &gt;&gt;&gt; DATA  = ediff.background.InputData ...</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="c1"># &gt;&gt;&gt; PPAR  = ediff.background.PlotParams ...</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="c1"># &gt;&gt;&gt; IPLOT = ediff.background.InteractivePlot ...</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="kn">import</span> <span class="nn">bground.ui</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="kn">from</span> <span class="nn">bground.ui</span> <span class="kn">import</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">PlotParams</span><span class="p">,</span> <span class="n">InteractivePlot</span>
 </span></pre></div>
 
 

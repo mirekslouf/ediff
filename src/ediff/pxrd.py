@@ -441,18 +441,25 @@ class PXRDcalculation:
 
         Returns
         -------
-        * None; the output is the plot on the screen (and outfile).
-        * Note that the plot shows just diffraction intensities, not profiles.
-        * Use *plot_diffractogram* for diffractogram with intensity profiles.
+        None
+            The output is the plot on the screen (and outfile).
+            This function plots just diffraction intensities,
+            not profiles.
+            Use ediff.pxrd.plot_diffractions
+            for diffractogram with intensity profiles.
         '''
+        
         # (1) Make local copies of pre-defined parameters (just convenience)
         df      = self.diffractions
         x_axis  = self.plot_parameters.x_axis
+        
         # (2) Prepare the plot
         plt.vlines(df[x_axis],0,df.Ihkl, lw=2)
+        
         # (3) Set plot details
         # (external function, common to diffractions and diffractogram plots
         self.set_plot_details(x_axis)
+        
         # (4) Save/show the plot...
         # In Spyder: plot is always shown
         # In CLI: plot is saved (if outfile is defined) or it is just shown
@@ -550,14 +557,18 @@ class PXRDcalculation:
                 'Columns: TwoTheta[deg], S[1/A], q[1/A], Intensity')
     
     def plot_diffractogram(self, outfile, x_axis='q'):
+        
         # (1) Make local copies of pre-defined parameters (just convenience)
         df     = self.diffractogram
         x_axis = self.plot_parameters.x_axis
+        
         # (2) Prepare the plot
         plt.plot(df[x_axis],df.Intensity)
+        
         # (3) Set plot details
         # (external function, common to diffractions and diffractogram plots
         self.set_plot_details(x_axis)
+        
         # (4) Save/show the plot...
         # In Spyder: plot is always shown
         # In CLI: plot is saved (if outfile is defined) or it is just shown
