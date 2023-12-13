@@ -476,7 +476,8 @@ class CenterEstimator:
         
         # local variables save
         self.center = center
-               
+        
+        self.backip = [self.x, self.y, self.r]
         # Manually adjust the calculated center coordinates
         self.x, self.y, self.r = self.adjustment_3points(fig, circle, center)
 
@@ -967,6 +968,7 @@ class CenterLocator(CenterEstimator):
         radius of the detected center
     '''
     
+
     def __init__(self, image_path,
                  detection_method, correction_method=None, 
                  heq=False, icut=None, cmap='gray',
@@ -983,34 +985,46 @@ class CenterLocator(CenterEstimator):
         self.image_path = image_path
 
 
-       # (3) Run correction method and get refined parameters
+        # (3) Run correction method and get refined parameters
         if correction_method is not None:
             self.ret = 1
             if correction_method == 'manual':
-                self.yy, self.xx, self.rr = self.x, self.y, self.r
-                self.y, self.x, self.r = self.backip[0], self.backip[1], self.r
-            elif correction_method in ['var', 'sum']:
-                ref_method = getattr(self, f'ref_{correction_method}')
-                self.xx, self.yy, self.rr = ref_method(self.x, self.y, self.r)
+                if detection_method == 'manual':
+                    self.yy, self.xx, self.rr = self.x, self.y, self.r
+                    self.y, self.x, self.r = self.backip[0], self.backip[1], self.r
+                elif detection_method == 'intensity':
+                    self.yy, self.xx, self.rr = \
+                        self.ref_interactive(self.y, self.x, self.r)
+                else:
+                    self.yy, self.xx, self.rr = \
+                        self.ref_interactive(self.x, self.y, self.r)
+                        
+            elif correction_method == 'var':
+                self.xx, self.yy, self.rr = \
+                    self.ref_var(self.x, self.y, self.r)
                 if detection_method == 'manual':
                     self.xx, self.yy = self.yy, self.xx
                     self.x, self.y = self.y, self.x
+                    
+            elif correction_method == 'sum':
+                self.xx, self.yy, self.rr = \
+                    self.ref_sum(self.x, self.y, self.r)
+                if detection_method == 'manual':
+                    self.xx, self.yy = self.yy, self.xx
+                    self.x, self.y = self.y, self.x
+
             else:
                 print("Incorrect method for correction selected")
                 sys.exit()
             
-            # Swap coordinates if necessary
-            if detection_method == 'manual':
-                self.xx, self.yy = self.yy, self.xx
-                self.x, self.y = self.y, self.x
-            elif detection_method == 'hough':
+            if detection_method == 'hough':
                 self.x, self.y = self.y, self.x
                 self.xx, self.yy = self.yy, self.xx
-    
-            # Visualize refinement if required
+
             if final_replot:
-                self.visualize_refinement(self.y, self.x, self.r, 
-                                          (self.yy, self.xx), self.rr)
+                self.visualize_refinement(
+                    self.y, self.x, self.r, 
+                    (self.yy, self.xx), self.rr)
         else:
             self.ret = 2
 
@@ -1338,7 +1352,7 @@ class CenterLocator(CenterEstimator):
         ax.add_artist(circle)
 
         # Plot center point
-        center, = ax.plot(self.x, self.y, 'rx', markersize=12)
+        center, = ax.plot(px, py, 'rx', markersize=12)
                     
 
         plt.title('Manually adjust the center position.', 
