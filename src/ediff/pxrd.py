@@ -12,6 +12,7 @@ from scipy.signal import convolve as spConvolve
 from pymatgen.core.structure import Structure as pmStructure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator as pmXRDCalculator
 
+
 class Crystal:
     '''
     Define crystal structure.
@@ -38,6 +39,7 @@ class Crystal:
           the elements have the values defined in the dictionary;
           a sample input dictionary: `temp_factors = {'Na':1.2, 'Cl':1.1}`.
     '''
+
     
     def __init__(self, structure, temp_factors=0.8):
         '''
@@ -60,6 +62,7 @@ class Crystal:
             # (the number is a universal temperature factor for all atoms
             self.temp_factors = self.get_elements_with_temp_factors(
                 self.structure, temp_factors)
+
     
     @staticmethod
     def read_structure_from_CIF(CIF):
@@ -85,6 +88,7 @@ class Crystal:
          '''
         structure = pmStructure.from_file(CIF)
         return(structure)
+
 
     def get_elements(self, structure):
         '''
@@ -122,6 +126,7 @@ class Crystal:
         list_of_elements = np.unique(list_of_atoms)
         return(list_of_elements)
 
+
     def get_elements_with_temp_factors(self, structure, B=0.8):
         '''
         Get a dictionary, which contains symbols and temperature factors
@@ -154,6 +159,8 @@ class Crystal:
         elements_with_temp_factors = dict.fromkeys(elements, B)
         return(elements_with_temp_factors)
 
+
+
 class Experiment:
     '''
     Define experimental parameters.
@@ -167,6 +174,8 @@ class Experiment:
         Minimal and maximal diffraction angle;
         both values are TwoTheta angle in [deg] (for given *wavelength*).
     '''
+
+
     def __init__(self, wavelength, two_theta_range):
         '''
         * Initialize Experimental object.
@@ -174,6 +183,8 @@ class Experiment:
         '''
         self.wavelength = wavelength
         self.two_theta_range = two_theta_range
+
+
 
 class PlotParameters:
     '''
@@ -191,6 +202,7 @@ class PlotParameters:
         This enables to override current rcParams, if necessary.
     '''
     
+
     def __init__(self, title=None, x_axis='q', xlim=None, rcParams={}):
         '''
         * Initialize PlotParameters object.
@@ -203,6 +215,8 @@ class PlotParameters:
         self.xlim = xlim
         if rcParams: plt.rcParams.update(rcParams)
        
+
+
 class PeakProfiles:
     '''
     Define profile of diffraction peaks.
@@ -210,6 +224,7 @@ class PeakProfiles:
     * This class is employed only as a namespace.
     * It contains three functions/definitions of diffratction peak profiles.
     '''
+
 
     def gaussian(X,m,s):
         '''
@@ -231,6 +246,7 @@ class PeakProfiles:
         '''
         return( 1/(s*np.sqrt(2*np.pi)) * np.exp(-(X-m)**2/(2*s**2)) )
     
+
     def lorentzian(X,m,s):
         '''
         Lorentzian function (~ profile for PXRD calculation).
@@ -251,6 +267,7 @@ class PeakProfiles:
         '''
         return( 1/np.pi * s/((X-m)**2 + s**2) )
     
+
     def pseudo_voigt(X,m,s,n=0.5):
         '''
         Pseudo-Voigt function (~ profile for PXRD calculation).
@@ -296,6 +313,8 @@ class PeakProfiles:
         # (3) Return calculated function    
         return(pseudo_voigt)
 
+
+
 class PXRDcalculation:
     '''
     Define calculation of PXRD = powder X-ray diffraction pattern.
@@ -323,7 +342,8 @@ class PXRDcalculation:
         This default is suitable for common calculations
         and does not have to be changed (in great majority of cases).
     '''
-  
+
+    
     def __init__(self, crystal, experiment, plot_parameters,      
                  peak_profile_sigma = 0.03,
                  peak_profile_type = PeakProfiles.pseudo_voigt):
@@ -339,6 +359,7 @@ class PXRDcalculation:
         self.diffractions = self.calculate_diffractions()
         self.diffractogram = self.calculate_diffractogram()
 
+
     def calculate_diffractions(self):
         # (1) Calculate intensities
         calculation = pmXRDCalculator(
@@ -353,6 +374,7 @@ class PXRDcalculation:
         # (pandas.DataFrame with cols: TwoTheta, h,k,l, dhkl, S, q, Intensity
         return(diffractions_df)
         
+
     def calculate_diffractogram(self):
         # (1) Base diffraction profile
         # = diffractogram with zero intensities
@@ -402,6 +424,7 @@ class PXRDcalculation:
         # (5) Return diffractogram
         return(df)
         
+
     def print_diffractions(self):
         '''
         Print the calculated diffractions to stdout.
@@ -409,6 +432,7 @@ class PXRDcalculation:
         table = PXRDcalculation.dframe_to_table(self.diffractions)
         print(table)
             
+
     def save_diffractions(self, output_file):
         '''
         Save the calculated diffractions to *output_file*.
@@ -429,6 +453,7 @@ class PXRDcalculation:
         except:
             print(f'Error saving diffractions to {output_file}!')
     
+
     def plot_diffractions(self, outfile=None):
         '''
         Plot the calculated diffractions.
@@ -468,6 +493,7 @@ class PXRDcalculation:
         else:
             plt.show()
         
+
     def plot_diffractions_with_indexes(self):
         '''
         Plot indexed diffractions.
@@ -540,6 +566,7 @@ class PXRDcalculation:
         # (6) Revert to original rcParams.
         plt.rcParams.update(original_rcParams)
         
+
     def print_diffractogram(self):
         self.print_diffractions()
         print('-----')
@@ -547,6 +574,7 @@ class PXRDcalculation:
         print('* Reason: the whole diffraction pattern is too long.')
         print('* Note: save_diffractogram save the pattern to TXT-file.')
     
+
     def save_diffractogram(self, outfile):
         my_title = 'Calculated PXRD diffractogram\n'
         np.savetxt(
@@ -556,7 +584,8 @@ class PXRDcalculation:
             header = my_title + 
                 'Columns: TwoTheta[deg], S[1/A], q[1/A], Intensity')
     
-    def plot_diffractogram(self, outfile, x_axis='q'):
+
+    def plot_diffractogram(self, outfile, x_axis='q', dpi=300):
         
         # (1) Make local copies of pre-defined parameters (just convenience)
         df     = self.diffractogram
@@ -573,9 +602,10 @@ class PXRDcalculation:
         # In Spyder: plot is always shown
         # In CLI: plot is saved (if outfile is defined) or it is just shown
         if outfile != None: 
-            plt.savefig(outfile) 
+            plt.savefig(outfile, dpi=dpi) 
         else:
             plt.show()
+
         
     @staticmethod    
     def diffractions_to_dframe(intensities):
@@ -613,6 +643,7 @@ class PXRDcalculation:
             df.insert(loc=6, column='S', value=1/df.dhkl)
             df.insert(loc=7, column='q', value=2*np.pi*df.S)
         return(df)
+
     
     @staticmethod
     def dframe_to_table(dframe):
@@ -660,6 +691,7 @@ class PXRDcalculation:
                     'Ihkl'     : '{:9.3f}'.format})
         return(table)
 
+
     def add_diffraction_vectors_to_diffractogram(self, df):
         # Prepare wavelenght (just shortcut for convenience)
         wavelength = self.experiment.wavelength
@@ -673,6 +705,7 @@ class PXRDcalculation:
                   value = 2*np.pi * df.S)
         # Return the modified/extended DataFrame
         return(df)
+
 
     def set_plot_details(self, x_axis):
         # (1) Make local copies of pre-defined parameters (just convenience)
