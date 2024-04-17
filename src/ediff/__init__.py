@@ -24,7 +24,7 @@ Auxiliary package BGROUND:
 * it is imported during ediff initialization and accessible as ediff.background
 '''
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
@@ -35,8 +35,9 @@ import ediff.pxrd
 import ediff.radial
 
 # This is a slightly special import:
-# (import of a module that imports parts of external package bground
-# (this "double import" enables us to use the ediff module as follows:
+# * ediff (1) imports ediff.background, which (2) imports bground package
+# * see additional imports in ediff.background module to see what is done 
+# * this "two-step import" enables us to use the ediff module as follows:
 # >>> import ediff as ed
 # >>> DATA  = ed.background.InputData ...
 # >>> PPAR  = ed.background.PlotParams ...

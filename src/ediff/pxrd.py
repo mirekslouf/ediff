@@ -1,6 +1,6 @@
 '''
-Module ediff.pxrd
------------------
+Module: ediff.pxrd
+------------------
 Calculation of powder X-ray diffraction patterns.    
 '''
 

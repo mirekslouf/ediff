@@ -2,7 +2,7 @@ EDIFF :: Documentation and examples
 -----------------------------------
 
 Quick start =
-[Jupyter notebook](https://www.dropbox.com/scl/fi/p8mi2jnhrn19qyzzsbue4/01_ediff.nb.html.pdf?rlkey=qny4agmi2osb0k8w6olpeh3wm&dl=0)
+[Jupyter notebook](https://www.dropbox.com/scl/fi/3hb78voxd17wb3fzh9n1p/01_ediff_au.nb.pdf?rlkey=qmbvwaw80o1gbe262hwgjvmgx&dl=0)
 which shows complete data processing.
 
 External
