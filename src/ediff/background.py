@@ -1,7 +1,7 @@
 '''
-Module ediff.background
------------------------
-Interactive background definition.    
+Module: ediff.background
+------------------------
+Semi-automated background correction.    
 
 * This module just imports key objects from external bground package.
 * Therefore, it is just a formal incorporation of bground package to ediff.
@@ -12,7 +12,7 @@ but it contains a detailed explanation of how it works.
 * See the source code of ediff.background
   if you are interested in technical details concerning the import.
 * See documentation of bground package at https://pypi.org/project/bground
- to find out how the background correction works.
+  to find out how the background correction works.
 '''
 
 # Explanation of the following two import commands

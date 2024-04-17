@@ -1,6 +1,6 @@
 '''
-Module ediff.io
----------------
+Module: ediff.io
+----------------
 Input/output functions for package ediff.    
 '''
 
@@ -68,13 +68,14 @@ def set_plot_parameters(
     if fontsize:  # Global font size
         plt.rcParams.update({'font.size' : fontsize})
     # (2) Additional default parameters ---------------------------------------
-    plt.rcParams.update({
-        'lines.linewidth'    : 0.8,
-        'axes.linewidth'     : 0.6,
-        'xtick.major.width'  : 0.6,
-        'ytick.major.width'  : 0.6,
-        'grid.linewidth'     : 0.6,
-        'grid.linestyle'     : ':'})
+    if my_defaults:  # Default rcParams if not forbidden by my_defaults=False
+        plt.rcParams.update({
+            'lines.linewidth'    : 0.8,
+            'axes.linewidth'     : 0.6,
+            'xtick.major.width'  : 0.6,
+            'ytick.major.width'  : 0.6,
+            'grid.linewidth'     : 0.6,
+            'grid.linestyle'     : ':'})
     # (3) Further user-defined parameter in rcParams format -------------------
     if my_rcParams:  # Other possible rcParams in the form of dictionary
         plt.rcParams.update(my_rcParams)

@@ -1,6 +1,6 @@
 '''
-Module ediff.radial
--------------------
+Module: ediff.radial
+--------------------
 The conversion of a 2D powder diffraction pattern
 to a 1D powder diffraction pattern = radially averaged intensity distribution.
 '''

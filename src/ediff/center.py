@@ -1,6 +1,6 @@
 '''
-Module ediff.center
--------------------
+Module: ediff.center
+--------------------
 Find center of 2D diffraction pattern. 
 '''
 
