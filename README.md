@@ -6,6 +6,10 @@ EDIFF :: processing of powder electron diffraction patterns
 	- center = find center of 2D powder diffraction pattern
 	- radial = calculate radial distribution (2D-pattern &rArr; 1D-pattern) 
 	- pxrd = calculation of theoretical powder X-ray diffraction patterns
+* If you use EDIFF in your research, **please cite** the OpenAccess paper:
+	- Materials 14 (2011) 7550.
+	  [https://doi.org/10.3390/ma14247550](https://doi.org/10.3390/ma14247550)
+	- The paper describes {stemdiff} package, {ediff} is a part of it.
 
 Installation
 ------------
@@ -44,3 +48,5 @@ Versions of EDIFF
 * Version 0.1.2 = small improvements of code and documentation
 * Version 0.2   = important improvements of center.py
 * Version 0.2.2 = consolidation, update of docs and examples on www
+* Version 0.2.3 = small update of docs and citation
+
