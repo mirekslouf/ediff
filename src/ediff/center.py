@@ -6,7 +6,13 @@ Find center of 2D diffraction pattern.
 
 # CenterDet
 # PS 2023-10-06: CentDet update, methods compatibility
-# MS 2023-11-26: Improved code formatting and docs + TODO notes for PS  
+# MS 2023-11-26: Improved code formatting and docs + TODO notes for PS
+# MS 2024-23-09: Re-desing/draft of CenterLocator => CenterLocator_new
+#   # CenterLocator - beter structure, clearer usage, saving/reading to files
+#   import ediff as ed
+#   CENTER = ed.center.CenterlLocator(args)
+#   print(CENTER.x1,CENTER.y1)  # center coords after CenterDetermination
+#   print(CENTER.x2,CENTER.y2)  # center coords after CenterDetermination
     
 
 import numpy as np
@@ -24,6 +30,141 @@ import sys
 import warnings
 warnings.filterwarnings("ignore")
 
+
+
+class CenterLocator_new:
+    
+    
+    def __init__(self, input_image, 
+                 determination = None, 
+                 refinement = None,
+                 in_file = None,
+                 out_file = None,
+                 heq = False, 
+                 icut = None,
+                 cmap = 'gray',
+                 csquare=50,
+                 cintensity=0.8,
+                 messages = False,
+                 print_sums = False,
+                 final_replot=False):
+        '''
+        CenterLocator object
+        = determination + refinement of diffractogram center.
+
+        Parameters
+        ----------
+        input_image : str or path or numpy.array
+            Input image = 2D-diffration pattern.
+        determination : TYPE, optional
+            Method of center determination.
+        refinement : TYPE, optional
+            Method of center refinement.
+        in_file : TYPE, optional
+            Name of the text file,
+            to which we can save the center coordinates.
+        out_file : TYPE, optional
+            Name of the the text file,
+            from which we can read the center coordinates.
+        heq : TYPE, optional
+            DESCRIPTION. The default is False.
+        icut : TYPE, optional
+            DESCRIPTION. The default is None.
+        cmap : TYPE, optional
+            DESCRIPTION. The default is 'gray'.
+        csquare : TYPE, optional
+            DESCRIPTION. The default is 50.
+        cintensity : TYPE, optional
+            DESCRIPTION. The default is 0.8.
+        messages : TYPE, optional
+            DESCRIPTION. The default is False.
+        print_sums : bool, optional, default is False
+            This parameter is relevant only for 'manual' methods
+            of center *determination* and *refinement*.
+            If it is *True*,
+            then sum of intensity for refined circle
+            is printed to stdout is printed and updated after each movement.
+        final_replot : TYPE, optional
+            DESCRIPTION. The default is False.
+
+        Returns
+        -------
+        None.
+
+        '''
+        
+        # (0) Initialize basic parameters
+        # TODO - more-or-less copy+paste from previous
+        
+        # (1) Initialize/run CenterDetermination
+        self.center1 = CenterDetermination(
+            self.image_name,
+            self.determination,
+            self.heq,
+            self.icut,
+            self.cmap,
+            self.csquare,
+            self.cintensity,
+            self.messages,
+            self.print_sums,
+            self.final_replot)
+            
+        # (2) Initialize/run CenterRefinement
+        self.center2 = CenterRefinement(
+            self.input_image, 
+            self.refinement,
+            self.in_file,
+            self.out_file,
+            self.heq, 
+            self.icut,
+            self.cmap,
+            self.messages,
+            self.print_sums,
+            self.final_replot)
+
+        # (3) Collect results
+        self.x1 = self.center1.x
+        self.y1 = self.center1.y
+        self.x2 = self.center2.x
+        self.y2 = self.center2.y 
+
+        # (4) Return the results
+        return(self.x1,self.y1,self.x2,self.y2)
+    
+        
+    
+class CenterDetermination:
+
+
+    def __init__(self, input_image,
+                 determination = None, 
+                 in_file = None,
+                 out_file = None,
+                 heq = False, 
+                 icut = None,
+                 cmap = 'gray',
+                 csquare=50,
+                 cintensity=0.8,
+                 messages = False,
+                 print_sums = False,
+                 final_replot=False):
+        pass
+
+class CenterRefinement:
+    
+    
+    def __init__(self, input_image, 
+                 refinement = None,
+                 in_file = None,
+                 out_file = None,
+                 heq = False, 
+                 icut = None,
+                 cmap = 'gray',
+                 messages = False,
+                 print_sums = False,
+                 final_replot=False):
+        pass
+    
 
 class CenterEstimator:
     '''

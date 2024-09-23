@@ -13,6 +13,7 @@ Utilities for processing of electron diffraction patterns.
 EDIFF modules:
 
 * ediff.background = background correction (employs auxilliary package BGROUND)    
+* ediff.calibration = calibration of SAED diffractograms (pixels -> q-vector)
 * ediff.center = find center of 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
 * ediff.pxrd = calculate 1D-PXRD pattern for a known structure
@@ -24,11 +25,12 @@ Auxiliary package BGROUND:
 * it is imported during ediff initialization and accessible as ediff.background
 '''
 
-__version__ = "0.2.3"
+__version__ = "0.2.3c"
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
 # >>> ed.io.read_image ...
+import ediff.calibration
 import ediff.center
 import ediff.io
 import ediff.pxrd
