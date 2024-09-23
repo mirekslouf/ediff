@@ -2,10 +2,11 @@ EDIFF :: processing of powder electron diffraction patterns
 -----------------------------------------------------------
 * EDIFF is under development, but key modules do work:
     - io = input/output data treatment
-	- background = background subtraction
-	- center = find center of 2D powder diffraction pattern
-	- radial = calculate radial distribution (2D-pattern &rArr; 1D-pattern) 
-	- pxrd = calculation of theoretical powder X-ray diffraction patterns
+	- pxrd = calculate PXRD pattern(s) for the known/expected crystal(s)
+	- center = find center of 2D powder electron diffraction pattern
+	- radial = calculate radial distribution (2D-pattern &rarr; 1D-pattern) 
+	- background = semi-automated background subtraction (external module)
+	- calibration = calibration of SAED diffractograms (pixels &rarr; q-vector)
 * If you use EDIFF in your research, **please cite** the OpenAccess paper:
 	- Materials 14 (2011) 7550.
 	  [https://doi.org/10.3390/ma14247550](https://doi.org/10.3390/ma14247550)
