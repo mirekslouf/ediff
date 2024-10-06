@@ -81,6 +81,146 @@ def set_plot_parameters(
         plt.rcParams.update(my_rcParams)
 
 
+def plot_1d_profile(Xvalues, Yvalues, Xlabel, Ylabel, Xrange, Yrange,
+    title=None, output_file=None, output_file_dpi=300):
+    '''
+    Plot a 1D profile in a simple and stadnard way.
+
+    Parameters
+    ----------
+    Xvalues : array or list-like object
+        X values for plotting.
+    Yvalues : array or list-like object
+        Y values for plotting.
+    Xlabel : str
+        Label of the X-axis.
+    Ylabel : str
+        Label of the Y-axis.
+    Xrange : list/tuple of two floats
+        X range = minimum and maximu for Xvalues to plot.
+    Yrange : list/tuple of two floats
+        Y range = minimum and maximu for Yvalues to plot.
+    title : str, optional, default is None
+        The title of the plot.
+    output_file : str, optional, default is None
+        Name of the output file.
+        If the argument is not None, the plot is saved to *output_file*.
+    output_file_dpi : int, optional, default is 300
+        Resolution of the output file.
+
+    Returns
+    -------
+    None.
+    '''
+    
+    # (1) Plot title if requested
+    if title is not None: plt.title(title)
+    
+    # (2) The plot itself
+    plt.plot(Xvalues, Yvalues)
+    plt.xlabel(Xlabel)
+    plt.ylabel(Ylabel)
+    plt.xlim(Xrange)
+    plt.ylim(Yrange)
+    plt.grid()
+    plt.tight_layout()
+    
+    # (3) Save the plot if requested
+    if output_file is not None: plt.savefig(output_file, dpi=output_file_dpi)
+    
+    # (4) Show the plot
+    plt.show()
+    
+
+def plot_2d_diffractogram(diffractogram, icut=None, title=None):
+    '''
+    Plot 2D diffraction pattern.
+
+    Parameters
+    ----------
+    diffractogram : numpy.array
+        A numpy.array object representing a 2D diffractogram image.
+        In EDIFF,
+        this array is usually obtained by ediff.ioi.read_image function.
+    icut : integer, optional, default is None
+        Upper limit of intensity shown in the diffractogram.
+        The argument *icut* is used as *vmax* in plt.imshow function.
+        Example: If *icut*=300, then all intensities >300 are set to 300.
+    title : str, optional, default is None
+        If given, then it is the title of the plot.
+
+    Returns
+    -------
+    None
+        The 3D diffractogram is just shown in the stdout.
+    '''
+    # Plot the 2D-diffractogram
+    # (quite simple, we employ plt.imshow function with a few arguments
+    # (the function is defined in order to simplify user's input even more
+    if title is not None: plt.title(title)
+    plt.imshow(diffractogram, vmax=icut)
+    plt.tight_layout()
+    plt.show()
+
+    
+def final_plot_eld_xrd(eld_data, xrd_data, fine_tuning, x_range,
+        eld_data_label='ED experiment', xrd_data_label='XRD calculation',
+        x_axis_label='$q$ [1/\u212B]', y_axis_label='Intensity',
+        output_file=None, output_file_dpi=300):
+    '''
+    Final plot/comparison of ELD and XRD profiles.
+
+    * During the final plotting, we fine-tune the ELD calibration.
+    * This is done by iterative modification of fine_tuning constant.
+    
+    Parameters
+    ----------
+    eld_data : TYPE
+        DESCRIPTION.
+    xrd_data : TYPE
+        DESCRIPTION.
+    fine_tuning : TYPE
+        DESCRIPTION.
+    x_range : TYPE
+        DESCRIPTION.
+    output_file : TYPE
+        DESCRIPTION.
+    eld_data_label : TYPE, optional
+        DESCRIPTION. The default is 'ED experiment'.
+    xrd_data_label : TYPE, optional
+        DESCRIPTION. The default is 'XRD calculation'.
+    x_axis_label : TYPE, optional
+        DESCRIPTION. The default is '$q$ [1/\u212B]'.
+    y_axis_label : TYPE, optional
+        DESCRIPTION. The default is 'Intensity'.
+    output_file_dpi : TYPE, optional
+        DESCRIPTION. The default is 300.
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    # Plot the data
+    plt.plot(xrd_data[2], xrd_data[3], label=xrd_data_label)
+    plt.plot(eld_data[0]*fine_tuning, eld_data[2],
+             color='red', label=eld_data_label)
+    # Define axis labels
+    plt.xlabel(x_axis_label)
+    plt.ylabel(y_axis_label)
+    # Define xlim = x-limits = x-range
+    plt.xlim(x_range)
+    # Additional plot parameters
+    plt.legend()
+    plt.grid()
+    plt.tight_layout()
+    # Save plot if requested
+    if output_file is not None:
+        plt.savefig(output_file, dpi=output_file_dpi, facecolor='white')
+    # Show the plot
+    plt.show()
+
 def plot_radial_distributions(
         data_to_plot, xlimit, ylimit, output_file=None):
     """
