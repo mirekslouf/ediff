@@ -29,7 +29,9 @@ Various ways how to determine the calibration constant:
       (stored in the sub-dataclass ediff.calibration.Microscopes)
 * If the constants are not known,
   you can always use the EDIFF-calculated ELD and XRD profiles.
-* The short examples are below,
+    - More info on the EDIFF calculation of ELD and XRD profiles
+      => see section *Technical notes* below.
+* The short examples follow,
   more details are in the *worked examples* coming with this documentation.
 
 >>> # Standard import of ediff
@@ -54,6 +56,20 @@ Various ways how to determine the calibration constant:
 >>> # (4) Calibration constant from known/calibrated microscope.
 >>> # (The calibrated microscopes are in: ediff.calibration.Microscopes
 >>> calibration_constant = ed.calibration.Microscopes.TecnaiVeleta(D=750)
+
+Technical note - ELD and XRD profiles calculated by EDIFF:
+
+* ELD profile = 1D radially averaged powder electron diffraction pattern
+    - obtained from an experimental 2D difractogram
+* XRD profile = 1D radially averaged X-ray diffraction pattern
+    - calculated from a standard CIF file = Crystallographic Information File
+* EDIFF format = format of ELD and XRD profiles employed in EDIFF package
+    - Both ELD and XRD profiles can come in the form of files or np.arrays.
+    - Columns in files <=> rows in np.arrays (as we use: *unpack=True*).
+    - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
+    - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
+* EDIFF calculation of ELD and XRD profiles is best seen from examples:
+    - https://mirekslouf.github.io/ediff/docs -> worked example  
 '''
 
 
@@ -81,17 +97,15 @@ class Calculate:
             an electron diffraction profile in EDIFF format.
             It can come as file (if *eld_profile* = str = filename)
             or array (*eld_profile* = numpy.array).
-            Both file or array must be in EDIFF format,
-            i.e. containing the following 3 columns:
-            pixels, intensity, bkgr-corrected intensity.
+            More info about ELD profiles in EDIFF format
+            => initial description of ediff.calibration module.
         xrd_profile : str or numpy.array
             The *xrd_profile* is
             an X-rayd diffraction profile in EDIFF format.
             It can come as file (if *xrd_profile* = str = filename)
             or array (*xrd_profile* = numpy.array).
-            Both file or array must be in EDIFF format,
-            i.e. containing the following 4 columns:
-            2theta[deg], S[1/A], q[1/A], normalized-intensity.
+            More info about XRD profiles in EDIFF format
+            => initial description of ediff.calibration module.
         messages : bool, optional, default is True
             If *messages* = True,
             print some information
@@ -133,17 +147,15 @@ class Calculate:
             an electron diffraction profile in EDIFF format.
             It can come as file (if *eld_profile* = str = filename)
             or array (*eld_profile* = numpy.array).
-            Both file or array must be in EDIFF format,
-            i.e. containing the following 3 columns:
-            pixels, intensity, bkgr-corrected intensity.
+            More info about ELD profiles in EDIFF format
+            => initial description of ediff.calibration module.
         xrd_profile : str or numpy.array
             The *xrd_profile* is
             an X-rayd diffraction profile in EDIFF format.
             It can come as file (if *xrd_profile* = str = filename)
             or array (*xrd_profile* = numpy.array).
-            Both file or array must be in EDIFF format,
-            i.e. containing the following 4 columns:
-            2theta[deg], S[1/A], q[1/A], normalized-intensity.
+            More info about XRD profiles in EDIFF format
+            => initial description of ediff.calibration module.
         eld_range : tuple of two floats, optional, default is None
             The x-range in 1D ED profile,
             in which we should search for the maximal peak.
@@ -401,8 +413,8 @@ class Utils:
             * If profile = numpy.array,
               we assume that it is the 2D-array
               containing ELD or XRD profile in EDIFF format.
-            * See section *Technical notes* below
-              for explanation of the EDIFF format of the ELD and XRD profiles.
+            * More info about ELD and XRD profiles in EDIFF format
+              => initial description of ediff.calibration module.
 
         Returns
         -------
@@ -410,16 +422,6 @@ class Utils:
             The array representing ELD or XRD profile in EDIFF format.
             See section *Technical notes* below
             for explanation of the EDIFF format of the ELD and XRD profiles.  
-
-        Technical notes
-        ---------------
-        * EDIFF format of ELD and XRD profiles.
-            * EDIFF format = format employed in EDIFF package.
-            * ELD and XRD profiles can come in the form of files or arrays.
-            * ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
-            * XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
-        * Note1: ELD = electron diffraction, XRD = X-ray diffraction.
-        * Note2: Columns in files <=> rows in arrays (unpack=True).
         '''
         if type(profile)==np.ndarray:
             return(profile)
@@ -542,15 +544,24 @@ class Utils:
         Parameters
         ----------
         eld_profile : numpy.array
-            The original ELD profile in EDIFF format.
-            
+            The original ELD profile in EDIFF format
+            (see also the section *Technical notes* below).
         calibration_constant : float
-            DESCRIPTION
+            The calibration constant,
+            which converts distance-in-pixels to distance-in-q-vectors.
+            More info about XRD profiles in EDIFF format
+            => initial description of ediff.calibration module.
             
         Returns
         -------
         eld_profile : numpy.array
             The calibrated and normalized ELD profile (in EDIFF format).
+
+        Technical notes
+        ---------------
+        For more information about
+        calibration constant and ELD profiles in EDIFF format
+        see the initial description of ediff.calibration module.
         '''
         
         # X-data = calibrate = convert [pixels] to [q-vectors]. 

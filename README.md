@@ -22,13 +22,10 @@ Installation
 
 Quick start
 -----------
-* See how it works:
-	- Look at [worked example](https://www.dropbox.com/scl/fi/3hb78voxd17wb3fzh9n1p/01_ediff_au.nb.pdf?rlkey=qmbvwaw80o1gbe262hwgjvmgx&dl=0)
-      in Jupyter.
-* Try it yourself:
-	- Download [complete examples with data](https://www.dropbox.com/scl/fo/td6rkdgp2usxosj1vqeku/h?rlkey=41carfdej5h2f8f4yscbuvagm&dl=0)
-	  and scripts and basic instructions.
-	- After downloading, unzip it and follow the instructions in *readme* file.
+* Look at [worked example](https://www.dropbox.com/scl/fi/3hb78voxd17wb3fzh9n1p/01_ediff_au.nb.pdf?rlkey=qmbvwaw80o1gbe262hwgjvmgx&dl=0)
+  to see how EDIFF works.
+* Download [complete examples with data](https://www.dropbox.com/scl/fo/td6rkdgp2usxosj1vqeku/h?rlkey=41carfdej5h2f8f4yscbuvagm&dl=0)
+  and try EDIFF yourself.
 
 Documentation, help and examples
 --------------------------------
