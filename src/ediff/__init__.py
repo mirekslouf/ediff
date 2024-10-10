@@ -27,7 +27,7 @@ Auxiliary package BGROUND:
 * It is imported during initialization dnd accesible as ediff.background.
 '''
 
-__version__ = "0.2.4"
+__version__ = "0.3"
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed

@@ -1,6 +1,10 @@
 EDIFF :: processing of powder electron diffraction patterns
 -----------------------------------------------------------
-* EDIFF is under development, but key modules do work:
+* EDIFF program:
+	- converts 2D powder electron diffractogram to 1D diffraction profile (ELD)
+	- calculates theoretical 1D powder X-ray diffraction profile (XRD)
+	- compares the experimental ELD with theoretical XRD
+* EDIFF modules:
     - io = input/output data treatment
 	- pxrd = calculate PXRD pattern(s) for the known/expected crystal(s)
 	- center = find center of 2D powder electron diffraction pattern
@@ -17,7 +21,7 @@ Installation
 * Requirement: Python with sci-modules: numpy, matplotlib, scipy, pandas
 * `pip install scikit-image` = 3rd party package for advanced image processing 
 * `pip install pymatgen` = 3rd party package employed in PXRD calculation
-* `pip install bground`= our package, interactive background subtraction
+* `pip install bground` = our package, interactive background subtraction
 * `pip install ediff` = EDIFF package itself (uses all packages above)
 
 Quick start
@@ -37,11 +41,8 @@ Documentation, help and examples
 Versions of EDIFF
 -----------------
 
-* Version 0.0.1 = the 1st draft
-* Version 0.0.2 = pxrd module works
-* Version 0.0.3 = pxrd module works including profiles
-* Version 0.0.4 = bground module incorporated + docstrings improved
-* Version 0.1   = 1st semi-complete version with basic documentation
-* Version 0.2   = important improvements of center.py
-* Version 0.3   = calibration module + improved docs + improved ediff template
-* Version 0.4   = TODO: further improvements of center.py
+* Versions 0.0.x = the 1st drafts, testing of {pxrd} module
+* Version 0.1 = the 1st semi-complete version with basic documentation
+* Version 0.2 = important improvements of {center} module
+* Version 0.3 = {calibration} module + improved docs + improved ediff template
+* Version 0.4 = TODO: further improvements of {center} module

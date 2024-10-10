@@ -216,17 +216,18 @@ class Calculate:
         return(calibration_constant)
     
     
-    def from_microscope_constants(
+    def from_microscope_parameters(
             voltage_kV, camera_length_mm, camera_pixel_size_um, messages=True):
         '''
-        Calibration constant from microscope-specific constants.
+        Calibration constant from microscope-specific parameters.
         
-        * The calibration constant can be estimated from certain constants,
+        * The calibration constant can be estimated from parameters,
           which are typical of given microscope + camera system.
-        * The constants we need to know are: (i) accelerating_voltage,
+        * The parameters we need to know are: (i) accelerating_voltage,
           (ii) camera_length, and (iii) camera_pixel_size.
-        * Warning: All three 'constants' may change for given experiment,
-          as explained below in Technical notes section.
+        * Warning: All three parameters may change
+          from experiment to experiment (although it is not typical);
+          detailed explanation is given below in Technical notes section.
 
         Parameters
         ----------
@@ -313,8 +314,50 @@ class Calculate:
 @dataclass
 class Microscopes:
     '''
-    A dataclass with calibrated microscopes to determine calibration constants.
+    A dataclass with calibrated microscopes,
+    for which we can determine the *calibration constant* easily.
+    
+    * The *calibration constant* can be estimated from parameters,
+      which are typical of each specific system consisting of
+      a {microscope + camera}.
+    * The calculation of *calibration constant*
+      from the general {microscope + camera} parameters
+      is described in:
+      ediff.calibration.Calculate.from_microscope_parameters.
+    * The parameters we need to know are: (i) accelerating_voltage,
+      (ii) camera_length, and (iii) camera_pixel_size.
+    * Warning: all three parameters may change for given experiment!
+        - accelerating_voltage can be changed any time,
+        - camera_constant can be adjusted to see all diffractions,
+        - camera_pixel_size is fixed, but binning=2,4... increases it 2x,4x...
+    
+    An working example how to use Microscope dataclass
+    for one pre-defined microscope+camera combination,
+    (which is a Microscope.TecnaiVeleta subclass):
+      
+    >>> import ediff as ed
+    >>> 
+    >>> # (1) The simplest case
+    >>> # (all parameters at their typical/default values
+    >>> # (for given microscope/camera combination = Tecnai/Veleta
+    >>> # (voltage = 120kV, camera_pix_size = 26.2um, D=1000mm
+    >>> my_microscope = ed.calibration.Microscopes.TecnaiVeleta()
+    >>> print(my_microscope.calibration_constant)
+    >>>
+    >>> # (2) The intermediate case
+    >>> # (all parameters at their typical/default values, BUT...
+    >>> # (...the camera distance has changed => D=1000mm => D=750mm
+    >>> my_microscope = ed.calibration.Microscopes.TecnaiVeleta(D=750)
+    >>> print(my_microscope.calibration_constant)
+    >>> 
+    >>> # (3) The most complex case
+    >>> # (all parameters were changed somehow
+    >>> my_microscope = ed.calibration.Microscopes.TecnaiVeleta(
+    >>>     D=750, voltage_kV=100, camera_pixel_size_um=(26.2*2))
+    >>> print(my_microscope.calibration_constant)
     '''
+    
+    
     # Dataclasses
     #   https://docs.python.org/3/library/dataclasses.html
     # Dataclasses in PDoc:
@@ -331,17 +374,29 @@ class Microscopes:
     @dataclass
     class TecnaiVeleta:
         '''
-        Microscope:Tecnai + camera:Veleta3G.
-        '''
+        The calibration for the microscope/camera = Tecnai/Veleta3G.
+        
+        * More details:
+          see the docs of the superclass = ediff.calibration.Microscopes
+         '''
         D                    : float = 1000
         voltage_kV           : float = 120
         camera_pixel_size_um : float = 26.2
         D_to_CL_coefficient  : float = 1 / 4.5
-        messages             : bool  = True
+        messages             : bool  = False
 
     
         @property 
         def calibration_constant(self):
+            '''
+            Calibration constant for microscope:Tecnai + camera:Veleta3G.
+            
+            Returns
+            -------
+            q_calibration
+                The calibration constant,
+                which converts distances-in-pixels to distances-in-q-vectors.
+            '''
             
             # The following calculation is almost analogous to
             #  calibration.Calculate.from_microscope_constants - see above.
@@ -382,15 +437,64 @@ class Microscopes:
     @dataclass 
     class TecnaiMorada:
         '''
-        Microscope:TecnaiSpirit + camera:Morada.
+        The calibration for the microscope/camera = Tecnai/Veleta3G.
+        
+        * More details:
+          see the docs of the superclass = ediff.calibration.Microscopes
         '''
-        pass
+        D                    : float = 890
+        voltage_kV           : float = 120
+        camera_pixel_size_um : float = 35.9
+        D_to_CL_coefficient  : float = 1 / 4
+        messages             : bool  = True
 
 
         @property 
         def calibration_constant(self):
-            pass
-
+            '''
+            Calibration constant for microscope:Tecnai + camera:Veleta3G.
+            
+            Returns
+            -------
+            q_calibration
+                The calibration constant,
+                which converts distances-in-pixels to distances-in-q-vectors.
+            '''
+            
+            # The following calculation is almost analogous to
+            #  calibration.Calculate.from_microscope_constants - see above.
+            # There is just one small difference:
+            #  Step(2) - CL is calculated by means of D_to_CC_coefficient.
+            #  Reason: D given by the microscope may not be the real CL[mm].
+            
+            # (1) Calculate relativistic wavelength
+            Lambda = Utils.electron_wavelenght(self.voltage_kV)
+            
+            # (2) Determine CL and CC
+            # * CL = CameraLenght
+            #   CL is estimated from known distance D from the microscope
+            #   CL = D * D_to_CL_coefficient (coeff. typical of given device)
+            # * CC = Camera Constant
+            #   CC = CL * Lamda => CC[mmA] = CL[mm]*Lamda[A]
+            #   The CC-CL => Camera equation: R*d = Lambda*CL = CC
+            CL = self.D * self.D_to_CL_coefficient
+            CC = CL * Lambda
+            
+            # (3) Calculate the final calibration constants
+            # (see  Utils.final_calibration_constants for the justification
+            R_calibration, S_calibration, q_calibration = \
+                Utils.final_calibration_constants(
+                    camera_pixel_size_um = self.camera_pixel_size_um, 
+                    camera_constant_mmA = CC)
+            
+            # (4) Print calibrations if requested
+            if self.messages:
+                Utils.print_calibration_constants(
+                    Lambda, CL, CC,
+                    R_calibration, S_calibration, q_calibration)
+                
+            # (5) Return the final q_calibration constant
+            return(q_calibration)
 
 
 class Utils:
