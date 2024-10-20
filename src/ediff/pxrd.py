@@ -1,7 +1,36 @@
 '''
 Module: ediff.pxrd
 ------------------
-Calculation of powder X-ray diffraction patterns.    
+
+Calculation of powder X-ray diffraction patterns.
+
+>>> # EDIFF/PXRD module ::calculate diffraction pattern of NaCl
+>>> 
+>>> import ediff.pxrd
+>>>
+>>> # [0] Crystal structure is defined
+>>> # by means of CIF = Crystallographic Information File.
+>>> # CIFs can be downloaded from: https://www.crystallography.net
+>>> CIF_FILE = r'./nacl_1000041.cif.cif'
+>>> 
+>>> # [1] Crystal, experimental and plot parameters
+>>> # are defined as objects XTAL, EPAR, PPAR and CALC, respectively.
+>>> XTAL = ediff.pxrd.Crystal(structure=CIF_FILE, temp_factors=0.8)
+>>> EPAR = ediff.pxrd.Experiment(wavelength=0.71, two_theta_range=(5,120))
+>>> PPAR = ediff.pxrd.PlotParameters(x_axis='q', xlim=(1,10))
+>>> 
+>>> # [2] PXRDcalculation object
+>>> # calculates PXRD during initialization
+>>> # and contains the results for further processing.
+>>> CALC = ediff.pxrd.PXRDcalculation(XTAL, EPAR, PPAR, peak_profile_sigma=0.1)
+>>> 
+>>> # [3] Show/save CALCulation results.
+>>> # (it is quite ok to use default settings
+>>> # (for more advanced plotting you can use the saved results + arbitrary SW
+>>> CALC.print_diffractions()
+>>> CALC.save_diffractions('nacl_pxrd.py.diff')
+>>> CALC.plot_diffractogram('nacl_pxrd.py.png')
+>>> CALC.save_diffractogram('nacl_pxrd.py.txt') 
 '''
 
 import sys
@@ -498,33 +527,34 @@ class PXRDcalculation:
         '''
         Plot indexed diffractions.
         
-        Important - interactive plots in Spyder
-        ---------------------------------------
-        * This function can create interactive plot.
-            * In CLI (command line) - the plot is interactive automatically.
-            * In Spyder IDE - default is to create non-interactive plots.
-        * If you want the interactive plot in Spyder IDE, type in Console ...
-            * BEFORE running (to switch on interactivity): %matplotlib qt
+        * This function (usually) creates an interactive plot.
+        * **In CLI** (command line) - the plot is interactive automatically.
+        * **In Spyder or Jupyter** - type the following *magic commands*:
+            * BEFORE running (switch on the interactive mode): %matplotlib qt
             * AFTER running (back to non-interactive mode): %matplotlib inline
+            * In Spyder, the commands are typed in the Console window.
+            * In Jupyter, the commands are usually typed in separate cells.
         
         Parameters
         ----------
-        * None; this function is to be called exclusively 
-          as method of PXRDcalculation object.
-        * If PXRDcalculation is properly initialized,
-          additional parameters are not needed.
+        None
+            This function is to be called exclusively 
+            as method of PXRDcalculation object.
+            If PXRDcalculation is properly initialized,
+            additional parameters are not needed.
 
         Returns
         -------
-        * None; the output is the plot in the screen.
-        * In typical case, the plot is interactive
-          so that the indexed diffractions could be expected in detail.
+        None
+            The output is the plot in the screen.
+            In a typical case, the plot is interactive
+            so that the indexed diffractions could be expected in detail.
         
-        Technical notes
-        ---------------
+        Technical note
+        --------------
         * The code below uses (sligthly modified) PyMatGen functions.
-        * Reason: PyMatGen plotting works well with diffraction indexes.
-          Re-programing of indexed plots would be difficult and useless...
+        * Reason: PyMatGen plots with diffraction indexes are quite good.
+          Re-programing would be quite difficult, boring, and useless.
         '''
         # (0) Redefine plot parameters
         # (so that they were optimized for the interactive plot

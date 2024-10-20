@@ -1,20 +1,17 @@
 '''
 Package: EDIFF
 --------------
-Utilities for processing of electron diffraction patterns.
+Processing of powder electron diffraction patterns.
 
-* Input:
-    - 2D powder electron diffraction pattern
-* Output:
-    - 1D powder electron diffraction pattern
-* Notes:
+* Input:  2D powder electron diffraction pattern (raw experimental data).
+* Output: 1D powder electron diffraction pattern (final, compared with PXRD).
     - The 1D pattern/profile is obtained by radial averaging of 2D pattern.
-    - The 1D profile can be calibrated and compared with the theoretical PXRD.
-    - The calculation of theoretical PXRD pattern is a part of this package. 
+    - The 1D profile is calibrated and compared with the theoretical PXRD.
+    - The calculation of theoretical PXRD patterns is a part of this package. 
 
 EDIFF modules:
 
-* ediff.background = background correction (employs auxilliary package BGROUND)    
+* ediff.background = background correction (employs our package BGROUND)    
 * ediff.calibration = calibration of SAED diffractograms (pixels -> q-vectors)
 * ediff.center = find center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
@@ -23,11 +20,11 @@ EDIFF modules:
 
 Auxiliary package BGROUND:
 
-* The is an external package, which enables a 1D background correction.
-* It is imported during initialization dnd accesible as ediff.background.
+* BGROUND is an external package, which enables a 1D background correction.
+* It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.3"
+__version__ = "0.3.1"
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed

@@ -1,15 +1,15 @@
 '''
 Module: ediff.io
 ----------------
-Input/output functions for package ediff.    
+Input/output functions for package EDIFF.    
 '''
 
 from PIL import Image
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 import ediff.radial
+
+
 
 def read_image(image_name, itype=None):
     '''
@@ -19,12 +19,13 @@ def read_image(image_name, itype=None):
     ----------
     image_name : string or pathlib object
         Name of image that should read into numpy 2D array.
-    itype: string ('8bit'  or '16bit')
-        type of the image: 8 or 16 bit grayscale    
+    itype : string ('8bit'  or '16bit')
+        Type of the image: 8 or 16 bit grayscale    
         
     Returns
     -------
-    2D numpy array
+    arr : 2D numpy array
+        The *arr* is the input image read to an array by means of numpy.
     '''
     img = Image.open(image_name)
     if itype=='8bit':
@@ -32,6 +33,54 @@ def read_image(image_name, itype=None):
     else:
         arr = np.asarray(img, dtype=np.uint16)
     return(arr)
+
+
+def read_profile(profile):
+    '''
+    Read the ELD or XRD profile in EDIFF format.
+
+    * More info about ELD/XRD profiles in EDIFF
+      => see the section *Technical notes* below.
+
+    Parameters
+    ----------
+    profile : str or numpy.array
+        
+        * If profile = str,
+          we assume a filename
+          of the file with ELD or XRD profile in EDIFF format.
+        * If profile = numpy.array,
+          we assume a 2D-array
+          containing ELD or XRD profile in EDIFF format.
+
+    Returns
+    -------
+    profile : 2D numpy.array
+        The array representing ELD or XRD profile in EDIFF format.
+        See section *Technical notes* below
+        for explanation of the EDIFF format of the ELD and XRD profiles.
+    
+    Technical notes
+    ---------------
+    * ELD profile = 1D radially averaged
+      powder electron diffraction pattern
+        - in EDIFF, it is obtained from an experimental 2D difractogram
+    * XRD profile = 1D powder X-ray diffraction pattern
+        - in EDIFF, it is calculated from a standard CIF file
+          = Crystallographic Information File
+    * EDIFF format of ELD and XRD profiles employed in EDIFF package
+        - ELD and XRD profiles can come in the form of files or np.arrays
+        - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
+        - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
+        - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
+    * EDIFF calculation of ELD and XRD profiles is best seen from examples:
+        - https://mirekslouf.github.io/ediff/docs -> worked example
+    '''
+    if type(profile)==np.ndarray:
+        return(profile)
+    else:
+        profile = np.loadtxt(profile, unpack=True)
+        return(profile)
 
 
 def set_plot_parameters(
@@ -56,7 +105,8 @@ def set_plot_parameters(
 
     Returns
     -------
-    None; the result is a modification of the global plt.rcParams variable.
+    None
+        The result is a modification of the global plt.rcParams variable.
     '''
     # (1) Basic arguments -----------------------------------------------------
     if size:  # Figure size
@@ -110,8 +160,10 @@ def plot_1d_profile(Xvalues, Yvalues, Xlabel, Ylabel, Xrange, Yrange,
 
     Returns
     -------
-    None.
-    '''
+    None
+        The plot is shown in the stdout
+        and saved to *output_file* if requested.
+   '''
     
     # (1) Plot title if requested
     if title is not None: plt.title(title)
@@ -152,7 +204,7 @@ def plot_2d_diffractogram(diffractogram, icut=None, title=None):
     Returns
     -------
     None
-        The 3D diffractogram is just shown in the stdout.
+        The 2D diffractogram is just shown in the stdout.
     '''
     # Plot the 2D-diffractogram
     # (quite simple, we employ plt.imshow function with a few arguments
@@ -163,7 +215,7 @@ def plot_2d_diffractogram(diffractogram, icut=None, title=None):
     plt.show()
 
     
-def final_plot_eld_xrd(eld_data, xrd_data, fine_tuning, x_range,
+def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
         eld_data_label='ED experiment', xrd_data_label='XRD calculation',
         x_axis_label='$q$ [1/\u212B]', y_axis_label='Intensity',
         output_file=None, output_file_dpi=300):
@@ -175,37 +227,61 @@ def final_plot_eld_xrd(eld_data, xrd_data, fine_tuning, x_range,
     
     Parameters
     ----------
-    eld_data : TYPE
-        DESCRIPTION.
-    xrd_data : TYPE
-        DESCRIPTION.
-    fine_tuning : TYPE
-        DESCRIPTION.
-    x_range : TYPE
-        DESCRIPTION.
-    output_file : TYPE
-        DESCRIPTION.
-    eld_data_label : TYPE, optional
-        DESCRIPTION. The default is 'ED experiment'.
-    xrd_data_label : TYPE, optional
-        DESCRIPTION. The default is 'XRD calculation'.
-    x_axis_label : TYPE, optional
-        DESCRIPTION. The default is '$q$ [1/\u212B]'.
-    y_axis_label : TYPE, optional
-        DESCRIPTION. The default is 'Intensity'.
-    output_file_dpi : TYPE, optional
-        DESCRIPTION. The default is 300.
+    eld_profile : str or numpy.array
+        The *eld_profile* (ELD) is
+        an electron diffraction profile in EDIFF format.
+        It can come as file (if *eld_profile* = str = filename)
+        or array (if *eld_profile* = numpy.array).
+        More info about ELD profiles in EDIFF
+        => see docs of ediff.calibration.Calculate.from_max_peaks function.
+    xrd_profile : str or numpy.array
+        The *xrd_profile* (XRD) is
+        an X-rayd diffraction profile in EDIFF format.
+        It can come as file (if *xrd_profile* = str = filename)
+        or array (if *xrd_profile* = numpy.array).
+        More info about XRD profiles in EDIFF
+        => see docs of ediff.calibration.Calculate.from_max_peaks function.
+    fine_tuning : float
+        The constant for the final fine-tuning of peak position.
+        The *fine_tuning* constant has a starting value of 1.000.
+        If ELD and XRD peaks are shifted, the constant should be adjusted.
+        The constant multiplies the X-values of ELD profile.
+    x_range : tuple of two floats
+        The limits for X-axis (minimum and maximu q-vectors on X-axis).
+    eld_data_label : str, optional, default is 'ED experiment'
+        The label of ELD data (= name of the electron diffraction data).
+    xrd_data_label : str, optional, the default is 'XRD calculation'
+        The label of XRD data (= name of the X-ray diffraction data).
+    x_axis_label : str, optional, the default is '$q$ [1/\u212B]' ~ q [1/A]
+        The label of X-axis.
+    y_axis_label : str, optiona, the default is 'Intensity'.
+        The label of Y-axis.
+    output_file : str, optional, default is None
+        The filename, to which the final graph should be saved.
+        If *output_file* is not None (= the default),
+        the plot is not only shown in stdout,
+        but also saved in the *output_file*.
+    output_file_dpi : int, optional, default is 300
+        The DPI of the output graph.
 
     Returns
     -------
-    None.
-
+    None
+        The plot is shown in the stdout
+        and saved to *output_file* if requested.
     '''
     
+    # (1) Read ED and XRD diffraction profiles.
+    # * The profiles are supposed to be either filenames or numpy.arrays
+    # * In any case, the filenames or arrays should be in EDIFF format:
+    #   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity
+    #   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity
+    eld = read_profile(eld_profile)
+    xrd = read_profile(xrd_profile)
+
     # Plot the data
-    plt.plot(xrd_data[2], xrd_data[3], label=xrd_data_label)
-    plt.plot(eld_data[0]*fine_tuning, eld_data[2],
-             color='red', label=eld_data_label)
+    plt.plot(xrd[2], xrd[3], label=xrd_data_label)
+    plt.plot(eld[0]*fine_tuning, eld[2], color='red', label=eld_data_label)
     # Define axis labels
     plt.xlabel(x_axis_label)
     plt.ylabel(y_axis_label)
@@ -221,10 +297,14 @@ def final_plot_eld_xrd(eld_data, xrd_data, fine_tuning, x_range,
     # Show the plot
     plt.show()
 
+
 def plot_radial_distributions(
         data_to_plot, xlimit, ylimit, output_file=None):
     """
     Plot one or more 1D-radial distrubution files in one graph.
+    
+    * This is a rather specific function.
+    * It is employed mostly when we combine STEMDIFF and EDIFF.
 
     Parameters
     ----------
@@ -251,9 +331,9 @@ def plot_radial_distributions(
 
     Returns
     -------
-    Nothing
-        The output is the plot on screen
-        (and in *output file* if the *output* argument was given).
+    None
+        The plot is shown in the stdout
+        and saved to *output_file* if requested.
     
     Technical notes
     ---------------
