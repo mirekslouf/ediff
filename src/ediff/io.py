@@ -218,7 +218,8 @@ def plot_2d_diffractogram(diffractogram, icut=None, title=None):
 def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
         eld_data_label='ED experiment', xrd_data_label='XRD calculation',
         x_axis_label='$q$ [1/\u212B]', y_axis_label='Intensity',
-        output_file=None, output_file_dpi=300):
+        xticks=None, yticks=None, mxticks=None, myticks=None,
+        output_file=None, output_file_dpi=300, transparent=False, CLI=False):
     '''
     Final plot/comparison of ELD and XRD profiles.
 
@@ -256,6 +257,14 @@ def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
         The label of X-axis.
     y_axis_label : str, optiona, the default is 'Intensity'.
         The label of Y-axis.
+    xticks : float, optional, default is None
+        The X-axis ticks (if not omitted, use the default).
+    yticks : float, optional, default is None
+        The Y-axis ticks (if not omitted, use the default).
+    mxticks : float, optional, default is None
+        The Y-axis minor ticks (if not omitted, use the default).
+    myticks : float, optional, default is None
+        The Y-axis minor ticks (if not omitted, use the default).
     output_file : str, optional, default is None
         The filename, to which the final graph should be saved.
         If *output_file* is not None (= the default),
@@ -263,6 +272,11 @@ def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
         but also saved in the *output_file*.
     output_file_dpi : int, optional, default is 300
         The DPI of the output graph.
+    transparent : bool, optional, default is False
+        If *transparent* = True, then the image background is transparent.
+    CLI : bool, optional, default is False
+        If *CLI* = True, we assume command line interface
+        and the plot is not shown, just saved.
 
     Returns
     -------
@@ -287,15 +301,30 @@ def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
     plt.ylabel(y_axis_label)
     # Define xlim = x-limits = x-range
     plt.xlim(x_range)
-    # Additional plot parameters
-    plt.legend()
+    # Define ticks and minor ticks if requested
+    if xticks is not None:
+        plt.gca().xaxis.set_major_locator(plt.MultipleLocator(xticks))
+    if yticks is not None:
+        plt.gca().yaxis.set_major_locator(plt.MultipleLocator(yticks))
+    if mxticks is not None:
+        plt.gca().xaxis.set_minor_locator(plt.MultipleLocator(mxticks))
+    if myticks is not None:
+        plt.gca().yaxis.set_minor_locator(plt.MultipleLocator(myticks))
+    # Add legent (considering transparency)
+    if transparent == True:
+        plt.legend(framealpha=0.0)
+    else: plt.legend()
+    # Additional parameters
     plt.grid()
     plt.tight_layout()
     # Save plot if requested
     if output_file is not None:
-        plt.savefig(output_file, dpi=output_file_dpi, facecolor='white')
+        if transparent == True:
+            plt.savefig(output_file, dpi=output_file_dpi, transparent=True)
+        else:
+            plt.savefig(output_file, dpi=output_file_dpi, facecolor='white')
     # Show the plot
-    plt.show()
+    if CLI == False: plt.show()
 
 
 def plot_radial_distributions(
