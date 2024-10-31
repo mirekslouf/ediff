@@ -1,7 +1,22 @@
 '''
 Module: ediff.center
 --------------------
-Find center of 2D diffraction pattern. 
+Find the center of a 2D diffraction pattern.
+
+* The center determination may be surprisingly tricky in certain cases.
+* Nevertheless, the user just calls the CenterLocator class as shown below.
+
+>>> # Example: How to use CenterLocator and get results?
+>>> import ediff as ed
+>>>
+>>> center = ed.center.CenterLocator(
+>>>    input_image='some_diffractogram.png',
+>>>    determination='intensity',
+>>>    refinement='sum',
+>>>    messages=True, final_replot=False)
+>>>
+>>> print('Determined center coordinates:', center.x1, center.y1)
+>>> print('Refined center coordinates   :', center.x2, center.y2)
 '''
 
 # CenterDet
@@ -34,6 +49,70 @@ warnings.filterwarnings("ignore")
 
 
 class CenterLocator:
+    '''
+    CenterLocator object for determining and refining the center 
+    of a diffraction pattern.
+
+    Parameters
+    ----------
+    input_image : str, path, or numpy.array
+        The input image representing a 2D diffraction pattern, either as a 
+        file path or a NumPy array.
+    determination : callable, optional, default is None
+        Method used for center determination
+        = the initial estimate of center coordinates.
+    refinement : callable, optional, default is None
+        Method used for center refinement
+        = refining the calculated center position interactively.
+    in_file : str, optional, default is None
+        Filename of the text file
+        for saving the center coordinates.
+    out_file : str, optional, default is None
+        Filename of the text file
+        for loading the previously saved center coordinates.
+    heq : bool, optional, default is False
+        Flag to indicate whether to perform histogram equalization 
+        on the input image.
+        The equalization is done internally,
+        the image on the screen remains unchanged.
+    icut : float, optional, default, default is None
+        Cut-off intensity level for processing the image.
+    cmap : str, optional, default is 'gray'
+        Colormap to be used for displaying the image. 
+    csquare : int, optional, default is 50
+        Size of the central square,
+        within which we will search the intensity center.
+    cintensity : float, optional, default is 0.8
+        Threshold intensity
+        for finding the intensity center.
+        Pixels with a (relative) intensity lower than cintensity are ignored.
+    messages : bool, optional, default is False
+        Flag to enable or disable informational messages during processing. 
+    print_sums : bool, optional, default is False
+        If True, prints the sum of intensity values for the refined circle 
+        after each adjustment, relevant only for manual methods of center 
+        determination and refinement.
+    final_replot : bool, optional, default is False
+        Flag to indicate whether to replot the final results.
+ 
+    Returns
+    -------
+    None
+        The center coordinates are stored in instance variables
+        (x1,y1) for the determined center and
+        (x2,y2) for the refined center.
+        Look at the initial example at the top of this module
+        to see how to use CenterLocator class.
+            
+    Technical notes
+    ---------------
+    * The class initializes (and runs) two sub-classes (= processes),
+      CenterDetermination and CenterRefinement.
+    * The two sub-classes/processes are hidden to common user,
+      altough they could be run separately.
+    '''
+    
+    
     def __init__(self,
                  input_image, 
                  determination = None, 
@@ -49,65 +128,8 @@ class CenterLocator:
                  print_sums = False,
                  final_replot=False):
         '''
-        CenterLocator object for determining and refining the center 
-        of a diffraction pattern.
-
-        This class combines the processes of center determination and refinement 
-        for a given 2D diffraction pattern image. 
-        It initializes with the input image and parameters that control various 
-        aspects of the center locating process. 
-
-        Parameters
-        ----------
-        input_image : str, path, or numpy.array
-            The input image representing a 2D diffraction pattern, either as a 
-            file path or a NumPy array.
-        determination : callable, optional
-            Method used for determining the initial center of the diffraction 
-            pattern.
-        refinement : callable, optional
-            Method used for refining the calculated center position interactively.
-        in_file : str, optional
-            Filename of the text file for saving center coordinates.
-        out_file : str, optional
-            Filename of the text file for loading previously saved center 
-            coordinates.
-        heq : bool, optional
-            Flag to indicate whether to perform histogram equalization 
-            on the input image. Default is False.
-        icut : float, optional
-            Cut-off intensity level for processing the image. Default is None.
-        cmap : str, optional
-            Colormap to be used for displaying the image. Default is 'gray'.
-        csquare : int, optional
-            Size of the square for processing. Default is 50.
-        cintensity : float, optional
-            Threshold intensity for detecting features in the image. 
-            Default is 0.8.
-        messages : bool, optional
-            Flag to enable or disable informational messages during processing. 
-            Default is False.
-        print_sums : bool, optional
-            If True, prints the sum of intensity values for the refined circle 
-            after each adjustment, relevant only for manual methods of center 
-            determination and refinement.
-        final_replot : bool, optional
-            Flag to indicate whether to replot the final results. 
-            Default is False.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        - The class initializes the CenterDetermination and CenterRefinement 
-          processes using the provided parameters.
-        - If `in_file` is specified, the coordinates are saved to that file.
-        - If `out_file` is specified, the class attempts to load previously 
-          saved coordinates from that file.
-        - Instance variables `x1`, `y1`, `x2`, and `y2` store the determined 
-          and refined center coordinates.
+        * Initialize CenterLocator object.
+        * The parameters are described above in class definition.
         '''
         
         ## (0) Initialize input attributes
@@ -482,8 +504,6 @@ class CenterDetermination:
         - The detected center coordinates are stored in instance variables
           `x`, `y`, and `r`, representing the center's x-coordinate, 
           y-coordinate, and radius, respectively.
-        - If an invalid determination method is specified, the class will print
-          an error message and exit.
         '''
         
         ## (0) Initialize input attributes
