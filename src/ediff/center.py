@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.legend_handler import HandlerBase
 
-import dio
+import ediff
 import os
 
 from skimage.measure import moments
@@ -134,7 +134,7 @@ class CenterLocator:
         if isinstance(input_image, np.ndarray):
             self.image = input_image
         else:
-            self.image = dio.read_image(self.input_image)
+            self.image = ediff.io.read_image(self.input_image)
         
         ## (2) Initialize/run CenterDetermination
         self.center1 = CenterDetermination(self,
