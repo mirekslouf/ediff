@@ -60,7 +60,7 @@ class CenterLocator:
         The input image representing a 2D diffraction pattern, either as a 
         file path or a NumPy array.
     determination : callable, optional, default is None
-        Method used for center determination
+        The method used for center determination
         = the initial estimate of center coordinates.
     refinement : callable, optional, default is None
         Method used for center refinement
@@ -90,9 +90,11 @@ class CenterLocator:
     messages : bool, optional, default is False
         Flag to enable or disable informational messages during processing. 
     print_sums : bool, optional, default is False
-        If True, prints the sum of intensity values for the refined circle 
-        after each adjustment, relevant only for manual methods of center 
-        determination and refinement.
+        Flag to print the sum of intensity values for the refined circle 
+        after each adjustment; relevant only for manual method
+        of center determination and refinement.
+    final_print : bool, optional, default is True
+        Flag to print the center coordinates on stdout at the end.
     final_replot : bool, optional, default is False
         Flag to indicate whether to replot the final results.
  
@@ -128,7 +130,7 @@ class CenterLocator:
                  messages = False,
                  print_sums = False,
                  final_print = True,
-                 final_replot=False):
+                 final_replot = False):
         '''
         * Initialize CenterLocator object.
         * The parameters are described above in class definition.
@@ -2378,25 +2380,4 @@ class IntensityCenter:
         
         ## Return the final center
         return(xc,yc)
-
-
-
-
-if __name__=="__main__":
-    plt.close("all")
-    
-    path=r"C:\_isibrno\data\IMAGES.IMC\img3_feo.bmp"
-    
-    locator = CenterLocator(
-        input_image=path,
-        determination='intensity',
-        refinement='sum',
-        #in_file="combos.txt",
-        #out_file="combos.txt",
-        print_sums=True,
-        final_print=True,
-        final_replot=True,
-        messages=False)
-    
-    
-
+  
