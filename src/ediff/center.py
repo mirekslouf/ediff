@@ -36,11 +36,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.legend_handler import HandlerBase
 
-import ediff
+import ediff.io
 import os
 
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
+from textwrap import dedent
 
 import sys
 import warnings
@@ -126,12 +127,13 @@ class CenterLocator:
                  cintensity=0.8,
                  messages = False,
                  print_sums = False,
+                 final_print = True,
                  final_replot=False):
         '''
         * Initialize CenterLocator object.
         * The parameters are described above in class definition.
         '''
-        
+               
         ## (0) Initialize input attributes
         self.input_image = input_image
         self.refinement = refinement
@@ -145,10 +147,13 @@ class CenterLocator:
         self.cintensity = cintensity
         self.messages = messages
         self.print_sums = print_sums
+        self.final_print = final_print
         self.final_replot = final_replot
         
         ## (1) Initialize new attributes
         self.to_refine = []
+        self.dText = []
+        self.rText = []
         # Adjust this initial value as desired
         self.marker_size = 100          
 
@@ -183,19 +188,37 @@ class CenterLocator:
             self.messages,
             self.print_sums,
             self.final_replot)
-
+        
         ## (4) Collect results
         self.x1 = self.center1.x
         self.y1 = self.center1.y
         self.x2 = self.center2.xx
         self.y2 = self.center2.yy
-           
-        ## (5) Save results to a .txt file if specified
-        if in_file is not None:
+        
+        if (determination != "manual" and refinement == "manual"):
+            #print("swap1")
+            #self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
+            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)
+            
+        if self.final_print:
+            self.dText=str(self.dText)
+            self.rText=str(self.rText)
+
+            print(self.dText.format(float(self.x1),float(self.y1)))
+            print(self.rText.format(float(self.x2),float(self.y2)))
+                
+        ## (5) Plot results if final_replot
+        if final_replot:   
+            self.center2.visualize_refinement(
+                self.x1, self.y1, self.center1.r,
+                (self.x2, self.y2), self.center2.rr)
+        
+        ## (6) Save results to a .txt file if specified
+        if out_file is not None:
             self.save_results()
             
-        ## (6) Load results from a .txt file if specified       
-        if out_file is not None:
+        ## (7) Load results from a .txt file if specified       
+        if in_file is not None:
             self.load_results()   
     
     def output(self):
@@ -274,16 +297,16 @@ class CenterLocator:
             x2: <value>, y2: <value>
         '''
         
-        if self.in_file is not None:
+        if self.out_file is not None:
             # Check if the specified file exists
-            if os.path.isfile(self.in_file):
+            if os.path.isfile(self.out_file):
                 # Append results to in_file
-                with open(self.in_file, 'a') as f:  # Open in append mode
+                with open(self.out_file, 'a') as f:  # Open in append mode
                     f.write(f"x1: {self.x1:.4f}, y1: {self.y1:.4f}\n")
                     f.write(f"x2: {self.x2:.4f}, y2: {self.y2:.4f}\n")
             else:
                 # If the file does not exist, create it and write results
-                with open(self.in_file, 'w') as f:  # Open in write mode
+                with open(self.out_file, 'w') as f:  # Open in write mode
                     f.write(f"x1: {self.x1:.4f}, y1: {self.y1:.4f}\n")
                     f.write(f"x2: {self.x2:.4f}, y2: {self.y2:.4f}\n")
 
@@ -316,8 +339,8 @@ class CenterLocator:
         and only the last set can be accessed as instance variables.
         '''        
         
-        if self.out_file is not None and os.path.isfile(self.out_file):
-            with open(self.out_file, 'r') as f:
+        if self.in_file is not None and os.path.isfile(self.in_file):
+            with open(self.in_file, 'r') as f:
                 lines = f.readlines()
                 
                 # Initialize lists to hold multiple values
@@ -356,7 +379,7 @@ class CenterLocator:
                     self.y2 = y2_values[-1]
     
         else:
-            print("Output file does not exist or is not specified.")
+            print("Input file does not exist or is not specified.")
 
 
     def get_circle_pixels(self, xc, yc, radius, num_points=360):
@@ -427,7 +450,11 @@ class CenterLocator:
         return s
     
     
-             
+    def convert_coords(self, x, y):
+        """ Convert between numpy and matplotlib coordination system. """
+        return y, x
+
+
 class CenterDetermination:
     def __init__(self, parent,
                  input_image,
@@ -625,13 +652,13 @@ class CenterDetermination:
 
                     if control_print == 1:
                         fig, ax = plt.subplots(nrows=2, ncols=2)
-                        ax[0,0].imshow(self.parent.image)
+                        ax[0,0].imshow(self.parent.image, origin="upper")
                         ax[0,0].set_title("Original image")
-                        ax[0,1].imshow(self.parent.to_refine)
+                        ax[0,1].imshow(self.parent.to_refine, origin="upper")
                         ax[0,1].set_title("Hough pre-processed")
-                        ax[1,0].imshow(edges)
+                        ax[1,0].imshow(edges, origin="upper")
                         ax[1,0].set_title("Edges")
-                        ax[1,1].imshow(connected_edges)
+                        ax[1,1].imshow(connected_edges, origin="upper")
                         ax[1,1].set_title("Connected edges")
                         plt.tight_layout()
                         plt.show(block=False)
@@ -657,13 +684,13 @@ class CenterDetermination:
                     
                     if control_print == 1:
                         fig, ax = plt.subplots(nrows=2, ncols=2)
-                        ax[0,0].imshow(self.image)
+                        ax[0,0].imshow(self.image, origin="upper")
                         ax[0,0].set_title("Original image")
-                        ax[0,1].imshow(self.to_refine)
+                        ax[0,1].imshow(self.to_refine, origin="upper")
                         ax[0,1].set_title("Hough pre-processed")
-                        ax[1,0].imshow(edges)
+                        ax[1,0].imshow(edges, origin="upper",)
                         ax[1,0].set_title("Edges")
-                        ax[1,1].imshow(connected_edges)
+                        ax[1,1].imshow(connected_edges,origin="upper")
                         ax[1,1].set_title("Connected edges")
                         plt.tight_layout()
                         plt.show(block=False)
@@ -693,11 +720,11 @@ class CenterDetermination:
                     
                     if control_print == 1:
                         fig, ax = plt.subplots(nrows=2, ncols=2)
-                        ax[0,0].imshow(self.image)
+                        ax[0,0].imshow(self.image, origin="upper")
                         ax[0,0].set_title("Original image")
-                        ax[0,1].imshow(self.to_refine)
+                        ax[0,1].imshow(self.to_refine, origin="upper")
                         ax[0,1].set_title("Hough pre-processed")
-                        ax[1,0].imshow(edges)
+                        ax[1,0].imshow(edges, origin="upper")
                         ax[1,0].set_title("Edges")
                       #  ax[1,1].imshow(connected_edges)
                         ax[1,1].set_title("Connected edges")
@@ -716,11 +743,11 @@ class CenterDetermination:
                     
                     if control_print == 1:
                         fig, ax = plt.subplots(nrows=2, ncols=2)
-                        ax[0,0].imshow(self.image)
+                        ax[0,0].imshow(self.image, origin="upper")
                         ax[0,0].set_title("Original image")
-                        ax[0,1].imshow(self.to_refine)
+                        ax[0,1].imshow(self.to_refine, origin="upper")
                         ax[0,1].set_title("Hough pre-processed")
-                        ax[1,0].imshow(edges)
+                        ax[1,0].imshow(edges, origin="upper")
                         ax[1,0].set_title("Edges")
                         ax[1,1].set_title("Connected edges")
                         plt.tight_layout()
@@ -790,10 +817,9 @@ class CenterDetermination:
         self.r = 100
         
         # (6) User information (if required)
-        if self.parent.messages:
-            print("--- IntensityCenter = center of intensity/mass ---")
-            print(f"Center coordinates [x, y]: [{self.x:.3f}, {self.y:.3f}]")
-            print("---")
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.dText = "Center Determination (IntensityCenter): ({:.3f}, {:.3f})"
+
 
         # (7) Plot results (if required)
         if plot_results == 1:
@@ -885,14 +911,11 @@ class CenterDetermination:
         
         
         # User information:
-        if self.parent.messages:
-            print("------------ Diffraction pattern detection via Hough transform -----------")
-            print("Central coordinate [ x, y ]: [{:.3f}, {:.3f}]".format(float(self.x), 
-                                                                         float(self.y)))
-            print("--------------------------------------------------------------------------")
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.dText = "Center Determination (HoughTransform) : ({:.3f}, {:.3f})"
         
-        
-        self.x, self.y, self.r = float(self.x[0]), float(self.y[0]), float(self.r[0])
+        self.x, self.y, self.r = \
+            float(self.x[0]), float(self.y[0]), float(self.r[0])
 
         # (7) Plot results (if required)
         if plot_results == 1:
@@ -944,9 +967,7 @@ class CenterDetermination:
         # Load image
         im = self.parent.to_refine
     
-        if self.parent.print_sums:
-            print("Intensity sums during adjustment:")
-            
+           
         # Create a figure and display the image
         fig, ax = plt.subplots(figsize=(12, 12))
         
@@ -956,22 +977,23 @@ class CenterDetermination:
  
         plt.title("Select 3 points defining one of diffraction circles", 
                   fontsize = 20)
-        ax.imshow(im, cmap = self.parent.cmap)
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
 
         # User information:
+        instructions = dedent(
+            """
+            CenterDetermination :: ThreePoints (semi-automated method)
+            Select 3 points to define a diffraction circle using keys:
+              - '1' : define a point at current cursor position
+              - '2' : delete the last point
+              - '3' : delete the point closest to the cursor
+              - 'd' : done = finished = go to the next step
+            Close the figure to terminate. No center will be detected.
+            """)
+
         if self.parent.messages:
-            print("--- ThreePoints = semi-automated center detection ---")
-            print()
-            print("Select 3 points to define a circle in the diffractogram:")
-            print("Use these keys for the selection:")
-            print("  - '1' : define a point at current cursor position")
-            print("  - '2' : delete the last point")
-            print("  - '3' : delete the point closest to the cursor")
-            print("  - 'd' : done = finished = go to the next step")
-            print()
-            print("Close the figure to terminate. No center will be detected.")
-            print("---")
+            print(instructions)
        
         # Enable interactive mode
         # (figure is updated after every plotting command
@@ -992,6 +1014,8 @@ class CenterDetermination:
             termination_flag = True
             if self.parent.messages:
                 print('Execution terminated.')
+                print("------------------------------------------------------------")
+
  
         # Connect the event handler to the figure close event
         fig.canvas.mpl_connect('close_event', onclose)
@@ -1019,7 +1043,8 @@ class CenterDetermination:
     
                     ## Redraw the image without the deleted point
                     ax.clear()
-                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap)
+                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap,
+                              origin="upper")
                     for x, y in self.coords:
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
@@ -1047,13 +1072,11 @@ class CenterDetermination:
                     if len(self.coords) > 0:
                         # Delete the last point in the list
                         del self.coords[-1]
-                        if self.parent.messages:
-                            print('The most recently selected point deleted.')
-                            print('Please select a new one.')
     
                         # Redraw the image without the deleted point
                         ax.clear()
-                        ax.imshow(self.parent.to_refine, cmap=self.parent.cmap)
+                        ax.imshow(self.parent.to_refine, cmap=self.parent.cmap,
+                                  origin="upper")
                         for x, y in self.coords:
                             ax.scatter(x, y,
                                        c='r', marker='x', 
@@ -1100,16 +1123,13 @@ class CenterDetermination:
                         fig.canvas.draw()
     
                         point_counter += 1
-                else: # 3 points selected
-                    print("3 points already selected.")
+
     
                 if len(self.coords) == 3:
                     # Turn off interactive mode
                     plt.ioff()
     
-                    if self.parent.messages:
-                        print("3 points selected.")
-                        print("Press 'd' to calculate the center position.")
+
     
             # Calculate circle or terminate
             elif event.key == 'd':
@@ -1144,7 +1164,8 @@ class CenterDetermination:
                     self.calculate_circle(plot_results=0)
                     
                     ax.clear()
-                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap)
+                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap,
+                              origin="upper")
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
                     ax.set_ylim(current_ylim)
@@ -1227,26 +1248,35 @@ class CenterDetermination:
         r : integer
             radius of the diffraction pattern.
 
-        '''
+        '''            
         # Remove default left / right arrow key press events
         plt.rcParams['keymap.back'].remove('left')
         plt.rcParams['keymap.forward'].remove('right')
         
         if self.parent.messages:
-            print(" ")
-            print("Interactive refinement. Use these keys:")
-            print("      - 'left arrow' : move left")
-            print("      - 'right arrow' : move right")
-            print("      - 'top arrow' : move up")
-            print("      - 'bottom arrow' : move down")
-            print("      - '+' : increase circle radius")
-            print("      - '-' : decrease circle radius")
-            print("      - 'b' : increase step size")
-            print("      - 'l' : decrease step size")
-            print("      - 'd' : refinement done")
-            print("DISCLAIMER: for the purpose of the center shift, the default")
-            print("shortcuts for left and right arrows were removed.")
+            instructions = dedent(
+            """
+            CenterDetermination :: ThreePoints (interactive adjustment)
+            Use these keys:
+              - '←' : move left
+              - '→' : move right
+              - '↑' : move up
+              - '↓' : move down
+              - '+' : increase circle radius
+              - '-' : decrease circle radius
+              - 'b' : increase step size
+              - 'l' : decrease step size
+              - 'd' : refinement done
+                  
+            DISCLAIMER: For the purpose of the center position adjustment, 
+                        the default shortcuts for arrows were removed.
+            """)
+            print(instructions)
         
+        if self.parent.print_sums:
+            print("------------------------------------------------------------")
+            print("Intensity sums during adjustment:")
+            
         # Initialize variables and flags
         self.backip = np.array((self.x, self.y))
         xy = np.array((self.x, self.y))
@@ -1261,9 +1291,7 @@ class CenterDetermination:
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
-            if self.parent.messages:
-                print('Execution terminated.')
- 
+
         # Connect the event handler to the figure close event
         fig.canvas.mpl_connect('close_event', onclose)
         
@@ -1304,8 +1332,7 @@ class CenterDetermination:
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
                 termination_flag = True
-                if self.parent.messages:
-                    print("--- Refinement done. ---")
+
             
             # Change step size 
             if event.key == 'b':
@@ -1360,10 +1387,9 @@ class CenterDetermination:
         if termination_flag: 
             plt.close()  # Close the figure
 
-        # Print results
-        if self.parent.messages:
-            print("CenterEstimator :: manual detection + adjustment")
-            print(f"Center coordinates: {xy[0]:.2f} {xy[1]:.2f}")
+        # User information:
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.dText = "Center Determination (ThreePoints)    : ({:.3f}, {:.3f})"
         
     
         return xy[0], xy[1], r
@@ -1421,17 +1447,18 @@ class CenterDetermination:
         cr = c**0.5 
         self.r = ar*br*cr/((ar+br+cr)*(-ar+br+cr)*(ar-br+cr)*(ar+br-cr))**0.5
         
-        # Print results
-        if self.parent.messages:
-            print("CenterEstimator :: manual center detection")
-            print(f"Center coordinates: {self.x:.2f} {self.y:.2f}")
+        # # Print results
+        # if self.parent.messages:
+        #     print("CenterEstimator :: manual center detection")
+        #     print(f"Center coordinates: {self.x:.2f} {self.y:.2f}")
                     
         if plot_results==1:
             # Create and manage the figure
             fig, ax = plt.subplots()
             manager = plt.get_current_fig_manager()
             manager.window.showMaximized()
-            ax.imshow(self.parent.image, cmap = self.parent.cmap)
+            ax.imshow(self.parent.image, cmap = self.parent.cmap,
+                      origin="upper")
             
             # Plot center and points
             center, = plt.plot(self.x, self.y, 
@@ -1514,7 +1541,7 @@ class CenterDetermination:
         plt.legend(loc='upper right', fontsize=20)
         
         # Display the image
-        ax.imshow(im, cmap = self.parent.cmap)
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         plt.axis('off')
         plt.tight_layout()
         plt.show(block=False)
@@ -1596,57 +1623,41 @@ class CenterRefinement:
         ## (0) Initialize input attributes
         self.parent = parent
         
-        
         ## (1) Initialize new attributes
         self.step=0.5
         
         ## (2) Run functions
         if refinement is not None:
             self.ret = 1
-            
             par_short = self.parent.center1
+        
             if refinement == "manual":
-                if self.parent.determination == "manual":
-                    self.yy, self.xx, self.rr = \
+                # Manual refinement method
+                if parent.determination == 'manual':
+                    self.xx, self.yy, self.rr = \
                         par_short.x, par_short.y, par_short.r
-                    par_short.y, par_short.x, par_short.r = \
-                        par_short.backip[0], par_short.backip[1], par_short.r 
-                elif self.parent.determination == "intensity":
-                    self.yy, self.xx, self.rr = \
-                        self.ref_interactive(par_short.y,par_short.x,par_short.r)
+                    par_short.x, par_short.y = \
+                        par_short.backip[0], par_short.backip[1]
+                    if (self.parent.messages or self.parent.final_print):
+                        self.parent.rText = "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
                 else:
-                    self.yy, self.xx, self.rr = \
-                        self.ref_interactive(par_short.y,par_short.x,par_short.r)
-                        
+                    self.yy, self.xx, self.rr = self.ref_interactive(
+                        par_short.x, par_short.y, par_short.r)
+        
             elif refinement == "var":
-                self.xx, self.yy, self.rr = \
-                    self.ref_var(par_short.x, par_short.y, par_short.r)
-                if self.parent.determination == 'manual':
-                    self.xx, self.yy = self.yy, self.xx
-                    par_short.x, par_short.y = \
-                        par_short.y, par_short.x
-                    
+                # Intensity variance refinement
+                self.xx, self.yy, self.rr = self.ref_var(
+                    par_short.x, par_short.y, par_short.r)
+        
             elif refinement == "sum":
-                self.xx, self.yy, self.rr = \
-                    self.ref_sum(par_short.x, par_short.y, par_short.r)
-                if self.parent.determination == 'manual':
-                    self.xx, self.yy = self.yy, self.xx
-                    par_short.x, par_short.y = \
-                        par_short.y, par_short.x
-
+                # Intensity sum refinement
+                self.xx, self.yy, self.rr = self.ref_sum(
+                    par_short.x, par_short.y, par_short.r)
+        
             else:
-                print("Selected determination method is not supported.")
+                print("Selected refinement method is not supported.")
                 sys.exit()
-            
-            if self.parent.determination == 'hough':
-                self.xx, self.yy = self.yy, self.xx
-                par_short.x, par_short.y = \
-                    par_short.y, par_short.x
-                
-            if final_replot:
-                self.visualize_refinement(
-                    par_short.y, par_short.x, par_short.r,
-                    (self.yy, self.xx), self.rr)
+                        
         else: 
             self.ret = 2
             
@@ -1698,21 +1709,23 @@ class CenterRefinement:
 
         # User information:
         if self.parent.messages:
-            print(" ")
-            print("----------------------------------------------------------")
-            print("Interactive refinement. Use these keys:")
-            print("      - 'left arrow' : move left")
-            print("      - 'right arrow' : move right")
-            print("      - 'top arrow' : move up")
-            print("      - 'bottom arrow' : move down")
-            print("      - '+' : increase circle radius")
-            print("      - '-' : decrease circle radius")
-            print("      - 'b' : increase step size")
-            print("      - 'l' : decrease step size")
-            print("      - 'd' : refinement done")
-            print("DISCLAIMER: for the purpose of center shift, the default") 
-            print("shortcuts for left and right arrows were removed.")
-            print("----------------------------------------------------------")
+            instructions = dedent("""
+            
+            Interactive refinement. Use these keys:
+                  - '←' : move left
+                  - '→' : move right
+                  - '↑' : move up
+                  - '↓' : move down
+                  - '+' : increase circle radius
+                  - '-' : decrease circle radius
+                  - 'b' : increase step size
+                  - 'l' : decrease step size
+                  - 'd' : refinement done
+                  
+            DISCLAIMER: For the purpose of the center shift, the default
+            shortcuts for left and right arrows were removed.
+            """)
+            print(instructions)
         
         if self.parent.print_sums:
             print("Intensity sums during refinement:")
@@ -1735,7 +1748,7 @@ class CenterRefinement:
         plt.title('Manually adjust the center position.', 
                   fontsize=20)
 
-        ax.imshow(im, cmap = self.parent.cmap)
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
         
         # Enable interactive mode
@@ -1750,8 +1763,6 @@ class CenterRefinement:
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
-            if self.parent.messages:
-                print('Execution terminated.')
  
         # Connect the event handler to the figure close event
         fig.canvas.mpl_connect('close_event', onclose)
@@ -1793,8 +1804,7 @@ class CenterRefinement:
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
                 termination_flag = True
-                if self.parent.messages:
-                    print("--- Refinement done. ---")
+
             
             # Change step size 
             if event.key == 'b':
@@ -1848,11 +1858,10 @@ class CenterRefinement:
         if termination_flag: 
             plt.close()  # Close the figure
 
-        # Print results
-        if self.parent.messages:
-            print("CenterEstimator :: manual detection + adjustment")
-            print(f"Center coordinates: {xy[0]:.2f} {xy[1]:.2f}")
-                       
+        # User information:
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.rText = "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
+
         return xy[0], xy[1], r    
         
     
@@ -2011,10 +2020,9 @@ class CenterRefinement:
             best_center = np.copy(bckup)
     
         # Print results
-        if self.parent.messages:
-            print("CenterLocator: manual detection + adjustment:")
-            print(f"Estimated center {px:.2f} {py:.2f}")
-                
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.rText = "Center Refinement (IntensityVar)      : ({:.3f}, {:.3f})"
+                                  
         return best_center[0], best_center[1], best_radius
     
     
@@ -2173,9 +2181,8 @@ class CenterRefinement:
             best_center = np.copy(bckup)
     
         # Print results
-        if self.parent.messages:
-            print("CenterLocator: manual detection + adjustment:")
-            print(f"Estimated center {px:.2f} {py:.2f}")
+        if (self.parent.messages or self.parent.final_print):
+            self.parent.rText = "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
                 
         return best_center[0], best_center[1], best_radius
     
@@ -2202,7 +2209,7 @@ class CenterRefinement:
 
         '''
         # Extract pixels on the circle border
-        pxc, pyc = self.get_circle_pixels(px, py, pr)
+        pxc, pyc = self.parent.get_circle_pixels(px, py, pr)
         pxc = np.array(pxc, dtype=int)
         pyc = np.array(pyc, dtype=int)
         
@@ -2239,12 +2246,12 @@ class CenterRefinement:
 
         fig, ax = plt.subplots(figsize=(12, 12))
 
-        
-        dsum = self.parent.intensity_sum(image, px, py, pr)
-        rsum = self.parent.intensity_sum(image, xy[0], xy[1], r)      
+        ps=self.parent
+        dsum = ps.intensity_sum(image, px, py, pr)
+        rsum = ps.intensity_sum(image, xy[0], xy[1], r)      
                 
         # Original Image
-        ax.imshow(image, cmap=self.parent.cmap)
+        ax.imshow(image, cmap=ps.cmap, origin="upper")
         c0 = plt.Circle((px, py), pr,
                         color='r',
                         fill=False,
@@ -2273,7 +2280,7 @@ class CenterRefinement:
             linewidths=1, s=100)
 
         ax.set_title(
-            f'Center Detection and Refinement ({self.parent.determination}/{self.parent.refinement})',
+            f'Center Detection and Refinement ({ps.determination}/{ps.refinement})',
             fontsize=20)
         ax.legend(loc='upper left', frameon=True, fontsize=20, 
                   handler_map={Circle: HandlerCircle()}, ncol=2,
@@ -2371,4 +2378,25 @@ class IntensityCenter:
         
         ## Return the final center
         return(xc,yc)
+
+
+
+
+if __name__=="__main__":
+    plt.close("all")
+    
+    path=r"C:\_isibrno\data\IMAGES.IMC\img3_feo.bmp"
+    
+    locator = CenterLocator(
+        input_image=path,
+        determination='intensity',
+        refinement='sum',
+        #in_file="combos.txt",
+        #out_file="combos.txt",
+        print_sums=True,
+        final_print=True,
+        final_replot=True,
+        messages=False)
+    
+    
 
