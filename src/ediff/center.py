@@ -41,6 +41,7 @@ import os
 
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
+from scipy.signal import find_peaks
 from textwrap import dedent
 
 import sys
@@ -60,7 +61,7 @@ class CenterLocator:
         The input image representing a 2D diffraction pattern, either as a 
         file path or a NumPy array.
     determination : callable, optional, default is None
-        The method used for center determination
+        Method used for center determination
         = the initial estimate of center coordinates.
     refinement : callable, optional, default is None
         Method used for center refinement
@@ -90,11 +91,9 @@ class CenterLocator:
     messages : bool, optional, default is False
         Flag to enable or disable informational messages during processing. 
     print_sums : bool, optional, default is False
-        Flag to print the sum of intensity values for the refined circle 
-        after each adjustment; relevant only for manual method
-        of center determination and refinement.
-    final_print : bool, optional, default is True
-        Flag to print the center coordinates on stdout at the end.
+        If True, prints the sum of intensity values for the refined circle 
+        after each adjustment, relevant only for manual methods of center 
+        determination and refinement.
     final_replot : bool, optional, default is False
         Flag to indicate whether to replot the final results.
  
@@ -130,7 +129,7 @@ class CenterLocator:
                  messages = False,
                  print_sums = False,
                  final_print = True,
-                 final_replot = False):
+                 final_replot=False):
         '''
         * Initialize CenterLocator object.
         * The parameters are described above in class definition.
@@ -143,7 +142,7 @@ class CenterLocator:
         self.in_file = in_file
         self.out_file = out_file
         self.heq = heq
-        self.icut = None
+        self.icut = icut
         self.cmap = cmap
         self.csquare = csquare
         self.cintensity = cintensity
@@ -165,7 +164,7 @@ class CenterLocator:
         else:
             self.image = ediff.io.read_image(self.input_image)
         
-        ## (2) Initialize/run CenterDetermination
+        ## (2a) Initialize/run CenterDetermination
         self.center1 = CenterDetermination(self,
                 self.input_image,
                 self.determination,
@@ -177,7 +176,14 @@ class CenterLocator:
                 self.messages,
                 self.print_sums,
                 self.final_replot)
-            
+        
+        # ## (2b) Correct radius
+        # if self.determination is not "manual":
+        #     self.center1.r = self.center1.get_radius(self.image, 
+        #                                       self.center1.x, self.center1.y, 
+        #                                       disp=True)
+
+        
         ## (3) Initialize/run CenterRefinement
         self.center2 = CenterRefinement(self,
             self.input_image, 
@@ -191,27 +197,45 @@ class CenterLocator:
             self.print_sums,
             self.final_replot)
         
-        ## (4) Collect results
+        ## (4a) Collect results
         self.x1 = self.center1.x
         self.y1 = self.center1.y
-        self.x2 = self.center2.xx
-        self.y2 = self.center2.yy
         
-        if (determination != "manual" and refinement == "manual"):
-            #print("swap1")
-            #self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
-            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)
-            
+        if refinement is not None:
+            self.x2 = self.center2.xx
+            self.y2 = self.center2.yy
+        else: 
+            self.x2 = self.center1.x
+            self.y2 = self.center1.y
+            self.center2.xx = self.center1.x
+            self.center2.yy = self.center1.y
+            self.center2.rr = self.center1.r
+        
+        ## (4b) Switching coordinates if necessary
+        if (determination == "intensity"):
+            self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
+            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
+        
+        if (determination == "hough" and refinement == "manual"):
+            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
+
+        ## (5a) Printing coordinates
         if self.final_print:
             self.dText=str(self.dText)
             self.rText=str(self.rText)
-
+            
+            print("----------------------------------------------------------")
             print(self.dText.format(float(self.x1),float(self.y1)))
-            print(self.rText.format(float(self.x2),float(self.y2)))
+            
+            if refinement is not None:
+                print(self.rText.format(float(self.x2),float(self.y2)))
+            else:
+                print("Center Refinement (None)              : ({:.3f}, {:.3f})".\
+                      format(float(self.x2),float(self.y2)))
                 
-        ## (5) Plot results if final_replot
+        ## (5b) Plot results if final_replot
         if final_replot:   
-            self.center2.visualize_refinement(
+            self.visualize_refinement(
                 self.x1, self.y1, self.center1.r,
                 (self.x2, self.y2), self.center2.rr)
         
@@ -222,6 +246,7 @@ class CenterLocator:
         ## (7) Load results from a .txt file if specified       
         if in_file is not None:
             self.load_results()   
+        
     
     def output(self):
         """
@@ -452,6 +477,123 @@ class CenterLocator:
         return s
     
     
+    def intensity_var(self, image, px, py, pr):
+        ''' 
+        Variance of intensity values of pixels of a diffraction pattern.
+
+        Parameters
+        ----------
+        image : array of uint8
+            image from which the diffraction pattern has been detected.
+        px : float64
+            x-coordinate of the center of the diffraction pattern.
+        py : float64
+            y-coordinate of the center of the diffraction pattern.
+        pr : float64
+            radius of the diffraction pattern.
+
+        Returns
+        -------
+        s : float64
+            intensity variance
+
+        '''
+        # Extract pixels on the circle border
+        pxc, pyc = self.get_circle_pixels(px, py, pr)
+        pxc = np.array(pxc, dtype=int)
+        pyc = np.array(pyc, dtype=int)
+        
+        # Calculate sum using the filtered values
+        s = np.var(image[pxc, pyc])
+        return s
+    
+    
+    def visualize_refinement(self, px, py, pr, xy, r):
+        '''
+        Visualize diffraction patterns and center after correction
+
+        Parameters
+        ----------
+        px : float64
+            x-coordinate before correction.
+        py : float64
+            y-coordinate before correction.
+        pr : float64
+            radius before correction.
+        xy : float64
+            xy-coordinates after correction.
+        r : float64
+            radius after correction.
+
+
+        Returns
+        -------
+        None.
+
+        '''
+
+        image = np.copy(self.to_refine)
+
+        if self.icut is not None:
+            im = np.where(image > self.icut, self.icut, image)
+        else:
+            im = np.copy(image)
+            
+
+        fig, ax = plt.subplots(figsize=(12,12))
+
+        if self.refinement == "var":
+            dvar = self.intensity_var(image, px, py, pr)
+            rvar = self.intensity_var(image, xy[0], xy[1], r)  
+            labeld = f'd-center: [{px:.1f}, {py:.1f}]\nint-var: {dvar:.1f}'
+            labelr = f'r-center: [{xy[0]:.1f}, {xy[1]:.1f}]\nint-var: {rvar:.1f}'
+        else:
+            dsum = self.intensity_sum(image, px, py, pr)
+            rsum = self.intensity_sum(image, xy[0], xy[1], r) 
+            labeld = f'd-center: [{px:.1f}, {py:.1f}]\nint-sum: {dsum:.1f}'
+            labelr = f'r-center: [{xy[0]:.1f}, {xy[1]:.1f}]\nint-sum: {rsum:.1f}'
+                
+        # Original Image
+        ax.imshow(im, cmap=self.cmap, origin="upper")
+        c0 = plt.Circle((px, py), pr,
+                        color='r',
+                        fill=False,
+                        label='detected',
+                        linewidth=1)
+        ax.add_patch(c0)
+        ax.scatter(px, py,
+                   label= labeld,
+                   color='r',
+                   marker='x',
+                   s=100, linewidths=1)
+
+        # Refined Image
+        c1 = plt.Circle(xy, r,
+                        color='springgreen',
+                        fill=False,
+                        label='refined',
+                        linewidth=1)
+        ax.add_patch(c1)
+
+        
+        ax.scatter(xy[0], xy[1],
+            label=labelr,
+            color='springgreen',
+            marker='x',
+            linewidths=1, s=100)
+
+        ax.set_title(
+            f'Center Detection and Refinement ({self.determination}/{self.refinement})',
+            fontsize=20)
+        ax.legend(loc='upper left', frameon=True, fontsize=20, 
+                  handler_map={Circle: HandlerCircle()}, ncol=2,
+                  bbox_to_anchor=(0.085, 1.00), bbox_transform=ax.transAxes)  
+        ax.axis('off')
+
+        plt.tight_layout()
+        plt.show(block=False)
+        
+        
     def convert_coords(self, x, y):
         """ Convert between numpy and matplotlib coordination system. """
         return y, x
@@ -1276,7 +1418,6 @@ class CenterDetermination:
             print(instructions)
         
         if self.parent.print_sums:
-            print("------------------------------------------------------------")
             print("Intensity sums during adjustment:")
             
         # Initialize variables and flags
@@ -1501,6 +1642,66 @@ class CenterDetermination:
         return self.x, self.y, self.r, self.center, self.circle
 
 
+    def get_radius(self, im, x, y, disp=False):
+        x_line = im[int(x),:]
+        y_line = im[:,int(y)]
+        
+        # Deffine threshold for peak detection
+        x_thr = 0.5 * max(x_line)
+        y_thr = 0.5 * max(y_line)
+
+        # Find peaks with dynamic height thresholds and other parameters
+        xpeaks, _ = find_peaks(x_line, 
+                                    height=x_thr, 
+                                    prominence=1, distance=5)
+        ypeaks, _ = find_peaks(y_line, 
+                                    height=y_thr, 
+                                    prominence=1, distance=5)
+        # get radius
+        num_peaks = len(xpeaks)
+        # Check if the number of peaks is odd
+        if num_peaks % 2 == 1:
+            # For odd number of peaks, get the two around the middle one
+            middle_left = xpeaks[(num_peaks // 2) - 1]
+            middle_right = xpeaks[(num_peaks // 2) + 1]
+        else:
+            # For even number of peaks, get the two middle ones
+            middle_left = xpeaks[(num_peaks // 2) - 1]
+            middle_right = xpeaks[num_peaks // 2]
+    
+        # Calculate and return the difference
+        dx = abs(middle_right - middle_left)
+        
+        rx = dx
+    
+        if disp:
+            # Plot xline with peaks
+            plt.figure(figsize=(12, 6))
+            
+            # Plot for xline
+            plt.subplot(2, 1, 1)
+            plt.plot(x_line, label='xline')
+            plt.plot(xpeaks, x_line[xpeaks], "ro", label='Peaks')  # Mark peaks
+            plt.title('Peaks in xline')
+            plt.xlabel('Index')
+            plt.ylabel('Value')
+            plt.legend()
+            
+            # Plot for yline
+            plt.subplot(2, 1, 2)
+            plt.plot(y_line, label='yline')
+            plt.plot(ypeaks, y_line[ypeaks], "ro", label='Peaks')  # Mark peaks
+            plt.title('Peaks in yline')
+            plt.xlabel('Index')
+            plt.ylabel('Value')
+            plt.legend()
+            
+            plt.tight_layout()
+            plt.show()
+        
+        return(rx)
+        
+        
     def visualize_center(self, x, y, r):
         '''         
         Visualize detected diffraction patterns and mark the center.
@@ -1913,8 +2114,8 @@ class CenterRefinement:
         image = np.copy(self.parent.image)
 
         # Starting values to be modified 
-        init_var = self.intensity_var(image, px, py, pr)
-        min_intensity_var = self.intensity_var(image, px, py, pr)
+        init_var = self.parent.intensity_var(image, px, py, pr)
+        min_intensity_var = self.parent.intensity_var(image, px, py, pr)
         best_center = (np.copy(px), np.copy(py))
         best_radius = np.copy(pr)
     
@@ -1941,7 +2142,7 @@ class CenterRefinement:
         
         for iteration in range(max_iterations):    
             # Refine center while keeping radius constant
-            curr = self.intensity_var(image, 
+            curr = self.parent.intensity_var(image, 
                                       best_center[0], 
                                       best_center[1], 
                                       best_radius) 
@@ -1950,7 +2151,7 @@ class CenterRefinement:
             for dx, dy in neighbors:
                 nx, ny = best_center[0] + dx, best_center[1] + dy
                 # Check if the point is within the expanded search radius
-                curr_intensity_var.append(self.intensity_var(image, 
+                curr_intensity_var.append(self.parent.intensity_var(image, 
                                                              nx, ny, 
                                                              best_radius))
             
@@ -1971,7 +2172,7 @@ class CenterRefinement:
                 best_center = px, py = (np.copy(nx), np.copy(ny))
                 
             # Update maximum intensity sum 
-            min_intensity_var = self.intensity_var(image, 
+            min_intensity_var = self.parent.intensity_var(image, 
                                                     best_center[0], 
                                                     best_center[1], 
                                                     best_radius) 
@@ -1984,7 +2185,7 @@ class CenterRefinement:
             radii = np.arange(-1, 1 + step, step)
             for dr in radii:
                 new_radius = best_radius + dr
-                radi_intensity_var.append(self.intensity_var(image, 
+                radi_intensity_var.append(self.parent.intensity_var(image, 
                                                              best_center[0], 
                                                              best_center[1], 
                                                              new_radius))
@@ -2189,111 +2390,7 @@ class CenterRefinement:
         return best_center[0], best_center[1], best_radius
     
     
-    def intensity_var(self, image, px, py, pr):
-        ''' 
-        Variance of intensity values of pixels of a diffraction pattern.
-
-        Parameters
-        ----------
-        image : array of uint8
-            image from which the diffraction pattern has been detected.
-        px : float64
-            x-coordinate of the center of the diffraction pattern.
-        py : float64
-            y-coordinate of the center of the diffraction pattern.
-        pr : float64
-            radius of the diffraction pattern.
-
-        Returns
-        -------
-        s : float64
-            intensity variance
-
-        '''
-        # Extract pixels on the circle border
-        pxc, pyc = self.parent.get_circle_pixels(px, py, pr)
-        pxc = np.array(pxc, dtype=int)
-        pyc = np.array(pyc, dtype=int)
-        
-        # Calculate sum using the filtered values
-        s = np.var(image[pxc, pyc])
-        return s
     
-    
-    def visualize_refinement(self, px, py, pr, xy, r):
-        '''
-        Visualize diffraction patterns and center after correction
-
-        Parameters
-        ----------
-        px : float64
-            x-coordinate before correction.
-        py : float64
-            y-coordinate before correction.
-        pr : float64
-            radius before correction.
-        xy : float64
-            xy-coordinates after correction.
-        r : float64
-            radius after correction.
-
-
-        Returns
-        -------
-        None.
-
-        '''
-        
-        image = np.copy(self.parent.to_refine)
-
-        fig, ax = plt.subplots(figsize=(12, 12))
-
-        ps=self.parent
-        dsum = ps.intensity_sum(image, px, py, pr)
-        rsum = ps.intensity_sum(image, xy[0], xy[1], r)      
-                
-        # Original Image
-        ax.imshow(image, cmap=ps.cmap, origin="upper")
-        c0 = plt.Circle((px, py), pr,
-                        color='r',
-                        fill=False,
-                        label='detected',
-                        linewidth=1)
-        ax.add_patch(c0)
-        ax.scatter(px, py,
-                   label= f'd-center: [{px:.1f}, {py:.1f}]\nint-sum: {dsum:.1f}',
-                   color='r',
-                   marker='x',
-                   s=100, linewidths=1)
-
-        # Refined Image
-        c1 = plt.Circle(xy, r,
-                        color='springgreen',
-                        fill=False,
-                        label='refined',
-                        linewidth=1)
-        ax.add_patch(c1)
-
-        
-        ax.scatter(xy[0], xy[1],
-            label=f'r-center: [{xy[0]:.1f}, {xy[1]:.1f}]\nint-sum: {rsum:.1f}',
-            color='springgreen',
-            marker='x',
-            linewidths=1, s=100)
-
-        ax.set_title(
-            f'Center Detection and Refinement ({ps.determination}/{ps.refinement})',
-            fontsize=20)
-        ax.legend(loc='upper left', frameon=True, fontsize=20, 
-                  handler_map={Circle: HandlerCircle()}, ncol=2,
-                  bbox_to_anchor=(0.085, 1.00), bbox_transform=ax.transAxes)  
-        ax.axis('off')
-
-        plt.tight_layout()
-        plt.show(block=False)
-    
-    
-
 class HandlerCircle(HandlerBase):
     '''
     Help class for visualization. Not to be used outside of the module.
@@ -2380,4 +2477,28 @@ class IntensityCenter:
         
         ## Return the final center
         return(xc,yc)
-  
+
+
+
+
+if __name__=="__main__":
+    plt.close("all")
+    
+    path=r"C:\_isibrno\data\IMAGES.IMC\img1_au-ni_8bit.bmp"
+    
+    locator = CenterLocator(
+        input_image=path,
+        determination='hough',
+        refinement='sum',
+      #  icut=100,
+        in_file="combos.txt",
+        #out_file="combos.txt",
+        print_sums=True,
+        final_print=True,
+        final_replot=True,
+        messages=False)
+    
+   
+
+    
+
