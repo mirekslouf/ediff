@@ -746,13 +746,13 @@ class CenterDetermination:
                 image = sk.exposure.equalize_adapthist(image)
 
                 
-            # Edit contrast with a user-predefined parameter
-            if self.parent.icut is not None:
-                if self.parent.messages:
-                    print("Contrast enhanced.")
-                image = np.where(image > self.parent.icut, 
-                                 self.parent.icut, 
-                                 image)
+            # # Edit contrast with a user-predefined parameter
+            # if self.parent.icut is not None:
+            #     if self.parent.messages:
+            #         print("Contrast enhanced.")
+            #     image = np.where(image > self.parent.icut, 
+            #                      self.parent.icut, 
+            #                      image)
                 
 
             self.parent.to_refine = image
