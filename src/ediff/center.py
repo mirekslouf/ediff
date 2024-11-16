@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.legend_handler import HandlerBase
 
-import ediff.io
+import ediff.io 
 import os
 
 from skimage.measure import moments
@@ -177,13 +177,14 @@ class CenterLocator:
                 self.print_sums,
                 self.final_replot)
         
-        # ## (2b) Correct radius
-        # if self.determination is not "manual":
-        #     self.center1.r = self.center1.get_radius(self.image, 
-        #                                       self.center1.x, self.center1.y, 
-        #                                       disp=True)
+        ## (2b) Correct radius
+        if self.determination != "manual":
+            self.center1.r = self.center1.get_radius(
+                self.image, 
+                self.center1.x, 
+                self.center1.y, 
+                disp=False)
 
-        
         ## (3) Initialize/run CenterRefinement
         self.center2 = CenterRefinement(self,
             self.input_image, 
@@ -213,8 +214,10 @@ class CenterLocator:
         
         ## (4b) Switching coordinates if necessary
         if (determination == "intensity"):
-            self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
-            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
+          #  if (refinement != "manual"):
+                self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
+         #   if (refinement != "sum"):
+                self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
         
         if (determination == "hough" and refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
@@ -511,7 +514,7 @@ class CenterLocator:
     def visualize_refinement(self, px, py, pr, xy, r):
         '''
         Visualize diffraction patterns and center after correction
-
+    
         Parameters
         ----------
         px : float64
@@ -524,35 +527,34 @@ class CenterLocator:
             xy-coordinates after correction.
         r : float64
             radius after correction.
-
-
+    
         Returns
         -------
         None.
-
+    
         '''
-
+    
         image = np.copy(self.to_refine)
-
+    
         if self.icut is not None:
             im = np.where(image > self.icut, self.icut, image)
         else:
             im = np.copy(image)
-            
-
-        fig, ax = plt.subplots(figsize=(12,12))
-
+    
+       # ediff.io.set_plot_parameters(size=(9,9), dpi=100, fontsize=10)
+        fig, ax = plt.subplots()
+    
         if self.refinement == "var":
             dvar = self.intensity_var(image, px, py, pr)
-            rvar = self.intensity_var(image, xy[0], xy[1], r)  
+            rvar = self.intensity_var(image, xy[0], xy[1], r)
             labeld = f'd-center: [{px:.1f}, {py:.1f}]\nint-var: {dvar:.1f}'
             labelr = f'r-center: [{xy[0]:.1f}, {xy[1]:.1f}]\nint-var: {rvar:.1f}'
         else:
             dsum = self.intensity_sum(image, px, py, pr)
-            rsum = self.intensity_sum(image, xy[0], xy[1], r) 
+            rsum = self.intensity_sum(image, xy[0], xy[1], r)
             labeld = f'd-center: [{px:.1f}, {py:.1f}]\nint-sum: {dsum:.1f}'
             labelr = f'r-center: [{xy[0]:.1f}, {xy[1]:.1f}]\nint-sum: {rsum:.1f}'
-                
+    
         # Original Image
         ax.imshow(im, cmap=self.cmap, origin="upper")
         c0 = plt.Circle((px, py), pr,
@@ -562,11 +564,11 @@ class CenterLocator:
                         linewidth=1)
         ax.add_patch(c0)
         ax.scatter(px, py,
-                   label= labeld,
+                   label=labeld,
                    color='r',
                    marker='x',
-                   s=100, linewidths=1)
-
+                   s=60, linewidths=1)
+    
         # Refined Image
         c1 = plt.Circle(xy, r,
                         color='springgreen',
@@ -574,24 +576,29 @@ class CenterLocator:
                         label='refined',
                         linewidth=1)
         ax.add_patch(c1)
-
-        
+    
         ax.scatter(xy[0], xy[1],
-            label=labelr,
-            color='springgreen',
-            marker='x',
-            linewidths=1, s=100)
-
+                   label=labelr,
+                   color='springgreen',
+                   marker='x',
+                   linewidths=1, s=60)
+    
         ax.set_title(
-            f'Center Detection and Refinement ({self.determination}/{self.refinement})',
-            fontsize=20)
-        ax.legend(loc='upper left', frameon=True, fontsize=20, 
-                  handler_map={Circle: HandlerCircle()}, ncol=2,
-                  bbox_to_anchor=(0.085, 1.00), bbox_transform=ax.transAxes)  
-        ax.axis('off')
+            f'Center Location ({self.determination}/{self.refinement})')
+          #  fontsize=12)
+        
+        # Move legend to the top right next to the image
+        ax.legend(loc='upper left', frameon=False, #fontsize=10,
+                  handler_map={Circle: HandlerCircle()}, ncol=1,
+                  bbox_to_anchor=(.98, 1.01), 
+                  bbox_transform=ax.transAxes)
 
-        plt.tight_layout()
+    
+        ax.axis('on')
+    
+        #plt.tight_layout()
         plt.show(block=False)
+
         
         
     def convert_coords(self, x, y):
@@ -697,6 +704,9 @@ class CenterDetermination:
                 self.parent.csquare, 
                 self.parent.cintensity
                 )
+        elif determination == "contour":
+            self.x, self.y, self.r = self.detection_countour()
+                
         else: 
             print("Selected determination method does not exist.")
             sys.exit()
@@ -746,13 +756,13 @@ class CenterDetermination:
                 image = sk.exposure.equalize_adapthist(image)
 
                 
-            # Edit contrast with a user-predefined parameter
-            if self.parent.icut is not None:
-                if self.parent.messages:
-                    print("Contrast enhanced.")
-                image = np.where(image > self.parent.icut, 
-                                 self.parent.icut, 
-                                 image)
+            # # Edit contrast with a user-predefined parameter
+            # if self.parent.icut is not None:
+            #     if self.parent.messages:
+            #         print("Contrast enhanced.")
+            #     image = np.where(image > self.parent.icut, 
+            #                      self.parent.icut, 
+            #                      image)
                 
 
             self.parent.to_refine = image
@@ -957,7 +967,6 @@ class CenterDetermination:
         # but we have to recalculate it to the whole image
         (self.x, self.y) = (self.x + xborder, self.y + yborder)
         # (d) Radius of a diffraction ring is hardcoded to 100 here
-        # TODO: consider improving/correcting/removing in the future
         self.r = 100
         
         # (6) User information (if required)
@@ -1110,8 +1119,15 @@ class CenterDetermination:
         
         # Load image
         im = self.parent.to_refine
-    
-           
+        
+        # Edit contrast with a user-predefined parameter
+        if self.parent.icut is not None:
+            if self.parent.messages:
+                print("Contrast enhanced.")
+            im = np.where(im > self.parent.icut, 
+                              self.parent.icut, 
+                              im)
+            
         # Create a figure and display the image
         fig, ax = plt.subplots(figsize=(12, 12))
         
@@ -1187,7 +1203,7 @@ class CenterDetermination:
     
                     ## Redraw the image without the deleted point
                     ax.clear()
-                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap,
+                    ax.imshow(im, cmap = self.parent.cmap,
                               origin="upper")
                     for x, y in self.coords:
                         ax.scatter(x, y, 
@@ -1219,7 +1235,7 @@ class CenterDetermination:
     
                         # Redraw the image without the deleted point
                         ax.clear()
-                        ax.imshow(self.parent.to_refine, cmap=self.parent.cmap,
+                        ax.imshow(im, cmap=self.parent.cmap,
                                   origin="upper")
                         for x, y in self.coords:
                             ax.scatter(x, y,
@@ -1308,7 +1324,7 @@ class CenterDetermination:
                     self.calculate_circle(plot_results=0)
                     
                     ax.clear()
-                    ax.imshow(self.parent.to_refine, cmap = self.parent.cmap,
+                    ax.imshow(im, cmap = self.parent.cmap,
                               origin="upper")
                     # Retore the previous zoom level
                     ax.set_xlim(current_xlim)
@@ -1358,7 +1374,7 @@ class CenterDetermination:
         return(self.x, self.y, self.r)
     
     
-    def adjustment_3points(self, fig, circle, center, plot_results=0):
+    def adjustment_3points(self, fig, circle, center, plot_results=0) -> tuple:
         '''
         Adjustment of the center position calculated from 3 points.
         Interactive refinement using keys:
@@ -1537,8 +1553,8 @@ class CenterDetermination:
     
         return xy[0], xy[1], r
     
-    
-    def calculate_circle(self, plot_results):
+       
+    def calculate_circle(self, plot_results:int)->tuple[float,float,float,tuple[float,float], plt.Circle]:
         ''' 
         Calculates coordinates of the center and radius of a circle defined via
         3 points determined by the user. Plots the calculated circle, detected 
@@ -1642,67 +1658,176 @@ class CenterDetermination:
         return self.x, self.y, self.r, self.center, self.circle
 
 
-    def get_radius(self, im, x, y, disp=False):
-        x_line = im[int(x),:]
-        y_line = im[:,int(y)]
+    def get_radius(self, im:np.ndarray, x:float, y:float, disp:bool=False) -> float:
+        """
+        Calculate the radius of a circle based on intensity profiles along 
+        horizontal and vertical axes.
+    
+        Parameters
+        ----------
+        im : np.ndarray
+            The 2D image array containing the circle.
+        x : float
+            The x-coordinate of the circle's center.
+        y : float
+            The y-coordinate of the circle's center.
+        disp : bool, optional
+            If True, visualizes the detected intensity profiles and peaks 
+            (default is False).
+    
+        Returns
+        -------
+        float
+            The estimated radius of the circle. Defaults to 100 if no valid 
+            radius is detected.
+        """
         
-        # Deffine threshold for peak detection
+        def match_peaks(arr):
+            """
+            Finds the most similar values across the left and right halves of 
+            an array, omitting the highest value. If exactly two peaks are 
+            detected, they are returned as the best pair.
+            """
+            if len(arr) < 2:  # Not enough values to compare
+                if self.parent.messages:
+                    print("Not enough values to find similar pairs.")
+                return None, None
+    
+            # Special case: if there are exactly 2 peaks, return them
+            if len(arr) == 2:
+                if self.parent.messages:
+                    print("Exactly two peaks detected. Returning them as the best pair.")
+                return 0, 1
+    
+            # Find the index of the highest value
+            center_idx = np.argmax(arr)
+    
+            # Split into left and right halves, excluding the highest value
+            left = arr[:center_idx]
+            right = arr[center_idx + 1:]
+            left_indices = np.arange(center_idx)
+            right_indices = np.arange(center_idx + 1, len(arr))
+    
+            if len(left) == 0 or len(right) == 0:  # Check for empty halves
+                if self.parent.messages:
+                    print("One of the halves is empty.")
+                return None, None
+    
+            # Initialize variables for tracking the smallest difference
+            smallest_diff = np.inf
+            best_pair = (None, None)
+    
+            # Compare each value in the left with every value in the right
+            for i, l_val in enumerate(left):
+                for j, r_val in enumerate(right):
+                    diff = abs(l_val - r_val)
+                    if diff < smallest_diff:
+                        smallest_diff = diff
+                        best_pair = (left_indices[i], right_indices[j])
+    
+            return best_pair
+    
+        self.xpeaks, self.ypeaks = None, None
+        self.xyvals, self.yyvals = None, None
+    
+        x_line = im[int(x), :]
+        y_line = im[:, int(y)]
+    
+        # Define threshold for peak detection
         x_thr = 0.5 * max(x_line)
         y_thr = 0.5 * max(y_line)
-
-        # Find peaks with dynamic height thresholds and other parameters
-        xpeaks, _ = find_peaks(x_line, 
-                                    height=x_thr, 
-                                    prominence=1, distance=5)
-        ypeaks, _ = find_peaks(y_line, 
-                                    height=y_thr, 
-                                    prominence=1, distance=5)
-        # get radius
-        num_peaks = len(xpeaks)
-        # Check if the number of peaks is odd
-        if num_peaks % 2 == 1:
-            # For odd number of peaks, get the two around the middle one
-            middle_left = xpeaks[(num_peaks // 2) - 1]
-            middle_right = xpeaks[(num_peaks // 2) + 1]
-        else:
-            # For even number of peaks, get the two middle ones
-            middle_left = xpeaks[(num_peaks // 2) - 1]
-            middle_right = xpeaks[num_peaks // 2]
     
-        # Calculate and return the difference
-        dx = abs(middle_right - middle_left)
-        
-        rx = dx
+        # Find peaks with dynamic height thresholds
+        self.xpeaks, _ = find_peaks(x_line, 
+                                    height=x_thr, 
+                                    prominence=1, 
+                                    distance=30)
+        self.xyvals = x_line[self.xpeaks]
+        self.ypeaks, _ = find_peaks(y_line, 
+                                    height=y_thr, 
+                                    prominence=1, 
+                                    distance=30)
+        self.yyvals = y_line[self.ypeaks]
+    
+        # Define half the length of the image
+        half_length_x = x_line.shape[0] / 2
+        half_length_y = y_line.shape[0] / 2
+    
+        # Check the additional condition for xpeaks
+        if len(self.xpeaks) == 2 and (
+            (self.xpeaks[0]<half_length_x and self.xpeaks[1]<half_length_x) or
+            (self.xpeaks[0]>half_length_x and self.xpeaks[1]>half_length_x)):
+            if self.parent.messages:
+                print("xpeaks condition met: Both peaks are on the same side of the center.")
+            self.pairX = None
+        else:
+            self.pairX = match_peaks(self.xyvals)
+    
+        # Check the additional condition for ypeaks
+        if len(self.ypeaks) == 2 and (
+            (self.ypeaks[0]<half_length_y and self.ypeaks[1]<half_length_y) or
+            (self.ypeaks[0]>half_length_y and self.ypeaks[1]>half_length_y)):
+            if self.parent.messages:
+                print("ypeaks condition met: Both peaks are on the same side of the center.")
+            self.pairY = None
+        else:
+            self.pairY = match_peaks(self.yyvals)
+    
+        # Determine radius based on available pairs
+        if self.pairX is None or None in self.pairX:
+            rx_x = None
+        else:
+            x1 = self.xpeaks[self.pairX[0]]
+            x2 = self.xpeaks[self.pairX[1]]
+            rx_x = abs(x1 - x2) / 2
+    
+        if self.pairY is None or None in self.pairY:
+            rx_y = None
+        else:
+            y1 = self.ypeaks[self.pairY[0]]
+            y2 = self.ypeaks[self.pairY[1]]
+            rx_y = abs(y1 - y2) / 2
+    
+        if rx_x is not None and rx_y is not None:
+            rx = np.mean([rx_x, rx_y])
+        elif rx_x is not None:
+            rx = rx_x
+        elif rx_y is not None:
+            rx = rx_y
+        else:
+            if self.parent.messages:
+                print("No valid pairs detected for radius calculation.")
+            return 100  # Default radius or error handling
     
         if disp:
             # Plot xline with peaks
             plt.figure(figsize=(12, 6))
-            
+    
             # Plot for xline
             plt.subplot(2, 1, 1)
             plt.plot(x_line, label='xline')
-            plt.plot(xpeaks, x_line[xpeaks], "ro", label='Peaks')  # Mark peaks
+            plt.plot(self.xpeaks, self.xyvals, "ro", label='Peaks')
             plt.title('Peaks in xline')
             plt.xlabel('Index')
             plt.ylabel('Value')
             plt.legend()
-            
+    
             # Plot for yline
             plt.subplot(2, 1, 2)
             plt.plot(y_line, label='yline')
-            plt.plot(ypeaks, y_line[ypeaks], "ro", label='Peaks')  # Mark peaks
+            plt.plot(self.ypeaks, self.yyvals, "ro", label='Peaks')  
             plt.title('Peaks in yline')
             plt.xlabel('Index')
             plt.ylabel('Value')
             plt.legend()
-            
+    
             plt.tight_layout()
             plt.show()
+    
+        return rx
+
         
-        return(rx)
-        
-        
-    def visualize_center(self, x, y, r):
+    def visualize_center(self, x: float, y: float, r: float) -> None:
         '''         
         Visualize detected diffraction patterns and mark the center.
         
@@ -1843,6 +1968,9 @@ class CenterRefinement:
                         par_short.backip[0], par_short.backip[1]
                     if (self.parent.messages or self.parent.final_print):
                         self.parent.rText = "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
+                elif parent.determination == 'intensity':
+                    self.yy, self.xx, self.rr = self.ref_interactive(
+                        par_short.y, par_short.x, par_short.r)
                 else:
                     self.yy, self.xx, self.rr = self.ref_interactive(
                         par_short.x, par_short.y, par_short.r)
@@ -1904,6 +2032,15 @@ class CenterRefinement:
         
         # Load original image
         im = np.copy(self.parent.to_refine)
+
+        # Edit contrast with a user-predefined parameter
+        if self.parent.icut is not None:
+            if self.parent.messages:
+                print("Contrast enhanced.")
+            im = np.where(im > self.parent.icut, 
+                              self.parent.icut, 
+                              im)
+            
         
         # Initialize variables and flags
         xy = np.array((px, py))
@@ -2283,7 +2420,7 @@ class CenterRefinement:
         convergence_threshold = 0.05*max_intensity_sum
         
         # (2) maximum number of iterations of optimization
-        max_iterations = 50
+        max_iterations = 100
         
         # (3) keep track of the number of consecutive iterations where there 
         #     is no improvement in the objective function beyond 
@@ -2373,10 +2510,10 @@ class CenterRefinement:
 
         
         # Avoid incorrect/redundant refinement
-        ## (1) swapped coordinates
-        if ((bckup[0] > bckup[1] and not best_center[0] > best_center[1])
-            or  (bckup[0] < bckup[1] and not best_center[0] < best_center[1])):
-            best_center = best_center[::-1]
+        # ## (1) swapped coordinates
+        # if ((bckup[0] > bckup[1] and not best_center[0] > best_center[1])
+        #     or  (bckup[0] < bckup[1] and not best_center[0] < best_center[1])):
+        #     best_center = best_center[::-1]
         
         ## (2) worsened final maximum intensity sum than the initial one
         if np.round(init_sum,-2) > np.round(max_intensity_sum,-2):
@@ -2481,24 +2618,7 @@ class IntensityCenter:
 
 
 
-if __name__=="__main__":
-    plt.close("all")
     
-    path=r"C:\_isibrno\data\IMAGES.IMC\img1_au-ni_8bit.bmp"
-    
-    locator = CenterLocator(
-        input_image=path,
-        determination='hough',
-        refinement='sum',
-      #  icut=100,
-        in_file="combos.txt",
-        #out_file="combos.txt",
-        print_sums=True,
-        final_print=True,
-        final_replot=True,
-        messages=False)
-    
-   
 
     
 
