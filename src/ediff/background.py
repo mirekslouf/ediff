@@ -6,8 +6,8 @@ Semi-automated background correction.
 * This module just imports key objects from external bground package.
 * Therefore, it is just a formal incorporation of bground package to ediff.
 
-The source code is the whole module is rather brief,
-but it contains a detailed explanation of how it works.
+The source code is brief (just imports),
+but it describes how it works (how it can be used).
 
 * See the source code of ediff.background
   if you are interested in technical details concerning the import.
