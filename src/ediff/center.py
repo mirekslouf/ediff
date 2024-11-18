@@ -2529,7 +2529,8 @@ class CenterRefinement:
     
         # Print results
         if (self.parent.messages or self.parent.final_print):
-            self.parent.rText = "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
+            self.parent.rText = \
+                "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
                 
         return best_center[0], best_center[1], best_radius
     

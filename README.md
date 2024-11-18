@@ -34,8 +34,10 @@ Documentation, help and examples
 Versions of EDIFF
 -----------------
 
-* Versions 0.0.x = the 1st drafts, testing of {pxrd} module
+* Version 0.0 = the 1st drafts, testing of {pxrd} module
 * Version 0.1 = the 1st functional version with basic documentation
 * Version 0.2 = important improvements of {center} module
 * Version 0.3 = {calibration} module + various updates + better ediff template
-* Version 0.4 = TODO: {center} module: better structure + saving center coordinates
+* Version 0.4 = {center} module: better structure + better funcs + saving coords
+* Version 1.0 = TODO: complete version with finalized documentation
+
