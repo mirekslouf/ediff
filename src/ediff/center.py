@@ -138,8 +138,8 @@ class CenterLocator:
                
         ## (0) Initialize input attributes
         self.input_image = input_image
-        self.refinement = refinement
-        self.determination = determination
+        self.refinement = refinement.lower()
+        self.determination = determination.lower()
         self.in_file = in_file
         self.out_file = out_file
         self.heq = heq
@@ -203,7 +203,7 @@ class CenterLocator:
         self.x1 = self.center1.x
         self.y1 = self.center1.y
         
-        if refinement is not None:
+        if refinement.lower() is not None:
             self.x2 = self.center2.xx
             self.y2 = self.center2.yy
         else: 
@@ -214,13 +214,11 @@ class CenterLocator:
             self.center2.rr = self.center1.r
         
         ## (4b) Switching coordinates if necessary
-        if (determination == "intensity"):
-          #  if (refinement != "manual"):
+        if (determination.lower() == "intensity"):
                 self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
-         #   if (refinement != "sum"):
                 self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
         
-        if (determination == "hough" and refinement == "manual"):
+        if (determination.lower()=="hough" and refinement.lower() == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
 
         ## (5a) Printing coordinates
@@ -231,11 +229,12 @@ class CenterLocator:
             print("----------------------------------------------------------")
             print(self.dText.format(float(self.x1),float(self.y1)))
             
-            if refinement is not None:
+            if refinement.lower() is not None:
                 print(self.rText.format(float(self.x2),float(self.y2)))
             else:
-                print("Center Refinement (None)              : ({:.3f}, {:.3f})".\
-                      format(float(self.x2),float(self.y2)))
+                print(
+                  "Center Refinement (None)              : ({:.3f}, {:.3f})".\
+                   format(float(self.x2),float(self.y2)))
                 
         ## (5b) Plot results if final_replot
         if final_replot:   
@@ -610,7 +609,6 @@ class CenterLocator:
 
 class CenterDetermination:
     
-        
     def __init__(self, parent,
                  input_image,
                  determination = None, 
@@ -699,17 +697,15 @@ class CenterDetermination:
         self.preprocess(preInit=1)
         
         # (2b) Center detection methods
-        if determination == "manual":
+        if determination.lower() == "manual":
             self.x, self.y, self.r = self.detection_3points()
-        elif determination == "hough":
+        elif determination.lower() == "hough":
             self.x, self.y, self.r = self.detection_Hough()
-        elif determination == "intensity":
+        elif determination.lower() == "intensity":
             self.x, self.y, self.r = self.detection_intensity(
                 self.parent.csquare, 
                 self.parent.cintensity
                 )
-        elif determination == "contour":
-            self.x, self.y, self.r = self.detection_countour()
                 
         else: 
             print("Selected determination method does not exist.")
