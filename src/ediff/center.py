@@ -1,9 +1,3 @@
-"""
-Created on Fri Nov 22 10:36:35 2024
-
-@author: p-sik
-"""
-
 '''
 Module: ediff.center
 --------------------
@@ -19,7 +13,7 @@ Find the center of a 2D diffraction pattern.
 >>>    input_image='some_diffractogram.png',
 >>>    determination='intensity',
 >>>    refinement='sum',
->>>    messages=True, final_replot=False)
+>>>    messages=False, final_replot=True)
 >>>
 >>> print('Determined center coordinates:', center.x1, center.y1)
 >>> print('Refined center coordinates   :', center.x2, center.y2)
