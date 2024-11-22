@@ -57,11 +57,9 @@ def calc_radial_distribution(arr, center=None, output_file=None):
     
     # (3) Calculate radial distribution
     # --- (3a) Prepare 2D-array/meshgrid with calculated radial distances
-    # (trick 1: the array/meshgrid will be employed for mask
+    # (trick: the array/meshgrid will be employed for mask
     # (...the meshgrid size = the same as the original array size
-    # (...note: when creating meshgrid, xc,yc must be switched
-    # (   it is not so clear why, but it was verified repeatedly
-    [X,Y] = np.meshgrid(np.arange(width)-yc, np.arange(height)-xc)
+    [X,Y] = np.meshgrid(np.arange(width)-xc, np.arange(height)-yc)
     R = np.sqrt(np.square(X) + np.square(Y))
     # --- (3b) Initialize variables
     radial_distance = np.arange(1,np.max(R),1)

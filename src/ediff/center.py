@@ -130,10 +130,11 @@ class CenterLocator:
                  print_sums = False,
                  final_print = True,
                  final_replot=False):
-        '''
-        * Initialize CenterLocator object.
-        * The parameters are described above in class definition.
-        '''
+        
+        ######################################################################
+        # PRIVATE FUNCTION: Initialize CenterLocator object.
+        # The parameters are described above in class definition.
+        ######################################################################
                
         ## (0) Initialize input attributes
         self.input_image = input_image
@@ -606,7 +607,10 @@ class CenterLocator:
         return y, x
 
 
+
 class CenterDetermination:
+    
+        
     def __init__(self, parent,
                  input_image,
                  determination = None, 
@@ -1875,7 +1879,10 @@ class CenterDetermination:
         plt.show(block=False)
 
 
+
 class CenterRefinement:
+    
+    
     def __init__(self, parent,
                  input_image, 
                  refinement = None,
@@ -2522,7 +2529,8 @@ class CenterRefinement:
     
         # Print results
         if (self.parent.messages or self.parent.final_print):
-            self.parent.rText = "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
+            self.parent.rText = \
+                "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
                 
         return best_center[0], best_center[1], best_radius
     
