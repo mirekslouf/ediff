@@ -1,3 +1,9 @@
+"""
+Created on Fri Nov 22 10:36:35 2024
+
+@author: p-sik
+"""
+
 '''
 Module: ediff.center
 --------------------
@@ -47,7 +53,6 @@ from textwrap import dedent
 import sys
 import warnings
 warnings.filterwarnings("ignore")
-
 
 
 class CenterLocator:
@@ -135,11 +140,17 @@ class CenterLocator:
         # PRIVATE FUNCTION: Initialize CenterLocator object.
         # The parameters are described above in class definition.
         ######################################################################
-               
+
         ## (0) Initialize input attributes
         self.input_image = input_image
-        self.refinement = refinement
-        self.determination = determination
+        if refinement is not None:
+            self.refinement = refinement.lower()
+        else: self.refinement = refinement
+        
+        if determination is not None:
+            self.determination = determination.lower()
+        else: self.determination = determination
+
         self.in_file = in_file
         self.out_file = out_file
         self.heq = heq
@@ -203,7 +214,7 @@ class CenterLocator:
         self.x1 = self.center1.x
         self.y1 = self.center1.y
         
-        if refinement is not None:
+        if self.refinement is not None:
             self.x2 = self.center2.xx
             self.y2 = self.center2.yy
         else: 
@@ -214,13 +225,11 @@ class CenterLocator:
             self.center2.rr = self.center1.r
         
         ## (4b) Switching coordinates if necessary
-        if (determination == "intensity"):
-          #  if (refinement != "manual"):
+        if (self.determination == "intensity"):
                 self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
-         #   if (refinement != "sum"):
                 self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
         
-        if (determination == "hough" and refinement == "manual"):
+        if (self.determination =="hough" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
 
         ## (5a) Printing coordinates
@@ -231,11 +240,8 @@ class CenterLocator:
             print("----------------------------------------------------------")
             print(self.dText.format(float(self.x1),float(self.y1)))
             
-            if refinement is not None:
+            if self.refinement is not None:
                 print(self.rText.format(float(self.x2),float(self.y2)))
-            else:
-                print("Center Refinement (None)              : ({:.3f}, {:.3f})".\
-                      format(float(self.x2),float(self.y2)))
                 
         ## (5b) Plot results if final_replot
         if final_replot:   
@@ -600,17 +606,94 @@ class CenterLocator:
         #plt.tight_layout()
         plt.show(block=False)
 
-        
-        
+    
     def convert_coords(self, x, y):
-        """ Convert between numpy and matplotlib coordination system. """
+        """
+        Convert coordinates between numpy and matplotlib systems.
+    
+        Parameters:
+        ----------
+        x : int or float
+            The x-coordinate in the numpy (column index) format.
+        y : int or float
+            The y-coordinate in the numpy (row index) format.
+    
+        Returns:
+        -------
+        tuple of (int or float, int or float)
+            The converted coordinates in matplotlib format, where:
+            - First element corresponds to y (new x in matplotlib).
+            - Second element corresponds to x (new y in matplotlib).
+        """
         return y, x
 
 
 
+
 class CenterDetermination:
+    '''
+    CenterDetermination object for detecting the center of a diffraction 
+    pattern.
+
+    This class is responsible for identifying the center coordinates of 
+    a 2D diffraction pattern image using various detection methods specified 
+    by the user. It initializes with the input image and other parameters
+    that influence the center detection process.
+
+    Parameters
+    ----------
+    parent : CenterLocator
+        Reference to the parent CenterLocator object, allowing access 
+        to shared attributes and methods.
+    input_image : str, path, or numpy.array
+        The input image representing a 2D diffraction pattern, provided as 
+        a file path or a NumPy array.
+    determination : str, optional
+        The method used for center detection. Options include:
+        - 'manual': Manual detection using three points.
+        - 'hough': Hough transform method for circle detection.
+        - 'intensity': Detection based on intensity thresholds.
+    in_file : str, optional
+        Filename of the text file from which to load previously saved 
+        center coordinates.
+    out_file : str, optional
+        Filename of the text file to which the detected center coordinates 
+        will be saved.
+    heq : bool, optional
+        Flag to indicate whether to perform histogram equalization on the 
+        input image. Default is False.
+    icut : float, optional
+        Cut-off intensity level for processing the image. Default is None.
+    cmap : str, optional
+        Colormap to be used for displaying the image. Default is 'gray'.
+    csquare : int, optional
+        Size of the square for processing. Default is 50.
+    cintensity : float, optional
+        Threshold intensity for detecting features in the image. Default is
+        0.8.
+    messages : bool, optional
+        Flag to enable or disable informational messages during processing. 
+        Default is False.
+    print_sums : bool, optional
+        If True, prints the sum of intensity values for the detected circle
+        after each adjustment, relevant only for manual detection methods.
+    final_replot : bool, optional
+        Flag to indicate whether to replot the final results. 
+        Default is False.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    - The class preprocesses the input image and then applies the specified 
+      center detection method.
+    - The detected center coordinates are stored in instance variables
+      `x`, `y`, and `r`, representing the center's x-coordinate, 
+      y-coordinate, and radius, respectively.
+    '''
     
-        
     def __init__(self, parent,
                  input_image,
                  determination = None, 
@@ -625,68 +708,10 @@ class CenterDetermination:
                  print_sums = False,
                  final_replot=False):
         
-        '''
-        CenterDetermination object for detecting the center of a diffraction 
-        pattern.
-
-        This class is responsible for identifying the center coordinates of 
-        a 2D diffraction pattern image using various detection methods specified 
-        by the user. It initializes with the input image and other parameters
-        that influence the center detection process.
-
-        Parameters
-        ----------
-        parent : CenterLocator
-            Reference to the parent CenterLocator object, allowing access 
-            to shared attributes and methods.
-        input_image : str, path, or numpy.array
-            The input image representing a 2D diffraction pattern, provided as 
-            a file path or a NumPy array.
-        determination : str, optional
-            The method used for center detection. Options include:
-            - 'manual': Manual detection using three points.
-            - 'hough': Hough transform method for circle detection.
-            - 'intensity': Detection based on intensity thresholds.
-        in_file : str, optional
-            Filename of the text file from which to load previously saved 
-            center coordinates.
-        out_file : str, optional
-            Filename of the text file to which the detected center coordinates 
-            will be saved.
-        heq : bool, optional
-            Flag to indicate whether to perform histogram equalization on the 
-            input image. Default is False.
-        icut : float, optional
-            Cut-off intensity level for processing the image. Default is None.
-        cmap : str, optional
-            Colormap to be used for displaying the image. Default is 'gray'.
-        csquare : int, optional
-            Size of the square for processing. Default is 50.
-        cintensity : float, optional
-            Threshold intensity for detecting features in the image. Default is
-            0.8.
-        messages : bool, optional
-            Flag to enable or disable informational messages during processing. 
-            Default is False.
-        print_sums : bool, optional
-            If True, prints the sum of intensity values for the detected circle
-            after each adjustment, relevant only for manual detection methods.
-        final_replot : bool, optional
-            Flag to indicate whether to replot the final results. 
-            Default is False.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        - The class preprocesses the input image and then applies the specified 
-          center detection method.
-        - The detected center coordinates are stored in instance variables
-          `x`, `y`, and `r`, representing the center's x-coordinate, 
-          y-coordinate, and radius, respectively.
-        '''
+        ######################################################################
+        # PRIVATE FUNCTION: Initialize CenterLocator object.
+        # The parameters are described above in class definition.
+        ######################################################################
         
         ## (0) Initialize input attributes
         self.parent = parent
@@ -699,17 +724,15 @@ class CenterDetermination:
         self.preprocess(preInit=1)
         
         # (2b) Center detection methods
-        if determination == "manual":
+        if determination.lower() == "manual":
             self.x, self.y, self.r = self.detection_3points()
-        elif determination == "hough":
+        elif determination.lower() == "hough":
             self.x, self.y, self.r = self.detection_Hough()
-        elif determination == "intensity":
+        elif determination.lower() == "intensity":
             self.x, self.y, self.r = self.detection_intensity(
                 self.parent.csquare, 
                 self.parent.cintensity
                 )
-        elif determination == "contour":
-            self.x, self.y, self.r = self.detection_countour()
                 
         else: 
             print("Selected determination method does not exist.")
@@ -717,7 +740,8 @@ class CenterDetermination:
 
 
     ## Functions::
-    def preprocess(self,preInit=0,preHough=0,preManual=0,preVar=0,preSum=0,preInt=0):  
+    def preprocess(self,preInit=0,preHough=0,preManual=0,
+                   preVar=0,preSum=0,preInt=0):  
         """ FOR AUTOMATIC METHODS OPTIMIZATION AND MORE UNIVERSAL SOLUTIONS
         Function for input image preprocessing based on the methods 
         defined in the class initialization - self.detection_method, 
@@ -1438,7 +1462,7 @@ class CenterDetermination:
             print(instructions)
         
         if self.parent.print_sums:
-            print("Intensity sums during adjustment:")
+            print("Intensity sums during refinement:")
             
         # Initialize variables and flags
         self.backip = np.array((self.x, self.y))
@@ -1558,7 +1582,8 @@ class CenterDetermination:
         return xy[0], xy[1], r
     
        
-    def calculate_circle(self, plot_results:int)->tuple[float,float,float,tuple[float,float], plt.Circle]:
+    def calculate_circle(self, plot_results:int)->tuple[
+            float,float,float,tuple[float,float], plt.Circle]:
         ''' 
         Calculates coordinates of the center and radius of a circle defined via
         3 points determined by the user. Plots the calculated circle, detected 
@@ -1662,7 +1687,8 @@ class CenterDetermination:
         return self.x, self.y, self.r, self.center, self.circle
 
 
-    def get_radius(self, im:np.ndarray, x:float, y:float, disp:bool=False) -> float:
+    def get_radius(
+            self, im:np.ndarray, x:float, y:float, disp:bool=False) -> float:
         """
         Calculate the radius of a circle based on intensity profiles along 
         horizontal and vertical axes.
@@ -1852,25 +1878,29 @@ class CenterDetermination:
                             
         '''
         # Load image
-        im = self.parent.to_refine
+        image = np.copy(self.parent.to_refine)
     
+        if self.parent.icut is not None:
+            im = np.where(image > self.parent.icut, self.parent.icut, image)
+        else:
+            im = np.copy(image)
+            
         # Create a figure and display the image
-        fig, ax = plt.subplots(figsize=(12, 12))
+        fig, ax = plt.subplots()
         
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
  
-        plt.title("Detected center", 
-                  fontsize = 20)
+        plt.title("Detected center")
         ax.axis('off')
 
         # Plot center point
         ax.scatter(x,y,
                 label= f'center:  [{x:.1f}, {y:.1f}]',
-                marker='x', color="red", s=100)
+                marker='x', color="red", s=60)
 
-        plt.legend(loc='upper right', fontsize=20)
+        plt.legend(loc='upper right')
         
         # Display the image
         ax.imshow(im, cmap = self.parent.cmap, origin="upper")
@@ -1881,7 +1911,66 @@ class CenterDetermination:
 
 
 class CenterRefinement:
-    
+    '''
+    CenterRefinement object for refining the center coordinates of 
+    a diffraction pattern.
+
+    This class is responsible for refining the center coordinates of a 
+    diffraction pattern based on the selected refinement method. It 
+    initializes with the input image and other parameters that influence 
+    the refinement process.
+
+    Parameters
+    ----------
+    parent : CenterLocator
+        Reference to the parent CenterLocator object, allowing access to 
+        shared attributes and methods.
+    input_image : str, path, or numpy.array
+        The input image representing a 2D diffraction pattern, provided as 
+        a file path or a NumPy array.
+    refinement : str, optional
+        The method used for center refinement. Options include:
+        - 'manual': Manual adjustment of the center based on user input.
+        - 'var': Variance-based refinement to optimize the center coordinates.
+        - 'sum': Sum-based refinement to find the optimal center based on 
+                 intensity sums.
+    in_file : str, optional
+        Filename of the text file from which to load previously saved 
+        refined coordinates.
+    out_file : str, optional
+        Filename of the text file to which the refined center coordinates 
+        will be saved.
+    heq : bool, optional
+        Flag to indicate whether to perform histogram equalization on the
+        input image. Default is False.
+    icut : float, optional
+        Cut-off intensity level for processing the image. Default is None.
+    cmap : str, optional
+        Colormap to be used for displaying the image. Default is 'gray'.
+    messages : bool, optional
+        Flag to enable or disable informational messages during processing. 
+        Default is False.
+    print_sums : bool, optional
+        If True, prints the sum of intensity values for the refined circle 
+        after each adjustment, relevant only for manual refinement methods.
+    final_replot : bool, optional
+        Flag to indicate whether to replot the final results after
+        refinement. Default is False.
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    - The class refines the detected center coordinates based on the 
+      specified refinement method.
+    - The refined coordinates are stored in instance variables
+      `xx`, `yy`, and `rr`, representing the refined center's x-coordinate, 
+      y-coordinate, and radius, respectively.
+    - If an unsupported refinement method is specified, the class will print 
+      an error message and exit.
+    '''
     
     def __init__(self, parent,
                  input_image, 
@@ -1894,66 +1983,11 @@ class CenterRefinement:
                  messages = False,
                  print_sums = False,
                  final_replot=False):
-        '''
-        CenterRefinement object for refining the center coordinates of 
-        a diffraction pattern.
-
-        This class is responsible for refining the center coordinates of a 
-        diffraction pattern based on the selected refinement method. It 
-        initializes with the input image and other parameters that influence 
-        the refinement process.
-
-        Parameters
-        ----------
-        parent : CenterLocator
-            Reference to the parent CenterLocator object, allowing access to 
-            shared attributes and methods.
-        input_image : str, path, or numpy.array
-            The input image representing a 2D diffraction pattern, provided as 
-            a file path or a NumPy array.
-        refinement : str, optional
-            The method used for center refinement. Options include:
-            - 'manual': Manual adjustment of the center based on user input.
-            - 'var': Variance-based refinement to optimize the center coordinates.
-            - 'sum': Sum-based refinement to find the optimal center based on 
-                     intensity sums.
-        in_file : str, optional
-            Filename of the text file from which to load previously saved 
-            refined coordinates.
-        out_file : str, optional
-            Filename of the text file to which the refined center coordinates 
-            will be saved.
-        heq : bool, optional
-            Flag to indicate whether to perform histogram equalization on the
-            input image. Default is False.
-        icut : float, optional
-            Cut-off intensity level for processing the image. Default is None.
-        cmap : str, optional
-            Colormap to be used for displaying the image. Default is 'gray'.
-        messages : bool, optional
-            Flag to enable or disable informational messages during processing. 
-            Default is False.
-        print_sums : bool, optional
-            If True, prints the sum of intensity values for the refined circle 
-            after each adjustment, relevant only for manual refinement methods.
-        final_replot : bool, optional
-            Flag to indicate whether to replot the final results after
-            refinement. Default is False.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        - The class refines the detected center coordinates based on the 
-          specified refinement method.
-        - The refined coordinates are stored in instance variables
-          `xx`, `yy`, and `rr`, representing the refined center's x-coordinate, 
-          y-coordinate, and radius, respectively.
-        - If an unsupported refinement method is specified, the class will print 
-          an error message and exit.
-        '''
+        
+        ######################################################################
+        # PRIVATE FUNCTION: Initialize CenterLocator object.
+        # The parameters are described above in class definition.
+        ######################################################################
         
         ## (0) Initialize input attributes
         self.parent = parent
@@ -1974,7 +2008,8 @@ class CenterRefinement:
                     par_short.x, par_short.y = \
                         par_short.backip[0], par_short.backip[1]
                     if (self.parent.messages or self.parent.final_print):
-                        self.parent.rText = "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
+                        self.parent.rText = \
+                            "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
                 elif parent.determination == 'intensity':
                     self.yy, self.xx, self.rr = self.ref_interactive(
                         par_short.y, par_short.x, par_short.r)
@@ -2212,7 +2247,7 @@ class CenterRefinement:
         return xy[0], xy[1], r    
         
     
-    def ref_var(self, px, py, pr, plot_results = 0):
+    def ref_var(self, px, py, pr, plot_results=0):
         '''         
         Adjust center coordinates of a detected circular diffraction pattern.
         The center adjustment is based on variance minimization.
@@ -2373,7 +2408,7 @@ class CenterRefinement:
         return best_center[0], best_center[1], best_radius
     
     
-    def ref_sum(self, px, py, pr, plot_results=1):
+    def ref_sum(self, px, py, pr, plot_results=0):
         ''' 
         Adjust center position based on gradient optimization method
         via maximization of intensity sum.
@@ -2537,19 +2572,65 @@ class CenterRefinement:
     
     
 class HandlerCircle(HandlerBase):
-    '''
-    Help class for visualization. Not to be used outside of the module.
-    '''
-    def create_artists(self, legend, orig_handle,
-                       xdescent, ydescent, width, height, fontsize, trans):
-        # Create a circular marker
+    """
+    Helper class for creating circular markers in matplotlib legends.
+
+    This class customizes the legend to display circular markers instead of the 
+    default. It is intended for internal use within the module and not 
+    for general use.
+
+    Methods:
+    --------
+    create_artists(legend, 
+                   orig_handle, 
+                   xdescent,
+                   ydescent, 
+                   width, 
+                   height, 
+                   fontsize, 
+                   trans):
+        Creates a circular marker for the legend based on the original handle's 
+        properties.
+
+    Parameters for `create_artists`:
+        legend : matplotlib.legend.Legend
+            The legend instance where the custom marker will be used.
+        orig_handle : matplotlib.artist.Artist
+            The original handle containing the marker properties 
+            (e.g., facecolor, edgecolor).
+        xdescent : float
+            Horizontal offset adjustment for the marker.
+        ydescent : float
+            Vertical offset adjustment for the marker.
+        width : float
+            Width of the legend entry.
+        height : float
+            Height of the legend entry.
+        fontsize : float
+            Font size of the legend text.
+        trans : matplotlib.transforms.Transform
+            Transformation applied to the marker's coordinates.
+
+    Returns:
+    --------
+    list of matplotlib.patches.Circle
+        A list containing a single circular marker artist.
+    """
+
+    def create_artists(self, legend, orig_handle, xdescent, ydescent, 
+                       width, height, fontsize, trans):
+        # Calculate the center and radius of the circle
         x = width / 2
         y = height / 2
         r = min(width, height) / 2
-        marker = Circle((x, y), r, facecolor=orig_handle.get_facecolor(),
+
+        # Create a circular marker using the properties of the original handle
+        marker = Circle((x, y), r,
+                        facecolor=orig_handle.get_facecolor(),
                         edgecolor=orig_handle.get_edgecolor(),
                         linewidth=orig_handle.get_linewidth(),
                         transform=trans)
+
         return [marker]
         
 
