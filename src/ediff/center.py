@@ -1,9 +1,3 @@
-"""
-Created on Fri Nov 22 10:36:35 2024
-
-@author: p-sik
-"""
-
 '''
 Module: ediff.center
 --------------------
@@ -1486,7 +1480,7 @@ class CenterDetermination:
         def onkeypress2(event):
             # Use nonlocal to modify the center position in the outer scope
             nonlocal xy, r, termination_flag
-
+        
             # OTHER KEYS USED IN INTERACTIVE FIGURES
             #   event.key == '1': select a point in self.detection_3points()
             #   event.key == '2': delete the last point in self.detection...
@@ -1496,7 +1490,7 @@ class CenterDetermination:
             #   event.key == 'b': increase the step size (big step size)
             #   event.key == 'l': decrease the step size (little step size)
             #   event.key == 'd': proceed in self.detection_3points()
-            
+        
             if event.key in ['up', 'down', 'left', 'right', '+', '-']:                    
                 if event.key in ['+', '-']:
                     r += 1 if event.key == '+' else -1
@@ -1504,46 +1498,42 @@ class CenterDetermination:
                     # Perform shifts normally
                     if event.key == 'up':
                         xy[1] -= self.step
-                       # print('Moved up')
                     elif event.key == 'down':
                         xy[1] += self.step
-                       # print('Moved down')
                     elif event.key == 'left':
                         xy[0] -= self.step
-                       # print('Moved left')
                     elif event.key == 'right':
                         xy[0] += self.step
-                       # print('Moved right')
-                
-                
+                    
+                    # Print sum only for arrow keys
+                    if self.parent.print_sums:
+                        s = self.parent.intensity_sum(self.parent.to_refine, 
+                                                      xy[0], xy[1], r)
+                        print(f'{s:.2f}')
+            
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
                 termination_flag = True
-
-            
+        
             # Change step size 
             if event.key == 'b':
-                self.step = self.step*5
-                
+                self.step = self.step * 5
+        
             if event.key == 'l':
-                self.step = self.step/5
-                if self.step<0.5:
-                    self.step=0.5
-
+                self.step = self.step / 5
+                if self.step < 0.5:
+                    self.step = 0.5
+        
             # Update the plot with the new center position
             circle.set_center((xy[0], xy[1]))  # circle
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
-
-            plt.title("Manually adjust the center position.", fontsize=20)
-         
-            # Update the plot
-            plt.draw() 
         
-            if self.parent.print_sums:
-                s = self.parent.intensity_sum(self.parent.to_refine, 
-                                       xy[0], xy[1], r)
-                print(f'{s:.2f}')
+            plt.title("Manually adjust the center position.", fontsize=20)
+        
+            # Update the plot
+            plt.draw()
+
                 
         # Disconnect the on_key_press1 event handler from the figure
         fig.canvas.mpl_disconnect(fig.canvas.manager.key_press_handler_id)
@@ -2153,7 +2143,7 @@ class CenterRefinement:
         def onkeypress2(event):
             # Use nonlocal to modify the center position in the outer scope
             nonlocal xy, r, termination_flag
-
+        
             # OTHER KEYS USED IN INTERACTIVE FIGURES
             #   event.key == '1': select a point in self.detection_3points()
             #   event.key == '2': delete the last point in self.detection...
@@ -2163,7 +2153,7 @@ class CenterRefinement:
             #   event.key == 'b': increase the step size (big step size)
             #   event.key == 'l': decrease the step size (little step size)
             #   event.key == 'd': proceed in self.detection_3points()
-            
+        
             if event.key in ['up', 'down', 'left', 'right', '+', '-']:                    
                 if event.key in ['+', '-']:
                     r += 1 if event.key == '+' else -1
@@ -2171,45 +2161,42 @@ class CenterRefinement:
                     # Perform shifts normally
                     if event.key == 'up':
                         xy[1] -= self.step
-                       # print('Moved up')
                     elif event.key == 'down':
                         xy[1] += self.step
-                       # print('Moved down')
                     elif event.key == 'left':
                         xy[0] -= self.step
-                       # print('Moved left')
                     elif event.key == 'right':
                         xy[0] += self.step
-                       # print('Moved right')
-                
-                
+                    
+                    # Print sum only for arrow keys
+                    if self.parent.print_sums:
+                        s = self.parent.intensity_sum(self.parent.to_refine, 
+                                                      xy[0], xy[1], r)
+                        print(f'{s:.2f}')
+            
             # Terminate the interactive refinement with 'd' key
             if event.key == 'd':
                 termination_flag = True
-
-            
+        
             # Change step size 
             if event.key == 'b':
-                self.step = self.step*5
-                
+                self.step = self.step * 5
+        
             if event.key == 'l':
-                self.step = self.step/5
-                if self.step<0.5:
-                    self.step=0.5
-
+                self.step = self.step / 5
+                if self.step < 0.5:
+                    self.step = 0.5
+        
             # Update the plot with the new center position
             circle.set_center((xy[0], xy[1]))  # circle
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
-
+        
             plt.title("Manually adjust the center position.", fontsize=20)
-            
+        
             # Update the plot
-            plt.draw() 
-            
-            if self.parent.print_sums:
-                s = self.parent.intensity_sum(im, xy[0], xy[1], r)
-                print(f'{s:.2f}')
+            plt.draw()
+
             
         # Disconnect the on_key_press1 event handler from the figure
         fig.canvas.mpl_disconnect(fig.canvas.manager.key_press_handler_id)
