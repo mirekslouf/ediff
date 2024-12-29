@@ -71,12 +71,12 @@ class Calculate:
     >>>         ELD, XRD, eld_range=(50,120), xrd_range=(2.0,2.5))
     >>>
     >>> # (3) Calibration constant from known microscope parameters.
-    >>> # (The three parameters below are often known or you can find them.
+    >>> # (The four parameters below are usually known for given microscope.
     >>> calibration_constant = \\
     >>>     ed.calibration.Calculate.from_microscope_constants(
     >>>         voltage_kV = 120,
     >>>         camera_length_mm = 170,
-    >>>         camera_pixel_size_um = 26.2, binning = 2)
+    >>>         camera_pixel_size_um = 13.2, binning = 2)
     '''
     
     

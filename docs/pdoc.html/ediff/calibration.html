@@ -230,12 +230,12 @@ but we need at least one of the following:
 </span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">    &gt;&gt;&gt;         ELD, XRD, eld_range=(50,120), xrd_range=(2.0,2.5))</span>
 </span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a><span class="sd">    &gt;&gt;&gt;</span>
 </span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="sd">    &gt;&gt;&gt; # (3) Calibration constant from known microscope parameters.</span>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">    &gt;&gt;&gt; # (The three parameters below are often known or you can find them.</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="sd">    &gt;&gt;&gt; # (The four parameters below are usually known for given microscope.</span>
 </span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">    &gt;&gt;&gt; calibration_constant = \\</span>
 </span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">    &gt;&gt;&gt;     ed.calibration.Calculate.from_microscope_constants(</span>
 </span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">    &gt;&gt;&gt;         voltage_kV = 120,</span>
 </span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">    &gt;&gt;&gt;         camera_length_mm = 170,</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">    &gt;&gt;&gt;         camera_pixel_size_um = 26.2, binning = 2)</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">    &gt;&gt;&gt;         camera_pixel_size_um = 13.2, binning = 2)</span>
 </span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a>    
 </span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>    
@@ -893,12 +893,12 @@ but we need at least one of the following:
 </span><span id="Calculate-72"><a href="#Calculate-72"><span class="linenos"> 72</span></a><span class="sd">    &gt;&gt;&gt;         ELD, XRD, eld_range=(50,120), xrd_range=(2.0,2.5))</span>
 </span><span id="Calculate-73"><a href="#Calculate-73"><span class="linenos"> 73</span></a><span class="sd">    &gt;&gt;&gt;</span>
 </span><span id="Calculate-74"><a href="#Calculate-74"><span class="linenos"> 74</span></a><span class="sd">    &gt;&gt;&gt; # (3) Calibration constant from known microscope parameters.</span>
-</span><span id="Calculate-75"><a href="#Calculate-75"><span class="linenos"> 75</span></a><span class="sd">    &gt;&gt;&gt; # (The three parameters below are often known or you can find them.</span>
+</span><span id="Calculate-75"><a href="#Calculate-75"><span class="linenos"> 75</span></a><span class="sd">    &gt;&gt;&gt; # (The four parameters below are usually known for given microscope.</span>
 </span><span id="Calculate-76"><a href="#Calculate-76"><span class="linenos"> 76</span></a><span class="sd">    &gt;&gt;&gt; calibration_constant = \\</span>
 </span><span id="Calculate-77"><a href="#Calculate-77"><span class="linenos"> 77</span></a><span class="sd">    &gt;&gt;&gt;     ed.calibration.Calculate.from_microscope_constants(</span>
 </span><span id="Calculate-78"><a href="#Calculate-78"><span class="linenos"> 78</span></a><span class="sd">    &gt;&gt;&gt;         voltage_kV = 120,</span>
 </span><span id="Calculate-79"><a href="#Calculate-79"><span class="linenos"> 79</span></a><span class="sd">    &gt;&gt;&gt;         camera_length_mm = 170,</span>
-</span><span id="Calculate-80"><a href="#Calculate-80"><span class="linenos"> 80</span></a><span class="sd">    &gt;&gt;&gt;         camera_pixel_size_um = 26.2, binning = 2)</span>
+</span><span id="Calculate-80"><a href="#Calculate-80"><span class="linenos"> 80</span></a><span class="sd">    &gt;&gt;&gt;         camera_pixel_size_um = 13.2, binning = 2)</span>
 </span><span id="Calculate-81"><a href="#Calculate-81"><span class="linenos"> 81</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="Calculate-82"><a href="#Calculate-82"><span class="linenos"> 82</span></a>    
 </span><span id="Calculate-83"><a href="#Calculate-83"><span class="linenos"> 83</span></a>    
@@ -1177,12 +1177,12 @@ the calibration constant for <em>an arbitrary microscope</em>.</p>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="n">ELD</span><span class="p">,</span> <span class="n">XRD</span><span class="p">,</span> <span class="n">eld_range</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="mi">120</span><span class="p">),</span> <span class="n">xrd_range</span><span class="o">=</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span><span class="mf">2.5</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># (3) Calibration constant from known microscope parameters.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># (The three parameters below are often known or you can find them.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># (The four parameters below are usually known for given microscope.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">calibration_constant</span> <span class="o">=</span> \
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">ed</span><span class="o">.</span><span class="n">calibration</span><span class="o">.</span><span class="n">Calculate</span><span class="o">.</span><span class="n">from_microscope_constants</span><span class="p">(</span>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="n">voltage_kV</span> <span class="o">=</span> <span class="mi">120</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="n">camera_length_mm</span> <span class="o">=</span> <span class="mi">170</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>        <span class="n">camera_pixel_size_um</span> <span class="o">=</span> <span class="mf">26.2</span><span class="p">,</span> <span class="n">binning</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">camera_pixel_size_um</span> <span class="o">=</span> <span class="mf">13.2</span><span class="p">,</span> <span class="n">binning</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 </code></pre>
 </div>
 </div>
