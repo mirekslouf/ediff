@@ -24,7 +24,8 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
+
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
@@ -35,6 +36,7 @@ import ediff.io
 import ediff.pxrd
 import ediff.radial
 
+
 # This is a slightly special import:
 # * ediff (1) imports ediff.background, which (2) imports bground package
 # * see additional imports in ediff.background module to see what is done 
@@ -44,3 +46,24 @@ import ediff.radial
 # >>> PPAR  = ed.background.PlotParams ...
 # >>> IPLOT = ed.background.InteractivePlot ...
 import ediff.background
+
+
+# Obligatory acknowledgement -- the development was co-funded by TACR.
+#  TACR requires that the acknowledgement is printed when we run the program.
+#  Nevertheless, Python packages run within other programs, not directly.
+# The following code ensures that the acknowledgement is printed when:
+#  (1) You run this file: __init__.py
+#  (2) You run the package from command line: python -m ediff
+# Technical notes:
+#  To get item (2) above, we define __main__.py (next to __init__.py).
+#  The usage of __main__.py is not very common, but still quite standard.
+
+def acknowledgement():
+    print('EDIFF package - process powder electron diffraction patterns.')
+    print('------')
+    print('The development of the package was co-funded by')
+    print('the Technology agency of the Czech Republic,')
+    print('program NCK, project TN02000020.')
+    
+if __name__ == '__main__':
+    acknowledgement()

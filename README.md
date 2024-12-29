@@ -20,16 +20,19 @@ Installation
 Quick start
 -----------
 * Look at [worked example](https://www.dropbox.com/scl/fi/3hb78voxd17wb3fzh9n1p/01_ediff_au.nb.pdf?rlkey=qmbvwaw80o1gbe262hwgjvmgx&dl=0)
-  to see how EDIFF works.
+  to see how EDIFF in action.
 * Download [complete examples with data](https://www.dropbox.com/scl/fo/td6rkdgp2usxosj1vqeku/h?rlkey=41carfdej5h2f8f4yscbuvagm&dl=0)
   and try EDIFF yourself.
 
 Documentation, help and examples
 --------------------------------
-* [PyPI](https://pypi.org/project/ediff) repository.
-* [GitHub](https://github.com/mirekslouf/ediff) repository.
+* [PyPI](https://pypi.org/project/ediff) repository -
+  the stable version to install.
+* [GitHub](https://github.com/mirekslouf/ediff) repository - 
+  the current version under development.
 * [GitHub Pages](https://mirekslouf.github.io/ediff/)
-  with [documentation](https://mirekslouf.github.io/ediff/docs).
+  with [help](https://mirekslouf.github.io/ediff/docs)
+  and [complete package documentation](https://mirekslouf.github.io/ediff/docs/pdoc.html/ediff.html).
 
 Versions of EDIFF
 -----------------
@@ -41,3 +44,8 @@ Versions of EDIFF
 * Version 0.4 = {center} module: better structure + better funcs + saving coords
 * Version 1.0 = TODO: complete version with finalized documentation
 
+Acknowledgement
+---------------
+
+The development was co-funded by TACR, program NCK,
+project [TN02000020](https://www.isibrno.cz/en/centre-advanced-electron-and-photonic-optics).
