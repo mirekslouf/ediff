@@ -275,49 +275,48 @@ class CenterLocator:
     
     def output(self):
         """
-        Manage variables that should be send as the output of the center 
-        detection. 
+        Return the final results of center determination and refinement. 
         
-        If there were set parameters detection_method and 
-        correction method during the class initialization, the output will be
-        coordinates x, y of the center detected by the detection_method and 
-        coordinates x, y of refined center position by the correction method.
-        
-        If there was not set the correction_method parameter, the function
-        outputs x, y coordinates of the detected center and None, None for
-        the refined coordinates.
-
         Returns
         -------
-        x : float
-            x-coordinate of the center detected via detection_method
-        y : float
-            y-coordinate of the center detected via detection_method
-        xx : float
-            x-coordinate of the center detected via refinement_method
-        yy : float
-            y-coordinate of the center detected via refinement_method
+        x1 : float
+            x-coordinate of the center from *determination* method
+        y1 : float
+            y-coordinate of the center from *determination* method
+        x2 : float
+            x-coordinate of the center from *refinement* method
+        y2 : float
+            y-coordinate of the center from *refinement* method
+            
+        Technical note
+        --------------
+        * The function always returns four parameters.
+        * In most cases, the output are four coordinates (x1,y1,x2,y2).
+        * If the *refinement* method was None, the output is (x1,y1,x1,y1);
+          i.e. the *determined* and *refined* center coordinates are the same.
         """
         
+        # (1) Refinement method was not None => prepare (x1,y1,x2,y2)
         if self.center2.ret == 1:
             # Convert to float
             if type(self.x1) != float:
                 self.x1, self.y1, self.x2, self.y2 = \
                     [float(value) for value in (self.x1, self.y1, 
                                                 self.x2, self.y2)]
-                        
-            # Return values of center coordinates
-            return (np.round(self.x1,1), np.round(self.y1,1), 
-                    np.round(self.x2,1), np.round(self.y2,1))  
+        # (2) Refinement method was None => prepare (x1,y1) = (x2,y2)                      
         else:
             # Convert to float
             if type(self.x1) != float:
                 self.x1, self.y1 = \
                     [float(value) for value in (self.x1,self.y1)]
+            # Define x2,y2 = x1,y1
+            self.x2 = self.x1
+            self.y2 = self.y1
+            
+        # (3) Return (rounded) values of center coordinates
+        return (np.round(self.x1,1), np.round(self.y1,1), 
+                np.round(self.x2,1), np.round(self.y2,1))  
 
-            # Return values of center coordinates
-            return (np.round(self.x1,1), np.round(self.y1,1), None, None)   
-    
     
     def save_results(self):
         '''
