@@ -11,7 +11,7 @@ Processing of powder electron diffraction patterns.
 
 EDIFF modules:
 
-* ediff.background = background correction (employs our package BGROUND)    
+* ediff.background = background correction (employs sub-package BGROUND)    
 * ediff.calibration = calibration of SAED diffractograms (pixels -> q-vectors)
 * ediff.center = find center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
@@ -24,7 +24,7 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.4.4"
+__version__ = "0.5"
 
 
 # Import of modules so that we could use the package as follows:

@@ -65,7 +65,7 @@ class Calculate:
     >>>     ed.calibration.Calculate.from_max_peaks(ELD, XRD)
     >>> 
     >>> # (2) Calibration constant from selected parts of ELD and XRD profiles.
-    >>> # (If the max.peak in ELD corresponds to low peak in XRD or vice versa
+    >>> # (If a max.peak in ELD corresponds to a low peak in XRD or vice versa.
     >>> calibration_constant = \\
     >>>     ed.calibration.Calculate.from_max_peaks_in_range(
     >>>         ELD, XRD, eld_range=(50,120), xrd_range=(2.0,2.5))
