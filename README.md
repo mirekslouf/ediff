@@ -14,7 +14,7 @@ EDIFF :: processing of powder electron diffraction patterns
 Principle
 ---------
 
-<img src="https://mirekslouf.github.io/ediff/docs/assets/principle.pptx.png" alt="EDIFF principle" width="500"/>
+<img src="https://mirekslouf.github.io/ediff/docs/assets/principle.pptx.png" alt="EDIFF principle" width="600"/>
 
 
 Installation
