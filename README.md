@@ -1,5 +1,5 @@
-EDIFF :: processing of powder electron diffraction patterns
------------------------------------------------------------
+EDIFF :: processing powder electron diffraction patterns
+--------------------------------------------------------
 
 * EDIFF package:
 	- converts a 2D powder electron diffractogram to a 1D diffractogram (ELD)
