@@ -2,8 +2,8 @@ EDIFF :: processing of powder electron diffraction patterns
 -----------------------------------------------------------
 
 * EDIFF package:
-	- converts a 2D powder electron diffractogram to a 1D profile (ELD)
-	- calculates a theoretical 1D powder X-ray diffraction profile (XRD)
+	- converts a 2D powder electron diffractogram to a 1D diffractogram (ELD)
+	- calculates a theoretical 1D powder X-ray diffractogram (XRD)
 	- compares the experimental ELD with the theoretically calculated XRD
 * If you use EDIFF in your research, **please cite** the OpenAccess paper:
 	- Materials 14 (2011) 7550.
