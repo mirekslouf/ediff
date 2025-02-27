@@ -659,6 +659,7 @@ class CenterLocator:
         # ...do not hide axis decorations = labels, spines, ticks...
         ax.axis('on')
         # ...show the plot
+
         plt.show(block=False)
 
     
