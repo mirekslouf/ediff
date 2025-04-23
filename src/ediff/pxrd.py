@@ -523,7 +523,7 @@ class PXRDcalculation:
             plt.show()
         
 
-    def plot_diffractions_with_indexes(self):
+    def plot_diffractions_with_indexes(self, output_file=None, two_theta=None):
         '''
         Plot indexed diffractions.
         
@@ -537,24 +537,29 @@ class PXRDcalculation:
         
         Parameters
         ----------
-        None
-            This function is to be called exclusively 
-            as method of PXRDcalculation object.
-            If PXRDcalculation is properly initialized,
-            additional parameters are not needed.
-
+        output_file: str, optional, default is None
+            If the argument is not None, the output is saved to {output_file}.
+        two_theta: tuple of two floats, optional, default is None
+            If the argument is not None, the plot uses the given two_theta
+            range.
+            If the argument is None, the plot takes the two_theta_range
+            from the (previously defined) ediff.pxrd.Experiment object.
+            
         Returns
         -------
         None
-            The output is the plot in the screen.
+            The output is the plot in the screen or in the {output_file}.
             In a typical case, the plot is interactive
-            so that the indexed diffractions could be expected in detail.
+            so that the indexed diffractions could be inspected in detail.
         
         Technical note
         --------------
+        * This function is usually called as a PXRDcalculation object method.
+            - Additional parameters are usually not needed.
+            - {output_file} and {theta_range} can modify default plot params.
         * The code below uses (sligthly modified) PyMatGen functions.
-        * Reason: PyMatGen plots with diffraction indexes are quite good.
-          Re-programing would be quite difficult, boring, and useless.
+            - Reason: PyMatGen plots with diffraction indexes are quite good.
+            - Re-programing would be quite difficult, boring, and useless.
         '''
         # (0) Redefine plot parameters
         # (so that they were optimized for the interactive plot
@@ -572,10 +577,14 @@ class PXRDcalculation:
         # (2) Create plot with indexes
         # (trick: we create figure and axes (fig,ax)
         # (and instruct PyMatGen to plot in pre-defined axes
+        # (a) prepare fig,ax
         fig,ax = plt.subplots()
+        # (b) prepare two_theta range 
+        if two_theta is None: two_theta = self.experiment.two_theta_range
+        # (c) create the plot using the parameters from (a,b) 
         xrd.get_plot(
             structure = self.crystal.structure,
-            two_theta_range=self.experiment.two_theta_range,
+            two_theta_range=two_theta,
             annotate_peaks='compact', ax=ax, fontsize=6)
         # (3) Ex-post changing line properties in plt.plot
         # https://stackoverflow.com/q/41709257
@@ -592,7 +601,10 @@ class PXRDcalculation:
         ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         # (5) Final adjustments
         fig.tight_layout()
-        fig.show()
+        if output_file == False:
+            plt.show()
+        else:
+            plt.savefig(output_file, dpi=300)
         # (6) Revert to original rcParams.
         plt.rcParams.update(original_rcParams)
         
