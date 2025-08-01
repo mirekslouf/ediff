@@ -7,7 +7,10 @@ which shows complete data processing.
 
 More details =
 [directory with examples](https://www.dropbox.com/scl/fo/td6rkdgp2usxosj1vqeku/h?rlkey=41carfdej5h2f8f4yscbuvagm&dl=0);
-each example contains testing data.
+each example contains testing data:
+
+* EX1.AU = complete processing of a 2D electron diffraction pattern 
+* EX2.CENTER = automatic center determination of an electron diffractogram  
 
 Complete documentation =
 [online ediff documentation](./pdoc.html/index.html),

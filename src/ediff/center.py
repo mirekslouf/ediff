@@ -19,16 +19,14 @@ Find the center of a 2D diffraction pattern.
 >>> print('Refined center coordinates   :', center.x2, center.y2)
 '''
 
-# CenterDet
+# CenterDet, major update and improvements by MS->PS
 # PS 2023-10-06: CentDet update, methods compatibility
 # MS 2023-11-26: Improved code formatting and docs + TODO notes for PS
 # MS 2024-23-09: Re-desing/draft of CenterLocator => CenterLocator_new
-#   # CenterLocator - beter structure, clearer usage, saving/reading to files
-#   import ediff as ed
-#   CENTER = ed.center.CenterlLocator(args)
-#   print(CENTER.x1,CENTER.y1)  # center coords after CenterDetermination
-#   print(CENTER.x2,CENTER.y2)  # center coords after CenterDetermination
+# PS 2025-XX-XX: Updates + imporovements in branch {center_determination}
+# MS 2025-08-01: Import of {center_determination} branch to {main) 
     
+
 import numpy as np
 import skimage as sk
 import matplotlib.pyplot as plt
@@ -37,18 +35,15 @@ from matplotlib.legend_handler import HandlerBase
 from math import floor
 from scipy.optimize import curve_fit
 
-
 import ediff.io 
 import os
 import cv2
-
 
 from skimage.measure import moments
 from skimage.transform import hough_circle, hough_circle_peaks
 from skimage.registration import phase_cross_correlation
 import skimage.feature as skf
 from scipy.ndimage import gaussian_filter
-
 
 from scipy.signal import find_peaks
 from scipy.fft import _pocketfft, set_backend
@@ -85,12 +80,12 @@ class CenterLocator:
     refinement : str or None, optional, default is None
         The method used for the final center refinement.
         Options include:
-        - 'manual': Manual adjustment - user adjust the position of the selected 
-           diffration ring.
+        - 'manual': Manual adjustment - user adjust the position
+           of the selected diffration ring.
         - 'sum': Auto-refinement - find a diffraction ring with maximal sum 
            of intensities.
-        - 'var': Auto-refinement - find a diffraction ring with minimal variance 
-           of intensities.
+        - 'var': Auto-refinement - find a diffraction ring
+           with minimal variance of intensities.
     in_file : str, optional, default is None
         Filename of the text file for saving the center coordinates.
     out_file : str, optional, default is None
@@ -125,7 +120,7 @@ class CenterLocator:
     Returns
     -------
     None
-        The center coordinates are stored in instance variables
+        The center coordinates are stored in the instance variables
         (x1,y1) for the determined center and
         (x2,y2) for the refined center.
         Look at the initial example at the top of this module
@@ -136,7 +131,7 @@ class CenterLocator:
     * The class initializes (and runs) two sub-classes (= processes),
       CenterDetermination and CenterRefinement.
     * The two sub-classes/processes are hidden to common user,
-      altough they could be run separately.
+      even if they could be run separately.
     '''
     
     
@@ -1136,7 +1131,8 @@ class CenterDetermination:
                     selem = sk.morphology.disk(5)
                     dilated_edges = sk.morphology.dilation(edges, selem)
                     
-                    # Erode the dilated edges to reduce thickness and smooth the contour
+                    # Erode the dilated edges
+                    # to reduce thickness and smooth the contour
                     connected_edges=sk.morphology.erosion(dilated_edges,selem)
 
                     if control_print == 1:
@@ -1165,7 +1161,8 @@ class CenterDetermination:
                     selem = sk.morphology.disk(10)
                     dilated_edges = sk.morphology.dilation(edges, selem)
                     
-                    # Erode the dilated edges to reduce thickness and smooth the contour
+                    # Erode the dilated edges
+                    # to reduce thickness and smooth the contour
                     connected_edges=sk.morphology.erosion(dilated_edges,selem)
                     connected_edges = sk.morphology.remove_small_objects(
                         connected_edges, 
@@ -1305,10 +1302,12 @@ class CenterDetermination:
         return sobel_magnitude
     
     
-    def detection_phase(self, normalize_bg=True, sobel=False, disp=False, masking=True):
+    def detection_phase(self, normalize_bg=True, sobel=False, 
+                        disp=False, masking=True):
         """
         Detects the center of symmetry in a diffraction image using 
-        a combination of weighted intensity averaging and phase cross-correlation.
+        a combination of weighted intensity averaging
+        and phase cross-correlation.
     
         This method follows these steps:
         (1) Finds an initial center estimate using the weighted average 
@@ -1323,8 +1322,8 @@ class CenterDetermination:
         Parameters
         ----------
         normalize_bg : bool, optional
-            If True, the function normalizes the background intensity to account 
-            for illumination variations. Default is True.
+            If True, the function normalizes the background intensity
+            to account for illumination variations. Default is True.
     
         Returns
         -------
@@ -1380,8 +1379,9 @@ class CenterDetermination:
         if normalize_bg:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-                image = image.astype(np.float64)  # Ensure float64 before division
-                image /= gaussian_filter(input=image, sigma=min(image.shape) / 25, truncate=2)
+                image = image.astype(np.float64)  # float64 before division
+                image /= gaussian_filter(
+                    input=image, sigma=min(image.shape) / 25, truncate=2)
         
         # Replace NaN values with 0s
         image = np.nan_to_num(image, copy=False)
@@ -1415,7 +1415,8 @@ class CenterDetermination:
 
         # (6) User information (if required)
         if (self.parent.messages or self.parent.final_print):
-            self.parent.dText = "Center Determination (PhaseCorrCenter): ({:.3f}, {:.3f})"
+            self.parent.dText = \
+                "Center Determination (PhaseCorrCenter): ({:.3f}, {:.3f})"
         
         # Ensure correction is a tuple or list before extracting elements
         correction_r, correction_c = correction \
@@ -1446,8 +1447,8 @@ class CenterDetermination:
         Parameters
         ----------
         normalize_bg : bool, optional
-            If True, the function normalizes the background intensity to account 
-            for illumination variations. Default is True.
+            If True, the function normalizes the background intensity
+            to account for illumination variations. Default is True.
         sobel : bool, optional
             If True, applies Sobel filtering to enhance edge detection before 
             processing. Default is False.
@@ -1460,7 +1461,8 @@ class CenterDetermination:
         r_final : float
             The estimated row-coordinate of the image center after refinement.
         c_final : float
-            The estimated column-coordinate of the image center after refinement.
+            The estimated column-coordinate of the image center
+            after refinement.
         None : NoneType
             Placeholder for future functionality (e.g., radius estimation).
         """
@@ -1503,13 +1505,14 @@ class CenterDetermination:
         # at each position, it computes the cross-correlation between 
         # overlapping pixels.
         # result is a 2D matrix, where each value represents the correlation 
-        # score at a particular location. Higher values indicate better symmetry 
-        # at that position.
+        # score at a particular location. Higher values indicate
+        # better symmetry at that position.
         
 
         
         # Ensure template is smaller than image
-        assert template.shape[0] <= image.shape[0] and template.shape[1] <= image.shape[1], \
+        assert template.shape[0] <= image.shape[0] \
+            and template.shape[1] <= image.shape[1], \
             "Template is larger than the image"
         
         result = cv2.matchTemplate(image.astype(np.float32), 
@@ -1543,7 +1546,8 @@ class CenterDetermination:
             
             plt.figure()
             if self.parent.icut:
-                orig=np.where(self.parent.to_refine>self.parent.icut, self.parent.icut, self.parent.to_refine)
+                orig=np.where(self.parent.to_refine>self.parent.icut,
+                              self.parent.icut, self.parent.to_refine)
             else: orig = np.copy(self.parent.to_refine)
             
             # Assuming fft_im_i is your Fourier transform image
@@ -1552,14 +1556,17 @@ class CenterDetermination:
             center_y = orig.shape[0] // 2
 
             # Crop the central part of the spectrum
-            orig = orig[center_y - center_size // 2:center_y + center_size // 2,
-                                         center_x - center_size // 2:center_x + center_size // 2]
+            orig = orig[
+                center_y - center_size // 2:center_y + center_size // 2,
+                center_x - center_size // 2:center_x + center_size // 2]
             
             plt.imshow(orig, cmap="gray", origin="lower")
             plt.scatter(corrected_c-center_x//2, corrected_r-center_y//2, 
                         color="white", marker="x", s=100,
                         label = "center")
-            plt.title("Location of the highest correlation coefficient in original image")
+            my_title =  "Location of the highest correlation coefficient"
+            my_title += "in the original image."
+            plt.title(my_title)
             plt.axis("off")
             plt.tight_layout()
             
@@ -1567,13 +1574,15 @@ class CenterDetermination:
         
         # (6) User information (if required)
         if self.parent.messages or self.parent.final_print:
-            self.parent.dText = "Center Determination (CrossCorrCenter): ({:.3f}, {:.3f})"
+            self.parent.dText = \
+                "Center Determination (CrossCorrCenter): ({:.3f}, {:.3f})"
 
                 
         return float(corrected_r), float(corrected_c), None
 
     
-    def detection_intensity(self, csquare, cintensity, plot_results=0, sobel=0):
+    def detection_intensity(self, 
+                            csquare, cintensity, plot_results=0, sobel=0):
         '''
         Find center of intensity/mass of an array.
         
@@ -1583,9 +1592,11 @@ class CenterDetermination:
             The array, whose intensity center will be determined.
         csquare : int, optional, default is 20
             The size/edge of the square in the (geometrical) center.
-            The intensity center will be searched only within the central square.
+            The intensity center will be searched only within the central
+            square.
             Reasons: To avoid other spots/diffractions and
-            to minimize the effect of possible intensity assymetry around center. 
+            to minimize the effect of possible intensity assymetry
+            around the center. 
         cintensity : float, optional, default is 0.8
             The intensity fraction.
             When searching the intensity center, we will consider only
@@ -1651,7 +1662,8 @@ class CenterDetermination:
         return(self.x, self.y, self.r)
     
 
-    def detection_Hough(self, plot_results=False, sobel=False, live_plot=False):
+    def detection_Hough(self, 
+                        plot_results=False, sobel=False, live_plot=False):
         '''        
         Perform Hough transform to detect the center of diffraction patterns 
         with optional real-time visualization and a final image showing all 
@@ -3257,8 +3269,8 @@ class CenterRefinement:
                                                     best_radius) 
             
             # Refine radius if necessary while keeping the center position 
-            # constant. It iterates through different radius adjustments to find
-            # a radius that maximizes the intensity sum of pixels
+            # constant. It iterates through different radius adjustments
+            # to find a radius that maximizes the intensity sum of pixels.
             
             radi_intensity_var = []
             radii = np.arange(-1, 1 + step, step)
@@ -3303,7 +3315,8 @@ class CenterRefinement:
     
         # Print results
         if (self.parent.messages or self.parent.final_print):
-            self.parent.rText = "Center Refinement (IntensityVar)      : ({:.3f}, {:.3f})"
+            self.parent.rText = \
+                "Center Refinement (IntensityVar)      : ({:.3f}, {:.3f})"
                                   
         return best_center[0], best_center[1], best_radius
     
@@ -3396,9 +3409,9 @@ class CenterRefinement:
             cx, _ = np.unravel_index(np.argmax(curr_intensity_sum),
                                      [len(curr_intensity_sum),1])
                     
-            # Check for improvement of criterion -- in each iteration just once,
-            # as the algorithm checks the neighbourhood of the best center (in
-            # each iteration, the center is updated if possible)
+            # Check for improvement of criterion - in each iteration just once,
+            # as the algorithm checks the neighbourhood of the best center
+            # (in each iteration, the center is updated if possible)
             if max(curr_intensity_sum) > max_intensity_sum:                           
                 max_intensity_sum = max(curr_intensity_sum)
                 
@@ -3416,8 +3429,8 @@ class CenterRefinement:
     
         
             # Refine radius if necessary while keeping the center position 
-            # constant. It iterates through different radius adjustments to find
-            # a radius that maximizes the intensity sum of pixels
+            # constant. It iterates through different radius adjustments
+            # to find a radius that maximizes the intensity sum of pixels.
             
             radi_intensity_sum = []
             radii = np.arange(-1.0, 1.0 + step, step)
@@ -3454,7 +3467,8 @@ class CenterRefinement:
         # Avoid incorrect/redundant refinement
         # ## (1) swapped coordinates
         # if ((bckup[0] > bckup[1] and not best_center[0] > best_center[1])
-        #     or  (bckup[0] < bckup[1] and not best_center[0] < best_center[1])):
+        #     or  (bckup[0] < bckup[1]
+        #     and not best_center[0] < best_center[1])):
         #     best_center = best_center[::-1]
         
         ## (2) worsened final maximum intensity sum than the initial one
@@ -3517,7 +3531,8 @@ class CenterRefinement:
         # Set up live plot
         if live_plot:
             if self.parent.icut is not None:
-                im = np.where(image > self.parent.icut, self.parent.icut, image)
+                im = np.where(
+                    image > self.parent.icut, self.parent.icut, image)
             else:
                 im = np.copy(image)
                 
@@ -3681,7 +3696,8 @@ class PocketFFTBackend:
     -------
     __ua_function__(method, args, kwargs)
         Universal array function handler that dispatches FFT operations to the 
-        corresponding PocketFFT implementation with optimized threading settings.
+        corresponding PocketFFT implementation with optimized threading
+        settings.
     """
 
     __ua_domain__ = "numpy.scipy.fft"
@@ -3701,8 +3717,8 @@ class PocketFFTBackend:
         args : tuple
             Positional arguments passed to the FFT function.
         kwargs : dict
-            Keyword arguments passed to the FFT function, including the optional
-            "workers" parameter for parallel execution.
+            Keyword arguments passed to the FFT function, including
+            the optional "workers" parameter for parallel execution.
 
         Returns
         -------
@@ -3791,11 +3807,3 @@ class IntensityCenter:
         
         ## Return the final center
         return(xc,yc)
-
-
-
-
-    
-
-    
-

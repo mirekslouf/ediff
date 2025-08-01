@@ -5,10 +5,9 @@ EDIFF :: processing powder electron diffraction patterns
 	- converts a 2D powder electron diffractogram to a 1D diffractogram (ELD)
 	- calculates a theoretical 1D powder X-ray diffractogram (XRD)
 	- compares the experimental ELD with the theoretically calculated XRD
-* If you use EDIFF in your research, **please cite** the OpenAccess paper:
-	- Materials 14 (2011) 7550.
-	  [https://doi.org/10.3390/ma14247550](https://doi.org/10.3390/ma14247550)
-	- The paper describes {stemdiff} package, {ediff} is a part of it.
+* If you use EDIFF in your research, **please cite** our recent paper:
+	- *Microscopy and Microanalysis* 31, 2025, ozaf045. <br>
+	  [https://doi.org/10.1093/mam/ozaf045](https://doi.org/10.1093/mam/ozaf045)
 
 
 Principle
@@ -57,7 +56,8 @@ Versions of EDIFF
 * Version 0.3 = {calibration} module + various updates + better ediff template
 * Version 0.4 = {center} module: better structure + better funcs + saving coords
 * Version 0.5 = consolidation of code and documentation - all stable and working
-* Version 1.0 = TODO: stable release with finalized documentation
+* Version 0.6 = finalization of {center} module
+* Version 1.0 = TODO: complete release with finalized documentation
 
 
 Acknowledgement
