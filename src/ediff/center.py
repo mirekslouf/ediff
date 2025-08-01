@@ -1490,7 +1490,7 @@ class CenterDetermination:
     
         # (5) Compute inversion symmetry using cross-correlation
         # Dynamically set the margin to a reasonable fraction of the image size
-        margin = np.floor(image.shape[0] // 4)
+        margin = int(np.floor(image.shape[0] // 4))
         im_i = image[margin:-margin, margin:-margin]  # Crop slightly
         
         template = im_i[::-1, ::-1]  # Inverted image for symmetry comparison
@@ -1792,7 +1792,10 @@ class CenterDetermination:
             plt.tight_layout()
 
             plt.show()
-            
+    
+        # Close live plot (to avoid non-closed windows in Jupyter)
+        plt.close("all")
+        
         # Final detected circle visualization (if requested)
         if plot_results:
             self.visualize_center(self.x, self.y, self.r)
