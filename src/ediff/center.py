@@ -33,9 +33,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.legend_handler import HandlerBase
 from math import floor
-from scipy.optimize import curve_fit, minimize
+from scipy.optimize import curve_fit
 from scipy.ndimage import map_coordinates
-from scipy.optimize import dual_annealing
 
 import ediff.io 
 import ediff.radial 
@@ -62,79 +61,106 @@ CPU_COUNT = os.cpu_count()
 
 class CenterLocator:
     '''
-    CenterLocator object - determine and refine a diffractogram center.
+    CenterLocator object : determine and refine the center of a 2D electron 
+    diffraction pattern (diffractogram)
+    
+    This class detects the center of diffraction patterns. It offers several 
+    automatic or manual methods and optionally refines the center position.
+
 
     Parameters
     ----------
-    input_image : str, path, or numpy.array
-        The input image representing a 2D diffraction pattern, either as a 
-        file path or a NumPy array.
-    determination : str or None, optional, default is None
-        The method used for the initial center determination.
+    input_image : str, path, or numpy.ndarray
+        The input 2D diffraction image, either a file path or a NumPy array.
+
+    determination : str or None, optional, default=None
+        Method used for the initial center determination.
         Options include:
-        - 'manual': Manual detection - user defines 3 points
-           on selected diffraction ring.
-        - 'hough': Auto-detection - Hough transform for circle detection.
-        - 'intensity': Auto-detection - intensity center in central region.
-        - 'phase': Auto-detection - phase correlation method to find
-           the center of symmetry.
-        - 'ccorr' : Auto-detection - cross-correlation method to find
-           the center of symmetry.  
-    refinement : str or None, optional, default is None
-        The method used for the final center refinement.
+        - 'manual'   : Manual selection of 3 points on a diffraction ring.
+        - 'hough'    : Automatic detection using Hough transform.
+        - 'intensity': Automatic detection based on the intensity center 
+                       of the central region.
+        - 'phase'    : Automatic detection using phase correlation to find 
+                       the symmetry center.
+        - 'ccorr'    : Automatic detection using cross-correlation to find 
+                       the symmetry center.
+        - 'curvefit' : Automatic detecting using pseudo-Voigt profile fitting                      
+
+    refinement : str or None, optional, default=None
+        Method used for refining the initially detected center.
         Options include:
-        - 'manual': Manual adjustment - user adjust the position
-           of the selected diffration ring.
-        - 'sum': Auto-refinement - find a diffraction ring with maximal sum 
-           of intensities.
-        - 'var': Auto-refinement - find a diffraction ring
-           with minimal variance of intensities.
-    in_file : str, optional, default is None
-        Filename of the text file for saving the center coordinates.
-    out_file : str, optional, default is None
-        Filename of the text file for loading the previously saved coordinates.
-    sobel : bool, optional, default is False
-        Flag to indicate whether to perform sobel-mask filtration on the input
-        image before center detection. 
-    heq : bool, optional, default is False
-        Flag to indicate whether to perform histogram equalization 
-        on the input image. The equalization is done internally, the image 
-        on the screen remains unchanged.
-    icut : float, optional, default is None
+        - 'manual': Manual fine-tuning of the center along the selected 
+                    diffraction ring.
+        - 'sum'   : Automatic refinement by maximizing the intensity sum along 
+        - 'var'   : Automatic refinement by minimizing intensity variance along 
+
+    rtype : int, default=0
+        Radius estimation method.
+        Options:
+        - 0 : Peak matching method.
+        - 1 : Radial distribution method.
+        
+    in_file : str or None, optional, default=None
+        Path to the file from which previously saved coordinates will be loaded.
+
+    out_file : str or None, optional, default=None
+        Path to the file where the determined coordinates will be saved.
+        
+    sobel : bool, optional, default=False
+        If True, apply Sobel filter to the image before processing.
+        
+    heq : bool or None, optional, default=False
+        If True, apply histogram equalization internally (display unchanged).
+
+    icut : float or None, optional, default=None
         Cut-off intensity level for processing the image.
-    cmap : str, optional, default is 'gray'
-        Colormap to be used for displaying the image. 
-    csquare : int, optional, default is 50
-        Size of the central square, within which we will search the center.
-    cintensity : float, optional, default is 0.8
+        
+    cmap : str, optional, default='gray'
+        Matplotlib colormap name used for displaying the image.
+        
+    csquare : int, optional, defaul=50
+        Size (in pixels) of the central square used for initial center search.
+        
+    cintensity : float, optional, default=0.8
         Threshold intensity for finding the intensity center. Pixels with a 
         (relative) intensity lower than cintensity are ignored.
-    messages : bool, optional, default is False
-        Flag to enable or disable informational messages during processing. 
-    print_sums : bool, optional, default is False
-        If True, prints the sum of intensity values for the refined circle 
-        after each adjustment, relevant only for manual methods of center 
-        determination and refinement.
-    final_print : bool, optional, default is True
-        If True, print determined and refined coordinates to stdout.
-    live_plot : bool, optional, default is True
-        If True, display process of Hough transform center detection
+        
+    messages : bool, optional, default=False
+        If True, print informational messages during the detection process.
+        
+    print_sums : bool, optional, default=False
+        If True, print intensity sums after each adjustment (in manual modes).
+        
+    final_print : bool, optional, default=True
+        If True, print final coordinates to stdout.
+    
+    live_plot : bool, optional, default=True
+        If True, show live visualization of some processes if available.
  
     Returns
     -------
     None
-        The center coordinates are stored in the instance variables
-        (x1,y1) for the determined center and
-        (x2,y2) for the refined center.
-        Look at the initial example at the top of this module
-        to see how to use CenterLocator class.
+        The result is stored in the instance variables:
+        - `(x1, y1)` for the initially determined center
+        - `(x2, y2)` for the refined center (if refinement is applied)
             
     Technical notes
     ---------------
-    * The class initializes (and runs) two sub-classes (= processes),
-      CenterDetermination and CenterRefinement.
-    * The two sub-classes/processes are hidden to common user,
-      even if they could be run separately.
+    * The class automatically initializes and uses two internal components:
+      `CenterDetermination` and `CenterRefinement`.
+    * These internal processes are hidden from the user but can be accessed 
+      directly if needed.
+
+    Examples
+    --------
+    >>> import ediff as ed
+    >>>
+    >>> locator = ed.center.CenterLocator(
+    >>>    input_image   = '.r/path/to/your/data.png',   
+    >>>    determination = 'manual',           
+    >>>    refinement    = 'sum',
+    >>>    final_print   = True)   
+                              
     '''
     
     
@@ -164,13 +190,13 @@ class CenterLocator:
         # The parameters are described above in class definition.
         ######################################################################
 
-        ## Initialize input attributes
+        ## Initialize input attributes ---------------------------------------
         
         # Input image = diffraction pattern
-        # (it can be either image file or numpy array
+        # (it can be either image file or numpy array)
         self.input_image = input_image
         
-        # Methods of center determination and center refinement
+        # Methods of center determination, refinement, and radius estimation
         self.determination = determination
         self.refinement = refinement
         self.rtype = rtype
@@ -202,8 +228,7 @@ class CenterLocator:
         self.final_print = final_print
         self.live_plot = live_plot
         
-        ## (0) Initialize new attributes
-        
+        ## Initialize new attributes ------------------------------------------
         self.to_refine = []
         self.dText = []
         self.rText = []
@@ -211,32 +236,28 @@ class CenterLocator:
         # The value of the following attribute can be adjusted
         self.marker_size = 100          
 
-        ## (1) Read input image
-
+        ## (1) Read input image -----------------------------------------------
         # The input image can be numpy.array (ndarray) or image file (path/str)
         if isinstance(input_image, np.ndarray):
             self.image = input_image
         else:
             self.image = ediff.io.read_image(self.input_image)
         
-        ## (2) Correcte ellipse
+        ## (2) Correct ellipse ------------------------------------------------
         if self.ellipse:
             self.image = self.ellipse_distortion(self.image, show=True,
                                                  method=self.mcorrect)
         
-        ## (3) Read center coordinates
-        
-        # * The center coordinates may have been determined
-        #   in a previous run of the program and saved to a text file.
-        # * We can Load coordinates from an input file if specified,
-        #   this is done by the following command.
-        # * As the saved coordinates can be used INSTEAD of CenterDetermination
-        #   we will read them here.
+        ## (3) Read center coordinates ----------------------------------------
+        # The center coordinates may have been determined in a previous run 
+        # of the program and saved to a text file.
+        # We can Load coordinates from an input file if specified, this is done 
+        # by the following command. As the saved coordinates can be used INSTEAD 
+        # of CenterDetermination we will read them here.
         if self.in_file is not None: self.load_results()  
         
-        ## (4) Run CenterDetermination
-        
-        # (4a) Initialize/run CenterDetermination
+        ## (4) Run CenterDetermination ----------------------------------------
+        #  (4a) Initialize/run CenterDetermination
         self.center1 = CenterDetermination(self,
                 self.input_image,
                 self.determination,
@@ -248,8 +269,8 @@ class CenterLocator:
                 self.messages,
                 self.print_sums)
         
-        # (4b) Find radius of a circle/diffraction ring,
-        #      which is needed for the next step = CenterRefimenement.
+        #  (4b) Find radius of a circle/diffraction ring, which is needed 
+        #       for the next step = CenterRefimenement.
         if self.determination != "manual":
             self.center1.r = self.center1.get_radius(
                 self.rtype,
@@ -258,7 +279,7 @@ class CenterLocator:
                 self.center1.y, 
                 disp=False)
 
-        ## (5) Initialize/run CenterRefinement
+        ## (5) Initialize/run CenterRefinement --------------------------------
         self.center2 = CenterRefinement(self,
             self.input_image, 
             self.refinement,
@@ -270,21 +291,27 @@ class CenterLocator:
             self.messages,
             self.print_sums)
         
-        ## (6) Collect results from CenterDetermination + CenterRefinement
+        ## (6) Collect results ------------------------------------------------
         self.x1 = self.center1.x
         self.y1 = self.center1.y
         
+        # Center only detected and not refined
         if self.refinement is not None:
             self.x2 = self.center2.xx
             self.y2 = self.center2.yy
         else: 
+            # Center detected and refined
             self.x2 = self.center1.x
             self.y2 = self.center1.y
             self.center2.xx = self.center1.x
             self.center2.yy = self.center1.y
             self.center2.rr = self.center1.r
         
-        ## (7) Switch coordinates if necessary
+        ## (7) Switch coordinates if necessary --------------------------------
+        #      This step is important, as center detection/refinement methods
+        #      have various coordinate system origins. The conversion is 
+        #      necessary for some combinations of methods
+        
         if (self.determination == "intensity"):
             self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
@@ -301,7 +328,7 @@ class CenterLocator:
         if (self.determination == "curvefit" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
                             
-        ## (8) Print the coordinates if required
+        ## (8) Print the coordinates if required ------------------------------
         if self.final_print:
             self.dText=str(self.dText)
             self.rText=str(self.rText)
@@ -312,7 +339,7 @@ class CenterLocator:
             if self.refinement is not None:
                 print(self.rText.format(float(self.x2),float(self.y2)))
                         
-        ## (9) Save results to a .txt file if specified
+        ## (9) Save results to a .txt file if specified -----------------------
         if out_file is not None:
             self.save_results()
 
@@ -324,30 +351,39 @@ class CenterLocator:
         Returns
         -------
         x1 : float
-            x-coordinate of the center from *determination* method
-        y1 : float
-            y-coordinate of the center from *determination* method
-        x2 : float
-            x-coordinate of the center from *refinement* method
-        y2 : float
-            y-coordinate of the center from *refinement* method
+            x-coordinate of the center determined by the *determination* method.
             
-        Technical note
-        --------------
-        * The function always returns four parameters.
-        * In most cases, the output are four coordinates (x1,y1,x2,y2).
-        * If the *refinement* method was None, the output is (x1,y1,x1,y1);
-          i.e. the *determined* and *refined* center coordinates are the same.
+        y1 : float
+            y-coordinate of the center determined by the *determination* method.
+        
+        x2 : float
+            x-coordinate of the center after *refinement*, or same as x1 if no 
+            refinement was used.
+        
+        y2 : float
+            y-coordinate of the center after *refinement*, or same as y1 if no 
+            refinement was used.
+
+            
+        Notes
+        -----
+        - The function always returns four values: (x1, y1, x2, y2).
+        - If no refinement method was used (`refinement=None`), then (x2, y2) 
+          will be equal to (x1, y1).
+        - All values are rounded to one decimal place before returning.
+        - Coordinates are internally converted to float to ensure consistency 
+          in output.
         """
         
-        # (1) Refinement method was not None => prepare (x1,y1,x2,y2)
+        # (1) refinement=None -------------------------------------------------
         if self.center2.ret == 1:
             # Convert to float
             if type(self.x1) != float:
                 self.x1, self.y1, self.x2, self.y2 = \
                     [float(value) for value in (self.x1, self.y1, 
                                                 self.x2, self.y2)]
-        # (2) Refinement method was None => prepare (x1,y1) = (x2,y2)                      
+                    
+        # (2) refinement!=None ------------------------------------------------
         else:
             # Convert to float
             if type(self.x1) != float:
@@ -357,24 +393,22 @@ class CenterLocator:
             self.x2 = self.x1
             self.y2 = self.y1
             
-        # (3) Return (rounded) values of center coordinates
+        # (3) Return (rounded) values of center coordinates -------------------
         return (np.round(self.x1,1), np.round(self.y1,1), 
                 np.round(self.x2,1), np.round(self.y2,1))  
 
     
     def save_results(self):
         '''
-        Save the current results to a specified file. The results are formatted 
-        to four decimal places for clarity.
-
-        
-        This method checks if a file path has been provided through 
-        the `in_file` attribute. 
-        
-        - If the specified file exists, the method appends the results 
-        (x1, y1, x2, y2) to the end of the file. 
-        - If the file does not exist, it creates a new file and writes 
-        the results to it.
+        Save the determined and refined center coordinates to a file.
+    
+        This method writes the coordinates (x1, y1) from the *determination*
+        step and (x2, y2) from the *refinement* step to a file specified by the 
+        `out_file` attribute.
+    
+        - If the file already exists, the results are appended to the end.
+        - If the file does not exist, it is created and the results are written.
+        - Coordinates are formatted to four decimal places for clarity.
         
         
         Parameters
@@ -387,9 +421,12 @@ class CenterLocator:
         
         Notes
         -----
+        - If `self.out_file` is None, the method does nothing.
         - The results are written in the format:
             x1: <value>, y1: <value>
             x2: <value>, y2: <value>
+        - This method does not raise an error if the path is invalid;
+          ensure `out_file` is a valid writable path.
         '''
         
         if self.out_file is not None:
@@ -407,32 +444,41 @@ class CenterLocator:
 
 
     def load_results(self, path=None):
-        '''
-        Load results from a specified text file.
+        """
+        Load center coordinates from a results file.
     
-        This method reads the coordinates from a text file defined by the 
-        `out_file` attribute. It extracts pairs of coordinates (x1, y1) and 
-        (x2, y2) from each line in the file. The extracted values are stored in 
-        lists, allowing for the retrieval of multiple results.The most recent 
-        values of x1, y1, x2, and y2 can be stored as instance variables
-        for easy access.
+        This method reads a text file (defaulting to `self.in_file` or
+        a provided `path`) containing previously saved center coordinates.
+        It extracts coordinate pairs (x1, y1) from the determination step and
+        (x2, y2) from the refinement step. All sets of values are stored
+        internally, with the most recent values assigned to instance variables 
+        `self.x1`, `self.y1`, `self.x2`, and `self.y2`.
     
         Parameters
         ----------
-        None
+        path : str, optional
+            Path to the results file. 
+            If not provided, the method uses `self.in_file`.
     
         Returns
         -------
-        None
+        tuple or None
+            If `path` is provided and successfully loaded:
+                (x1_values, y1_values) : Lists of all loaded x1 and y1 values.
+            If loading fails:
+                None
     
         Notes
         -----
-        - The results are expected to be in the format:
+        - The file is expected to contain lines in the following format:
             x1: <value>, y1: <value>
             x2: <value>, y2: <value>
-        - If multiple sets of coordinates are found, they are stored in lists,
-        and only the last set can be accessed as instance variables.
-        '''        
+        - Multiple coordinate entries can be loaded; the last set is stored in
+          the instance variables for easy access.
+        - If the file doesn't exist or is unreadable, a warning is printed and
+          the function returns None.
+        """      
+        
         if path is not None:
             self.in_file = path
             
@@ -483,21 +529,82 @@ class CenterLocator:
 
 
     def get_circle_pixels(self, image, cx, cy, r, num_points=360):
-        """Helper to get interpolated pixel values along a circle's circumference."""
+        """
+        Extract pixel values along a circular path in the image.
+    
+        Parameters
+        ----------
+        image : np.ndarray
+            2D grayscale image from which pixel values are extracted.
+            
+        cx : float
+            X-coordinate (row) of the circle center.
+        
+        cy : float
+            Y-coordinate (column) of the circle center.
+        
+        r : float
+            Radius of the circle.
+        
+        num_points : int, optional
+            Number of points to sample along the circular path. Default is 360.
+    
+        Returns
+        -------
+        pixels : np.ndarray
+            1D array of pixel intensity values sampled along the circular path.
+        """
         points = np.linspace(0, 2 * np.pi, num_points)
+        
         # Generate coordinates for the circle
         x = cx + r * np.cos(points)
         y = cy + r * np.sin(points)
+        
         # Use map_coordinates for accurate sub-pixel interpolation
         coords = np.vstack((y, x))
+        
         # 'order=1' is linear interpolation
-        pixels = map_coordinates(image, coords, order=1, mode='constant', cval=0.0)
+        pixels = map_coordinates(image, 
+                                 coords, 
+                                 order=1, 
+                                 mode='constant', 
+                                 cval=0.0)
+        
+        # Return pixels
         return pixels
      
      
     def intensity_sum(self, im, cx, cy, r):
-        """Original function."""
+        """
+        Compute the sum of pixel intensities along a circular path.
+    
+        This function extracts pixel values along a circle defined by the 
+        given center coordinates (cx, cy) and radius r, then returns 
+        the sum of these intensities.
+    
+        Parameters
+        ----------
+        im : np.ndarray
+            2D grayscale image from which the intensities are extracted.
+        
+        cx : float
+            X-coordinate (row) of the circle center.
+        
+        cy : float
+            Y-coordinate (column) of the circle center.
+        
+        r : float
+            Radius of the circle.
+    
+        Returns
+        -------
+        float
+            Sum of pixel intensities along the circular path.
+        """
+        # Get pixel intensities
         pixels = self.get_circle_pixels(im, cx, cy, r)
+        
+        # Sum pixel intensities
         return np.sum(pixels)
     
     
@@ -509,10 +616,13 @@ class CenterLocator:
         ----------
         image : array of uint8
             image from which the diffraction pattern has been detected.
+        
         px : float64
             x-coordinate of the center of the diffraction pattern.
+        
         py : float64
             y-coordinate of the center of the diffraction pattern.
+        
         pr : float64
             radius of the diffraction pattern.
 
@@ -540,6 +650,7 @@ class CenterLocator:
         ----------
         x : int or float
             The x-coordinate in the numpy (column index) format.
+        
         y : int or float
             The y-coordinate in the numpy (row index) format.
     
@@ -564,9 +675,11 @@ class CenterLocator:
             If csquare argument is given,
             only the central square of the diffractogram will be plotted;
             the size of the central square will be equal to csquare argument.
+        
         out_file : str, optional, default is None
             If out_file is given,
             save the final plot to image named *out_file*.
+        
         out_dpi : int, optional, default is 300
             DPI of the output image file;
             this parameter is relevant only if out_file is given.
@@ -578,21 +691,21 @@ class CenterLocator:
             showing also the central coordinates and refinement ring.
         '''
         
-        # (0) Collect center coordinates and radii
+        # (0) Collect center coordinates and radii ----------------------------
         x1, y1 = (self.x1, self.y1)
         r1 = self.center1.r
 
         x2, y2 = (self.x2, self.y2)
         r2 = self.center2.rr
 
-        # (1) Prepare the image of the diffractogram
+        # (1) Prepare the image of the diffractogram --------------------------
         image = np.copy(self.to_refine)
         if self.icut is not None:
             im = np.where(image > self.icut, self.icut, image)
         else:
             im = np.copy(image)
             
-        # (2) Calculate intensity sum or intensity variance
+        # (2) Calculate intensity sum or intensity variance -------------------
         if self.refinement == "var":
             dvar = self.intensity_variance(image, x1, y1, r1)
             rvar = self.intensity_variance(image, x2, y2, r2)
@@ -604,7 +717,7 @@ class CenterLocator:
             labeld = f'd-center: [{x1:.1f}, {y1:.1f}]\nint-sum: {dsum:.1f}'
             labelr = f'r-center: [{x2:.1f}, {y2:.1f}]\nint-sum: {rsum:.1f}'
             
-        # (3) Calculate xy-limits if we want to see only the central square
+        # (3) Calculate xy-limits if we want to see only the central square ---
         if csquare is not None:
             xmin, xmax = (0, image.shape[0])
             ymin, ymax = (0, image.shape[1])
@@ -614,7 +727,7 @@ class CenterLocator:
             ymin += edge
             ymax -= edge
     
-        # (4) Final plot: show the diffractogram + refinement results
+        # (4) Final plot: show the diffractogram + refinement results ---------
         fig, ax = plt.subplots(layout='constrained')
         ax.imshow(im, cmap=self.cmap)
     
@@ -674,9 +787,11 @@ class CenterLocator:
         img : np.ndarray
             Input image (2D numpy array) containing an elliptical diffraction 
             pattern.
+        
         show : bool, optional
             If True, displays the original and corrected images. 
             Default is True.
+        
         method : str, optional
             Point selection method: 'manual' or 'auto'.
             - 'manual': User clicks four points on the image.
@@ -688,11 +803,43 @@ class CenterLocator:
         corrected : np.ndarray
             The distortion-corrected image.
         """
-        
-    
+        # Helper function
         def refine_to_local_max(img, pt, window=9):
             """
-            Refines a point to the brightest pixel in a local window.
+            Refine a point to the local maximum intensity within a neighborhood.
+        
+            This function searches for the brightest (maximum intensity) pixel
+            within a square window centered around a given point. It is typi-
+            cally used to improve the accuracy of an estimated center by snap-
+            ping it to the nearest local maximum.
+        
+            Parameters
+            ----------
+            img : ndarray
+                2D array (grayscale) in which the local maximum is to be found.
+                
+            pt : array-like of float
+                Initial (x, y) point coordinates around which the local maximum 
+                is searched.
+                
+            window : int, optional
+                Size of the square window for the local search (default is 9).
+                The actual window will be `window x window` pixels, 
+                centered at `pt`.
+        
+            Returns
+            -------
+            refined_pt : ndarray of float
+                Refined point coordinates [x, y] corresponding to the brightest 
+                pixel in the local window.
+        
+            Notes
+            -----
+            - If the window overlaps the image boundaries, it is clipped 
+              appropriately.
+            - If the window is completely outside the image, the original point 
+              is returned.
+            - Assumption : `img` uses (row, column) = (y, x) indexing.
             """
             x, y = int(round(pt[0])), int(round(pt[1]))
             r = window // 2
@@ -707,7 +854,8 @@ class CenterLocator:
             refined_x = x_min + dx
             refined_y = y_min + dy
             return np.array([refined_x, refined_y], dtype=np.float32)
-    
+        
+        # Elliptical correction workflow --------------------------------------
         h, w = img.shape
     
         if method != "manual":
@@ -795,45 +943,56 @@ class CenterDetermination:
     parent : CenterLocator
         Reference to the parent CenterLocator object, allowing access 
         to shared attributes and methods.
+        
     input_image : str, path, or numpy.array
         The input image representing a 2D diffraction pattern, provided as 
         a file path or a NumPy array.
-    determination : str or None, optional, default is None
-        The method used for the initial center determination.
+        
+    determination : str or None, optional, default=None
+        Method used for the initial center determination.
         Options include:
-        - 'manual': Manual detection - user defines 3 points
-           on selected diffraction ring.
-        - 'hough': Auto-detection - Hough transform for circle detection.
-        - 'intensity': Auto-detection - intensity center in central region.
-        - 'phase': Auto-detection - phase correlation method to find
-           the center of symmetry.
-        - 'ccorr' : Auto-detection - cross correlation method to find 
-           the center of symmetry  
-    in_file : str, optional
-        Filename of the text file from which to load previously saved 
-        center coordinates.
-    out_file : str, optional
-        Filename of the text file to which the detected center coordinates 
-        will be saved.
-    heq : bool, optional
-        Flag to indicate whether to perform histogram equalization on the 
-        input image. Default is False.
-    icut : float, optional
-        Cut-off intensity level for processing the image. Default is None.
-    cmap : str, optional
-        Colormap to be used for displaying the image. Default is 'gray'.
-    csquare : int, optional
-        Size of the square for processing. Default is 50.
-    cintensity : float, optional
-        Threshold intensity for detecting features in the image. Default is
-        0.8.
-    messages : bool, optional
-        Flag to enable or disable informational messages during processing. 
-        Default is False.
-    print_sums : bool, optional
-        If True, prints the sum of intensity values for the detected circle
-        after each adjustment, relevant only for manual detection methods.
-
+        - 'manual'   : Manual selection of 3 points on a diffraction ring.
+        - 'hough'    : Automatic detection using Hough transform.
+        - 'intensity': Automatic detection based on the intensity center 
+                       of the central region.
+        - 'phase'    : Automatic detection using phase correlation to find 
+                       the symmetry center.
+        - 'ccorr'    : Automatic detection using cross-correlation to find 
+                       the symmetry center.
+        - 'curvefit' : Automatic detecting using pseudo-Voigt profile fitting 
+        
+    in_file : str or None, optional, default=None
+        Path to the file from which previously saved coordinates will be loaded.
+    
+    out_file : str or None, optional, default=None
+        Path to the file where the determined coordinates will be saved.
+        
+    sobel : bool, optional, default=False
+        If True, apply Sobel filter to the image before processing.
+        
+    heq : bool or None, optional, default=False
+        If True, apply histogram equalization internally (display unchanged).
+    
+    icut : float or None, optional, default=None
+        Cut-off intensity level for processing the image.
+        
+    cmap : str, optional, default='gray'
+        Matplotlib colormap name used for displaying the image.
+        
+    csquare : int, optional, defaul=50
+        Size (in pixels) of the central square used for initial center search.
+        
+    cintensity : float, optional, default=0.8
+        Threshold intensity for finding the intensity center. Pixels with a 
+        (relative) intensity lower than cintensity are ignored.
+        
+    messages : bool, optional, default=False
+        If True, print informational messages during the detection process.
+        
+    print_sums : bool, optional, default=False
+        If True, print intensity sums after each adjustment (in manual modes).
+        
+    
 
     Returns
     -------
@@ -868,17 +1027,17 @@ class CenterDetermination:
         # The parameters are described above in class definition.
         ######################################################################
         
-        ## (0) Initialize input attributes
+        ## (0) Initialize input attributes -----------------------------------
         self.parent = parent
         
-        ## (1) Initialize new attributes
-        self.step=0.5
+        ## (1) Initialize new attributes -------------------------------------
+        self.step=0.5 
         
-        ## (2) Run functions
-        # (2a) Preprocess data
+        ## (2) Run functions -------------------------------------------------
+        #  (2a) Preprocess data
         self.preprocess(preInit=1)
         
-        # (2b) Center detection methods
+        #  (2b) Center detection methods
         if determination.lower() == "manual":
             self.x, self.y, self.r = self.detection_3points()
             
@@ -911,32 +1070,42 @@ class CenterDetermination:
             sys.exit()
 
 
-    def preprocess(self,preInit=0,preHough=0,preManual=0,
-                   preVar=0,preSum=0,preInt=0):  
-        """ FOR AUTOMATIC METHODS OPTIMIZATION AND MORE UNIVERSAL SOLUTIONS
-        Function for input image preprocessing based on the methods 
-        defined in the class initialization - self.detection_method, 
-        self.correction_method.
-
+    def preprocess(self, preInit=0, preHough=0, preManual=0,
+                   preVar=0, preSum=0, preInt=0):  
+        """
+        Preprocess the input image based on the selected automatic detection 
+        and refinement methods.
+    
         Parameters
         ----------
-        preInit : bool, optional
-            Perform preprocessing of the input image (when using icut or heq). 
-            This is called automatically every time, if no preprocessing
-            specified, the detection and refinement will be performed on 
-            original image. The default is 0.
-        preHough : bool, optional
-            Perform preprocessing for automatic detection via Hough transform. 
-            
-
+        preInit : bool, optional, default=0
+            Preprocess the original image using initialization methods such as
+            histogram equalization (heq) or contrast clipping (icut). This
+            is used to enhance the input image prior to any detection or
+            correction.
+        
+        preHough : bool, optional, default=0
+            Perform preprocessing required for Hough transform-based automatic 
+            detection. This includes edge detection and handling beamstoppers. 
+    
+        preManual, preVar, preSum, preInt : bool, optional, default=0
+            Placeholder flags for future preprocessing needs for manual 
+            detection and different refinement methods (variance, sum, 
+            intensity-based). Currently unused.
+    
         Returns
         -------
-        manu : NumPy array
-            Pre-processed image for the manual detection method
-        edges : array of bool
-            Detected edges via Canny detector for automatic Hough transform
+        edges : np.ndarray of bool, optional
+            Edge map obtained using the Canny edge detector, required for Hough
+            transform. Only returned if `preHough` is True.
+    
+        Notes
+        -----
+        This function performs different preprocessing steps depending on the
+        detection/refinement strategy selected. It is modular and supports
+        optional display of intermediate results if `self.parent.messages` is True.
         """
-        
+    
         # Flags
         control_print = 1
         
@@ -953,16 +1122,6 @@ class CenterDetermination:
                 if self.parent.messages:
                     print("Histogram equalized.")
                 image = sk.exposure.equalize_adapthist(image)
-
-                
-            # # Edit contrast with a user-predefined parameter
-            # if self.parent.icut is not None:
-            #     if self.parent.messages:
-            #         print("Contrast enhanced.")
-            #     image = np.where(image > self.parent.icut, 
-            #                      self.parent.icut, 
-            #                      image)
-                
 
             self.parent.to_refine = image
             return
@@ -1174,36 +1333,45 @@ class CenterDetermination:
     def detection_phase(self, normalize_bg=True, sobel=False, 
                         disp=False, masking=True):
         """
-        Detects the center of symmetry in a diffraction image using 
-        a combination of weighted intensity averaging
-        and phase cross-correlation.
+        Detects the center of symmetry in a diffraction image using a 
+        combination of weighted intensity averaging and phase cross-correlation.
     
-        This method follows these steps:
-        (1) Finds an initial center estimate using the weighted average 
-            of pixel intensities.
-        (2) Crops the image to focus on the central region.
-        (3) Optionally normalizes the background intensity to reduce 
-            experimental artifacts.
-        (4) Computes the refined center by analyzing inversion symmetry 
-            via phase cross-correlation.
-        (5) Returns the corrected center coordinates.
+        This method performs the following steps:
+            1. Estimates an initial center using a weighted average of pixel 
+               intensities.
+            2. Crops the image to focus on its central region.
+            3. Optionally normalizes the background to mitigate experimental 
+               artifacts.
+            4. Computes a refined center via inversion symmetry and phase 
+               cross-correlation.
+            5. Returns the final refined center coordinates.
     
         Parameters
         ----------
-        normalize_bg : bool, optional
-            If True, the function normalizes the background intensity
-            to account for illumination variations. Default is True.
+        normalize_bg : bool, optional, default=True
+            If True, normalize background intensity to reduce artifacts.
+            
+        sobel : bool, optional, default=False
+            If True, applies Sobel filtering (currently unused if not implemented)
+            
+        disp : bool, optional, default=False
+            If True, displays intermediate processing results. 
+            
+        masking : bool, optional, default=True
+            If True, applies masking to exclude unwanted regions from analysis
     
         Returns
         -------
         r_final : float
-            The estimated row-coordinate of the image center after refinement.
+            Estimated row-coordinate of the image center after refinement.
+            
         c_final : float
-            The estimated column-coordinate of the image center after refinement.
+            Estimated column-coordinate of the image center after refinement.
+            
         None : NoneType
             Placeholder for future functionality (e.g., radius estimation).
         """
-        # (1) Get image 
+        # (1) Get image  ------------------------------------------------------
         image = np.copy(self.parent.to_refine)
         
         # if Sobel==True, perform Sobel filtration
@@ -1215,8 +1383,7 @@ class CenterDetermination:
         # shift the pixel values (smallest value is zero -> non-negative image)
         image -= image.min()
 
-        
-        # (2) Prepare mask and compute weighted center 
+        # (2) Prepare mask and compute weighted center ------------------------
         if masking:
             mask = self.auto_masking(image) 
             # print("masked")
@@ -1231,7 +1398,7 @@ class CenterDetermination:
         r_ = int(np.average(rr.flatten(), weights=weights.flatten()))
         c_ = int(np.average(cc.flatten(), weights=weights.flatten()))
 
-        # (3) Crop the image around the estimated center
+        # (3) Crop the image around the estimated center ----------------------
         # Some diffraction patterns are not centered, and so there's a lot of 
         # image area that cannot be used for registration.
         # Radial inversion becomes simple inversion of dimensions
@@ -1242,7 +1409,7 @@ class CenterDetermination:
         image = image[rs, cs]
         mask = mask[rs, cs]
     
-        # (4) Normalize background intensity (optional)
+        # (4) Normalize background intensity (optional) -----------------------
         # This step removes intensity variations due to experimental artifacts, 
         # such as uneven illumination.
         if normalize_bg:
@@ -1256,7 +1423,7 @@ class CenterDetermination:
         image = np.nan_to_num(image, copy=False)
 
 
-        # (5) Compute inversion symmetry using Fourier methods
+        # (5) Compute inversion symmetry using Fourier methods ----------------
         # an inverted copy of the image (im_i) and mask (mask_i), 
         # flipping both horizontally and vertically ::-1
         im_i = image[::-1, ::-1]
@@ -1282,7 +1449,7 @@ class CenterDetermination:
         correction = shift * downsampling
 
 
-        # (6) User information (if required)
+        # (6) User information (if required) ----------------------------------
         if (self.parent.messages or self.parent.final_print):
             self.parent.dText = \
                 "Center Determination (PhaseCorrCenter): ({:.3f}, {:.3f})"
@@ -1300,43 +1467,41 @@ class CenterDetermination:
 
     def detection_crosscorr(self, normalize_bg=True, sobel=False, disp=False):
         """
-        Detects the center of symmetry in a diffraction image using 
-        a combination of weighted intensity averaging and cross-correlation.
+        Detects the center of symmetry in a diffraction image using a 
+        combination of weighted intensity averaging and cross-correlation.
     
-        This method follows these steps:
-        (1) Finds an initial center estimate using the weighted average 
-            of pixel intensities.
-        (2) Crops the image to focus on the central region.
-        (3) Optionally normalizes the background intensity to reduce 
-            experimental artifacts.
-        (4) Computes the refined center by analyzing inversion symmetry 
-            using cross-correlation.
-        (5) Returns the corrected center coordinates.
+        This method performs the following steps:
+            1. Estimates an initial center using the weighted average of pixel
+               intensities.
+            2. Crops the image to focus on its central region.
+            3. Optionally normalizes the background to reduce experimental
+               artifacts.
+            4. Computes a refined center by analyzing inversion symmetry 
+               using cross-correlation.
+            5. Returns the final corrected center coordinates.
     
         Parameters
         ----------
-        normalize_bg : bool, optional
-            If True, the function normalizes the background intensity
-            to account for illumination variations. Default is True.
-        sobel : bool, optional
-            If True, applies Sobel filtering to enhance edge detection before 
-            processing. Default is False.
-        disp : bool, optional
-            If True, displays intermediate processing steps for debugging. 
-            Default is False.
+        normalize_bg : bool, optional, default=True
+            If True, normalizes the background intensity to reduce illumination 
+            artifacts. 
+            
+        sobel : bool, optional, default=False
+            If True, applies Sobel filtering to enhance edges prior to processing. 
+            
+        disp : bool, optional, default=False
+            If True, displays intermediate processing results.
     
         Returns
         -------
         r_final : float
-            The estimated row-coordinate of the image center after refinement.
+            Estimated row-coordinate of the image center after refinement.
+            
         c_final : float
-            The estimated column-coordinate of the image center
-            after refinement.
-        None : NoneType
-            Placeholder for future functionality (e.g., radius estimation).
+            Estimated column-coordinate of the image center after refinement.
         """
-        
-        # (1) Get image 
+       
+        # (1) Get image -------------------------------------------------------
         image = np.copy(self.parent.to_refine)
         
         # Apply Sobel filter if requested
@@ -1347,7 +1512,7 @@ class CenterDetermination:
         image -= image.min()
      
     
-        # (4) Normalize background intensity (optional)
+        # (2) Normalize background intensity (optional) -----------------------
         if normalize_bg:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -1359,7 +1524,7 @@ class CenterDetermination:
         # Replace NaN values with 0s
         image = np.nan_to_num(image, copy=False)
     
-        # (5) Compute inversion symmetry using cross-correlation
+        # (3) Compute inversion symmetry using cross-correlation --------------
         # Dynamically set the margin to a reasonable fraction of the image size
         margin = int(np.floor(image.shape[0] // 4))
         im_i = image[margin:-margin, margin:-margin]  # Crop slightly
@@ -1377,8 +1542,6 @@ class CenterDetermination:
         # score at a particular location. Higher values indicate
         # better symmetry at that position.
         
-
-        
         # Ensure template is smaller than image
         assert template.shape[0] <= image.shape[0] \
             and template.shape[1] <= image.shape[1], \
@@ -1392,24 +1555,20 @@ class CenterDetermination:
         max_location = np.unravel_index(np.argmax(result), result.shape) 
         correction_r, correction_c = max_location  
         
-        if disp:
-            
+        if disp: 
             plt.figure()
             plt.imshow(result, cmap="inferno")
             plt.title("Correlation matrix")
             plt.show()
-                   
-            # plt.scatter(correction_c, correction_r, 
-            #             color="white", marker="x", s=100, linewidths=2,
-            #             label="highest correlation coefficient")
             plt.axis("off")
             plt.tight_layout()
             plt.show()
         
-       # Adjust to original image coordinates (account for template cropping)
+        # Adjust to original image coordinates (account for template cropping)
         corrected_r = correction_r + template.shape[0] // 2
         corrected_c = correction_c + template.shape[1] // 2
         
+        # (4) Visualization ---------------------------------------------------
         # Plot with correct alignment
         if disp:
             
@@ -1441,12 +1600,11 @@ class CenterDetermination:
             
             plt.show()
         
-        # (6) User information (if required)
+        # (5) User information (if required) ----------------------------------
         if self.parent.messages or self.parent.final_print:
             self.parent.dText = \
                 "Center Determination (CrossCorrCenter): ({:.3f}, {:.3f})"
 
-                
         return float(corrected_r), float(corrected_c), None
 
     
@@ -1459,6 +1617,7 @@ class CenterDetermination:
         ----------
         arr : 2D-numpy array
             The array, whose intensity center will be determined.
+            
         csquare : int, optional, default is 20
             The size/edge of the square in the (geometrical) center.
             The intensity center will be searched only within the central
@@ -1466,6 +1625,7 @@ class CenterDetermination:
             Reasons: To avoid other spots/diffractions and
             to minimize the effect of possible intensity assymetry
             around the center. 
+            
         cintensity : float, optional, default is 0.8
             The intensity fraction.
             When searching the intensity center, we will consider only
@@ -1473,12 +1633,12 @@ class CenterDetermination:
             
         Returns
         -------
-        xc,yc : float,float
+        xc, yc : float,float
             XY-coordinates of the intensity/mass center of the array.
             Round XY-coordinates if you use them for image/array calculations.
         '''  
         
-        # (1) Get image/array size
+        # (1) Get image/array size --------------------------------------------
         image = np.copy(self.parent.to_refine)
         
         if sobel:
@@ -1487,19 +1647,19 @@ class CenterDetermination:
         arr = np.copy(image)
         xsize,ysize = arr.shape
         
-        # (2) Calculate borders around the central square
+        # (2) Calculate borders around the central square ---------------------
         xborder = (xsize - csquare) // 2
         yborder = (ysize - csquare) // 2
         
-        # (3) Create the central square,
+        # (3) Create the central square, --------------------------------------
         # from which the intensity center will be detected
         arr2 = arr[xborder:-xborder,yborder:-yborder].copy()
         
-        # (4) In the central square,
+        # (4) In the central square, ------------------------------------------
         # set all values below cintenstity to zero
         arr2 = np.where(arr2>np.max(arr2)*cintensity, arr2, 0)
         
-        # (5) Determine the intensity center from image moments
+        # (5) Determine the intensity center from image moments ---------------
         # see image moments in...
         # skimage: https://scikit-image.org/docs/dev/api/skimage.measure.html
         # wikipedia: https://en.wikipedia.org/wiki/Image_moment -> Centroid
@@ -1511,23 +1671,28 @@ class CenterDetermination:
         # (c) We have centroid of the central square
         # but we have to recalculate it to the whole image
         (self.x, self.y) = (self.x + xborder, self.y + yborder)
-        # (d) Radius of a diffraction ring is hardcoded to 100 here
-        self.r = 100
+        # (d) Radius of a diffraction ring 
+        self.r = self.get_radius(
+            self.parent.rtype, 
+            image, 
+            self.x, 
+            self.y,
+            disp=False)
         
-        # (6) User information (if required)
+        # (6) User information (if required) ----------------------------------
         if (self.parent.messages or self.parent.final_print):
-            self.parent.dText = "Center Determination (IntensityCenter): ({:.3f}, {:.3f})"
+            self.parent.dText =\
+                "Center Determination (IntensityCenter): ({:.3f}, {:.3f})"
 
-
-        # (7) Plot results (if required)
+        # (7) Plot results (if required) --------------------------------------
         if plot_results == 1:
            self.visualize_center(self.x, self.y, self.r) 
                 
-        # (8) Return the results:
-        # a) XY-coordinates of the center
-        # b) radius of the circle/diff.ring,
-        #    from which the center was determined
-        # ! radius of the circle is just hardcoded here - see TODO note above
+        # (8) Return the results: ---------------------------------------------
+        #  a) XY-coordinates of the center
+        #  b) radius of the circle/diff.ring,
+        #     from which the center was determined
+
         return(self.x, self.y, self.r)
     
 
@@ -1542,7 +1707,12 @@ class CenterDetermination:
         ----------
         plot_results : int, binary
             If 1, shows the final detected circle.
-        live_plot : bool, optional
+        
+        sobel : bool, optional, default=False
+            If True, applies Sobel filtering to enhance edges prior to processing. 
+            
+        sobel            
+        live_plot : bool, optional, default=False
             If True, animates the circle detection process and shows all 
             detected circles.
     
@@ -1550,17 +1720,17 @@ class CenterDetermination:
         -------
         self.x : float64
             x-coordinate of the detected center.
+            
         self.y : float64
             y-coordinate of the detected center.
+            
         self.r : float64
             Radius of the detected circle.
         '''
         
-        ## Image preprocessing
+        ## (0) Image preprocessing --------------------------------------------
         im = np.copy(self.parent.to_refine)
-        
-
-            
+                    
         if self.parent.heq == 0:
             if np.sum(im) < 150000:
                 im[im > 50] = 0  
@@ -1578,7 +1748,7 @@ class CenterDetermination:
         if sobel:
             edges = self.sobel_filt(im, disp=False)
 
-        # Define the radii range for concentric circles
+        ## (1) Define the radii range for concentric circles ------------------
         min_radius, max_radius, radius_step = 50, 120, 10
         radii = np.arange(min_radius, max_radius + radius_step, radius_step)
     
@@ -1597,7 +1767,7 @@ class CenterDetermination:
             plt.title("Live Hough Circle Detection")
             plt.ion()  # Turn on interactive mode
     
-        # Process each radius one at a time
+        ## (2) Process each radius one at a time ------------------------------
         for r in radii:
             hough_res = hough_circle(edges, np.array([r]))
             accums, x_peaks, y_peaks, _ = hough_circle_peaks(hough_res, 
@@ -1620,25 +1790,24 @@ class CenterDetermination:
                     ax.add_patch(circ)
                 plt.pause(0.3)
     
-        # Final detected circle
+        ## (3) Final detected circle ------------------------------------------
         accums ,self.x,self.y,self.r = hough_circle_peaks(
             hough_circle(edges, radii),
             radii,
             total_num_peaks=5
         )
         
-        # print(accums)
         
         self.x, self.y, self.r = \
             float(self.x[0]), float(self.y[0]), float(self.r[0])
     
-        # User information
+        ## (4) User information -----------------------------------------------
         if (self.parent.messages or self.parent.final_print):
             self.parent.dText = \
                 "Center Determination (HoughTransform) : ({:.3f}, {:.3f})".\
                     format(self.x, self.y)
     
-        # Final plot with all detected circles (if enabled)
+        ## (5) Final plot with all detected circles (if enabled) --------------
         if live_plot:
             plt.ioff()  # Turn off interactive mode
             plt.close("all")
@@ -1677,7 +1846,7 @@ class CenterDetermination:
         # Close live plot (to avoid non-closed windows in Jupyter)
         plt.close("all")
         
-        # Final detected circle visualization (if requested)
+        ## (6) Final detected circle visualization (if requested) --------------
         if plot_results:
             self.visualize_center(self.x, self.y, self.r)
     
@@ -1687,43 +1856,57 @@ class CenterDetermination:
     def detection_curvefit(self, plot_results=False):
         """
         Detects the center of a diffraction pattern by fitting a 2D pseudo-Voigt 
-        function.
-    
+        function to the central region of the image.
+     
+        This method:
+            - Crops a square region around the image center.
+            - Fits a 2D pseudo-Voigt peak to the cropped region.
+            - Returns the refined center coordinates in the original image space.
+            - Optionally visualizes the result.
+            - Falls back to the crop center if fitting fails.
+     
         Parameters
         ----------
-        image : numpy.ndarray
-            The 2D array representing the image intensities.
-        crop_size : int
-            The size of the central square region to extract for fitting.
-    
+        plot_results : bool, optional, default=False
+            If True, displays the fitted center location on the image. 
+     
         Returns
         -------
-        tuple
-            Refined center coordinates (x_refined, y_refined).
+        x : float
+            Refined x-coordinate of the center (column index).
+            
+        y : float
+            Refined y-coordinate of the center (row index).
+
         """
     
         def pseudo_voigt_2d(xy, amp, x0, y0, sigma_x, sigma_y, eta):
             """
-            2D pseudo-Voigt function (linear combination of Gaussian and 
-            Lorentzian).
-    
+            Computes a 2D pseudo-Voigt function, which is a linear combination 
+            of a Gaussian and a Lorentzian function.
+        
             Parameters
             ----------
-            xy : tuple
-                A tuple of x and y coordinate arrays.
+            xy : tuple of numpy.ndarray
+                A tuple (x, y) containing coordinate meshgrids.
+                
             amp : float
                 Amplitude of the peak.
+                
             x0, y0 : float
-                Center of the function.
+                Coordinates of the center of the peak.
+                
             sigma_x, sigma_y : float
-                Standard deviations along x and y axes.
+                Width (standard deviation) of the peak along the x and y axes.
+                
             eta : float
                 Mixing parameter (0 = pure Gaussian, 1 = pure Lorentzian).
-    
+        
             Returns
             -------
             numpy.ndarray
-                Flattened function values.
+                Flattened 1D array of function values evaluated at the input 
+                coordinates.
             """
             x, y = xy
             r_x = (x - x0) / sigma_x
@@ -1734,23 +1917,36 @@ class CenterDetermination:
     
             return amp * ((1 - eta) * gaussian + eta * lorentzian)
         
+        # Define crop size around the center of the image
         crop_size = 100
+        
+        # Make a copy of the image to avoid modifying the original
         image = np.copy(self.parent.to_refine)
-    
+        
+        # Get the image dimensions
         h, w = image.shape
+        
+        # Estimate the center of the image
         x_center, y_center = w // 2, h // 2
     
+        # Calculate the bounds of the cropped square region
         half_crop = crop_size // 2
         x_min, x_max = max(0, x_center - half_crop), min(w, x_center + half_crop)
         y_min, y_max = max(0, y_center - half_crop), min(h, y_center + half_crop)
     
+        # Crop the image around the center for curve fitting
         cropped_image = image[y_min:y_max, x_min:x_max]
     
+        # Create a meshgrid of x and y coordinates for the cropped region
         x, y = np.meshgrid(np.arange(cropped_image.shape[1]),
                            np.arange(cropped_image.shape[0]))
+        
+        # Flatten the meshgrid coordinates and image for use with curve fitting
         x_flat, y_flat = x.ravel(), y.ravel()
         image_flat = cropped_image.ravel()
-    
+
+        # Set initial parameter guesses for curve fitting:
+        # [amplitude, x0, y0, sigma_x, sigma_y, eta]    
         initial_guess = [
             np.max(cropped_image),
             crop_size // 2,
@@ -1759,13 +1955,15 @@ class CenterDetermination:
             max(1, crop_size / 5),
             0.5
         ]
-    
+        
+        # Define bounds for each parameter during optimization
         bounds = (
             [0, 0, 0, 1, 1, 0],
             [np.inf, crop_size, crop_size, crop_size, crop_size, 1]
         )
     
         try:
+            # Fit the pseudo-Voigt function to the cropped image
             popt, _ = curve_fit(
                 pseudo_voigt_2d,
                 (x_flat, y_flat),
@@ -1774,68 +1972,71 @@ class CenterDetermination:
                 bounds=bounds,
                 max_nfev=2000  # increase if needed
             )
+            
+            # Extract refined x and y center coordinates from fit
             x_refined, y_refined = popt[1], popt[2]
             used_fallback = False
     
         except RuntimeError:
-            # Fallback to center of cropped region
+            # If fitting fails, fall back to geometric center 
             x_refined, y_refined = crop_size // 2, crop_size // 2
             used_fallback = True
-    
+            
+        # Add the offset of the cropped region to get coordinates in full image
         self.x, self.y = x_refined + x_min, y_refined + y_min
-    
+        
+        # Print the result if messages are enabled
         if self.parent.messages or self.parent.final_print:
             self.parent.dText = (
                 f"Center Determination (CurveFitting) :   ({self.x:.3f}, {self.y:.3f})"
                 + (" [fallback]" if used_fallback else "")
             )
-    
+            
+        # Optionally show the result visually
         if plot_results:
             self.visualize_center(self.x, self.y, 100)
     
-        return self.x, self.y, 100
+        return self.x, self.y, None
 
 
     def detection_3points(self, plot_results=0):
         '''         
-        In the input image, select manually 3 points defining a circle using
-        a key press event 
-            - press '1' to select a point
-                
-        If the user is not satisfied with the point selection, it can be
-        deleted using a key press event:
-            - press '2' to delete the most recent
-            - press '3' to delete the point closest to the cursor
-        
-        If the user is satisified with the points selected, the rest 
-        of the program will be executed 
-            - press 'd' to proceed >DONE<
-        
-        Coordinates of the center and radius will be calculated automatically
-        using method self.calculate_circle()
-        
-        In addition, the user will be able to manually adjust the original
-        center position by using pre-defined keys.
+        Semi-automated detection of the diffraction pattern center using manual 
+        selection of 3 points.
+
+        This method allows the user to manually select 3 points along a visible 
+        diffraction ring in the image to define a circle. Once selected, 
+        the center and radius of the circle are automatically computed. After 
+        that, the user can manually adjust the center position using
+        an interactive interface.
+
+        ### User Controls (during point selection):
+        - **Press '1'**: Add a point at the current mouse cursor position 
+                         (max 3 points).
+        - **Press '2'**: Delete the most recently added point.
+        - **Press '3'**: Delete the point closest to the mouse cursor.
+        - **Press 'd'**: When 3 points are selected (DONE), proceed 
+        - **Close**    : Terminate the process without detecting a center.
         
         Parameters
         ----------
-        plot_results : int, binary
+        plot_results : int, binary, default=0
             Plot the pattern determined by pixels selected by the user.
-            Default is 1. To cancel visualization, set plot_results = 0.
         
         Returns
         -------
         self.x : float64
             x-coordinate of the detected center
+            
         self.y : float64
             y-coordinate of the detected center
+            
         self.r : float64
             radius of the detected center
             (if available, othervise returns None)
                                     
         '''
-        
-        # Load image
+        # (0) Load and prepare image ------------------------------------------
         im = self.parent.to_refine
         
         # Edit contrast with a user-predefined parameter
@@ -1846,8 +2047,8 @@ class CenterDetermination:
                               self.parent.icut, 
                               im)
             
-        # Create a figure and display the image
-        fig, ax = plt.subplots(figsize=(12, 12))
+        # (2) Create a figure and display the image ---------------------------
+        fig, ax = plt.subplots(figsize=(12, 12)) 
         
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
@@ -1858,7 +2059,7 @@ class CenterDetermination:
         ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
 
-        # User information:
+        # (3) User information ------------------------------------------------
         instructions = dedent(
             """
             CenterDetermination :: ThreePoints (semi-automated method)
@@ -1873,11 +2074,12 @@ class CenterDetermination:
         if self.parent.messages:
             print(instructions)
        
-        # Enable interactive mode
+        # (4) Enable interactive mode -----------------------------------------
         # (figure is updated after every plotting command
         # (so that calling figure.show() is not necessary
         plt.ion()
  
+        # (5) Initialization
         # Initialize the list of coordinates
         self.coords = [] 
         
@@ -1886,7 +2088,7 @@ class CenterDetermination:
         termination_flag = False               # close window event
         point_counter = 0                      # number of selected points
         
-        ### Define the event handler for figure close event
+        # (6) Define the event handler for figure close event -----------------
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
@@ -1899,7 +2101,7 @@ class CenterDetermination:
         fig.canvas.mpl_connect('close_event', onclose)
         
         
-        ### Define the callback function for key press events
+        # (7) Define the callback function for key press events ---------------
         def onkeypress(event):
             # nonlocal to modify the flag variable in the outer scope
             nonlocal calculate_circle_flag, point_counter, termination_flag
@@ -2009,7 +2211,7 @@ class CenterDetermination:
     
 
     
-            # Calculate circle or terminate
+            # (8) Calculate circle or terminate -------------------------------
             elif event.key == 'd':
                 if len(self.coords) == 3:
                     calculate_circle_flag = True
@@ -2021,7 +2223,7 @@ class CenterDetermination:
         # Connect the callback function to the key press event
         cid0 = fig.canvas.mpl_connect('key_press_event', onkeypress)
 
-        # Show the plot
+        # Show the plot 
         plt.tight_layout()
         ax.axis('off')
 
@@ -2093,40 +2295,63 @@ class CenterDetermination:
     
     
     def adjustment_3points(self, fig, circle, center, plot_results=0) -> tuple:
-        '''
-        Adjustment of the center position calculated from 3 points.
-        Interactive refinement using keys:
+        """
+        Interactive refinement of the diffraction pattern center after initial
+        detection via 3 points.
 
-        The user can change the position of the center of the diffraction
-        pattern and also the radius of the detected pattern using keys:
-            - left / right / top / down arrows : move left / right / top / down
-            - '+' : increase radius
-            - '-' : decrease radius
-            - 'd' : done, termination of the refinement
+        This method allows the user to fine-tune the estimated center and radius
+        of a diffraction ring (initially determined using 3 manually selected 
+        points) through interactive keyboard controls.
 
-        If the interactive figure is closed without any modifications,
-        the function returns input variables and the proccess terminates.
-        
+        The user interacts directly with the figure window containing the image 
+        and the detected circle.
+
+        ### Keyboard Controls
+        ---------------------
+        - Arrow keys (←, →, ↑, ↓): Move the center left, right, up, or down
+        - '+' : Increase the radius
+        - '-' : Decrease the radius
+        - 'b' : Increase step size (×5)
+        - 'l' : Decrease step size (/5, with minimum step size 0.5)
+        - 'd' : Done — finalize the center and radius
+        - Closing the figure: Cancels refinement and returns the original input 
+          center and radius
+
         Parameters
         ----------
-        fig : figure.Figure object
-            interactive figure in which a diffraction pattern has been
-            manually detected.
-        circle : patches.Circle object
-            circle defined via 3 points manually delected
+        fig : matplotlib.figure.Figure
+            The figure window used for interactive refinement.
+            
+        circle : matplotlib.patches.Circle
+            The circle object initially defined from 3 selected points.
+            
         center : tuple
-            calculated center of the input circle.
-        plot_results : boolean
-            visualize results. The default is 1 (plot detected center).
+            The initial (x, y) center coordinates estimated from the selected 
+            points.
+            
+        plot_results : bool, optional, default=False
+            If True, the results of the adjustment are visualized.
 
         Returns
         -------
-        xy : tuple
-            x,y-coordinates of the center of the diffraction pattern.
-        r : integer
-            radius of the diffraction pattern.
+        xy[0] : float
+            x-coordinate of the adjusted center of the diffraction pattern.
+            
+        xy[1] : float
+            y-coordinate of the adjusted center of the diffraction pattern.
+            
+        r : float
+            Adjusted radius of the diffraction ring.
 
-        '''            
+        Notes
+        -----
+        - Interactive adjustments are visualized in real time.
+        - Intensity sum at the current center/radius is printed if print_sums
+          is True.
+        - Arrow key defaults in Matplotlib (e.g., navigation) are temporarily 
+          disabled to allow movement control.
+        """
+                    
         # Remove default left / right arrow key press events
         plt.rcParams['keymap.back'].remove('left')
         plt.rcParams['keymap.forward'].remove('right')
@@ -2270,29 +2495,45 @@ class CenterDetermination:
 
     def calculate_circle(self, plot_results:int)->tuple[
             float,float,float,tuple[float,float], plt.Circle]:
-        ''' 
-        Calculates coordinates of the center and radius of a circle defined via
-        3 points determined by the user. Plots the calculated circle, detected 
-        points and marks the center.
-        
+        """
+        Calculate the center and radius of a circle defined by 3 manually 
+        selected points.
+
+        Given three user-defined points (typically on a diffraction ring), this 
+        method computes the center and radius of the circle that passes through 
+        them. Optionally, it visualizes the result including the circle, center, 
+        and selected points overlaid on the image.
+
         Parameters
         ----------
-        plot_results : int, binary
-            Plot the calculated center and circle. To cancel visualization, 
-            set plot_results = 0.
-        self.coords : array of float64
-            Coordinates of 3 manually selected points
-        
+        plot_results : int (binary: 0 or 1)
+            If 1, displays the image with the fitted circle and center.
+            If 0, skips visualization.
+
         Returns
         -------
-        self.x : float64
-            x-coordinate of the detected center
-        self.y : float64
-            y-coordinate of the detected center
-        self.r : float64
-            radius of the detected center
-                                    
-        '''
+        self.x : float
+            x-coordinate of the detected circle center.
+
+        self.y : float
+            y-coordinate of the detected circle center.
+
+        self.r : float
+            Radius of the detected circle.
+
+        self.center : tuple[float, float]
+            The (x, y) coordinates of the circle center.
+
+        self.circle : matplotlib.patches.Circle
+            A matplotlib Circle object that can be reused for future plotting.
+
+        Notes
+        -----
+        - The method uses a geometric approach to calculate the circumcenter
+          and circumradius.
+        - For best visual results, ensure the selected points are well spaced 
+          and belong to the same circular ring.
+        """
         # Extract the coordinates of the points        
         x = [self.coords[0][0], self.coords[1][0], self.coords[2][0]]
         y = [self.coords[0][1], self.coords[1][1], self.coords[2][1]]
@@ -2387,11 +2628,14 @@ class CenterDetermination:
             - rtype=1 : radial distribution method
             
         im : np.ndarray
-            The 2D image array containing the circle.
+            The 2D image array containing the circle. 
+            
         x : float
             The x-coordinate of the circle's center.
+            
         y : float
             The y-coordinate of the circle's center.
+            
         disp : bool, optional
             If True, visualizes the detected intensity profiles and peaks 
             (default is False).
@@ -2402,12 +2646,43 @@ class CenterDetermination:
             The estimated radius of the circle. Defaults to 100 if no valid 
             radius is detected.
         """
-        
+        # Helper function -----------------------------------------------------
         def match_peaks(arr):
             """
-            Finds the most similar values across the left and right halves of 
-            an array, omitting the highest value. If exactly two peaks are 
-            detected, they are returned as the best pair.
+            Find the most similar values across the left and right halves of 
+            an array, excluding the global maximum.
+        
+            This function is typically used for analyzing symmetric patterns 
+            such as diffraction profiles or intensity histograms. It identifies 
+            the most similar pair of peaks on either side of the central maximum, 
+            which is excluded from the comparison.
+        
+            Special case:
+            - If the array contains exactly two elements, it assumes they form 
+              the best pair and returns their indices directly.
+            - If one half is empty after removing the central peak,
+              it returns (None, None).
+        
+            Parameters
+            ----------
+            arr : np.ndarray or list of float
+                1D array of values (intensity profile) where symmetric peak
+                positions are to be matched.
+        
+            Returns
+            -------
+            best_pair : tuple[int or None, int or None]
+                Indices of the two most similar values, one from each half of 
+                the array. Returns (None, None) if no valid pair is found.
+        
+            Notes
+            -----
+            - The function assumes the most prominent peak (maximum value) lies 
+              at or near the center and represents the central feature.
+            - The left and right halves are compared pairwise, and the closest 
+              match in absolute value difference is returned.
+            - This is useful for refining radial symmetry or finding symmetric 
+              ring peaks.
             """
             if len(arr) < 2:  # Not enough values to compare
                 if self.parent.messages:
@@ -2448,6 +2723,7 @@ class CenterDetermination:
     
             return best_pair
         
+        # Peak matching method ------------------------------------------------
         if rtype == 0:
             self.xpeaks, self.ypeaks = None, None
             self.xyvals, self.yyvals = None, None
@@ -2545,7 +2821,8 @@ class CenterDetermination:
         
                 plt.tight_layout()
                 plt.show()
-
+        
+        # Radial distribution method ------------------------------------------
         elif rtype == 1:
             profile = ediff.radial.calc_radial_distribution(
                 im, 
@@ -2578,7 +2855,8 @@ class CenterDetermination:
                 axs[1].legend()
                 plt.tight_layout()
                 plt.show()
-    
+        
+        # Return found radius
         return rx
 
 
@@ -2654,10 +2932,11 @@ class CenterDetermination:
             above the threshold and `False` represents background or noise.
     
         """
-        # Find the median of the highest intensity value of the image to avoid hot spots
-        lower_limit = np.percentile(im, threshold * 100)  # More stable than median scaling
+        # Find the median of the highest intensity value of the image to avoid 
+        # hot spots (More stable than median scaling)
+        lower_limit = np.percentile(im, threshold * 100) 
         
-        # generate a mask
+        # Generate a mask
         mask = im > lower_limit
         
         if show_mask:
@@ -2679,10 +2958,13 @@ class CenterDetermination:
         ----------
         tit : string
             name of the method used for circle detection
+            
         x : float64
             x-coordinate of the detected center
+            
         y : float64
             y-coordinate of the detected center
+            
         r : float64
             radius of the detected center
         
@@ -2734,44 +3016,47 @@ class CenterDetermination:
 
 class CenterRefinement:
     '''
-    CenterRefinement object - final refinement of a diffractogram center.
+    CenterRefinement - Final refinement of the center of a diffraction pattern.
 
-    This class is responsible for refining the center coordinates of a 
-    diffraction pattern based on the selected refinement method. It 
-    initializes with the input image and other parameters that influence 
-    the refinement process.
+    This class performs refinement of the detected center coordinates in a 2D
+    diffraction pattern. It supports multiple refinement methods, both manual
+    and automatic, and optionally saves the refined center to a file.
+
 
     Parameters
     ----------
     parent : CenterLocator
-        Reference to the parent CenterLocator object, allowing access to 
-        shared attributes and methods.
-    input_image : str, path, or numpy.array
-        The input image representing a 2D diffraction pattern, provided as 
-        a file path or a NumPy array.
-    refinement : str or None, optional, default is None
-        The method used for the final center refinement.
-        Options include:
-        - 'manual': Manual adjustment - user adjust the position
-          of the selected diffration ring.
-        - 'sum': Auto-refinement - find a diffraction ring
-          with maximal sum of intensities.
-        - 'var': Auto-refinement - find a diffraction ring
-          with minimal variance of intensities.
+        Reference to the parent CenterLocator object. Used to access shared
+        attributes like initial center estimates and configuration flags.
+        
+    input_image : str, Path, or numpy.ndarray
+        The diffraction pattern image, either as a file path or a 2D NumPy array.
+    
+        
+    refinement : str or None, optional, default=None
+        The refinement method to apply. Options include:
+        - 'manual': Manual adjustment via user interaction on the selected ring.
+        - 'sum'   : Automatic refinement by maximizing the intensity sum 
+        - 'var'   : Automatic refinement by minimizing the intensity variance
+        If None, no refinement is applied.
+          
     out_file : str, optional
-        Filename of the text file to which the refined center coordinates 
-        will be saved.
-    heq : bool, optional
-        Flag to indicate whether to perform histogram equalization on the
-        input image. Default is False.
-    icut : float, optional
-        Cut-off intensity level for processing the image. Default is None.
-    cmap : str, optional
-        Colormap to be used for displaying the image. Default is 'gray'.
-    messages : bool, optional
+        Path to a text file where the refined center coordinates will be saved.
+    
+    heq : bool, optional, default=False
+        Whether to apply histogram equalization to the input image before
+        processing.
+    
+    icut : float, optional, default=None
+        Cut-off intensity level for processing the image
+        
+   cmap : str, optional, default='gray'
+        Colormap to be used when displaying the image for manual refinement.
+    
+    messages : bool, optional, default=False
         Flag to enable or disable informational messages during processing. 
-        Default is False.
-    print_sums : bool, optional
+
+    print_sums : bool, optional, default=False
         If True, prints the sum of intensity values for the refined circle 
         after each adjustment, relevant only for manual refinement methods.
 
@@ -2781,13 +3066,16 @@ class CenterRefinement:
 
     Notes
     -----
-    - The class refines the detected center coordinates based on the 
-      specified refinement method.
-    - The refined coordinates are stored in instance variables
-      `xx`, `yy`, and `rr`, representing the refined center's x-coordinate, 
-      y-coordinate, and radius, respectively.
-    - If an unsupported refinement method is specified, the class will print 
-      an error message and exit.
+    - If an unsupported refinement method is provided, the program exits with
+      an error.
+    - The coordinates `xx`, `yy`, and radius `rr` can be accessed after
+      initialization for further analysis or saving.
+    - The refinement strategy relies on initial estimates provided by the parent 
+      object.
+    - Manual refinement supports click-based center adjustments guided by visual 
+      feedback.
+    - Sum/variance refinement automatically searches for the most likely center
+      by evaluating ring statistics.
     '''
     
     def __init__(self, parent,
@@ -2806,14 +3094,15 @@ class CenterRefinement:
         # The parameters are described above in class definition.
         ######################################################################
         
-        ## (0) Initialize input attributes
+        ## (0) Initialize input attributes ------------------------------------
         self.parent = parent
         
-        ## (1) Initialize new attributes
+        ## (1) Initialize new attributes --------------------------------------
         self.step=0.5
         
-        ## (2) Run functions
+        ## (2) Run functions --------------------------------------------------
         if refinement is not None:
+            # Flag for later
             self.ret = 1
             par_short = self.parent.center1
         
@@ -2849,47 +3138,69 @@ class CenterRefinement:
                 sys.exit()
                         
         else: 
+            # Flag for later
             self.ret = 2
             
            
     def ref_interactive(self, px, py, pr):
-        ''' 
-        Manual refinement of the detected diffraction pattern via one of 
-        the methods provided in the class CircleDetection.
-        
-        The user can change the position of the center of the diffraction
-        pattern and also the radius of the detected pattern using keys:
-            - left / right / top / down arrows : move left / right / top / down
-            - '+' : increase radius
-            - '-' : decrease radius
-            - 'b'/'l' : increase/decrease step size")
-            - 'd' : done, termination of the refinement
-
-        If the interactive figure is closed without any modifications,
-        the function returns input variables and the proccess terminates.
-        
-        The results are shown in a figure when the refinement is successful.
-
+        """
+        Interactive refinement of the diffraction pattern center after initial
+        detection via 3 points.
+      
+        This method allows the user to fine-tune the estimated center and radius
+        of a diffraction ring (initially determined using 3 manually selected 
+        points) through interactive keyboard controls.
+      
+        The user interacts directly with the figure window containing the image 
+        and the detected circle.
+      
+        ### Keyboard Controls
+        ---------------------
+        - Arrow keys (←, →, ↑, ↓): Move the center left, right, up, or down
+        - '+' : Increase the radius
+        - '-' : Decrease the radius
+        - 'b' : Increase step size (×5)
+        - 'l' : Decrease step size (/5, with minimum step size 0.5)
+        - 'd' : Done — finalize the center and radius
+        - Closing the figure: Cancels refinement and returns the original input 
+          center and radius
+      
         Parameters
         ----------
-        px : float64
-            x-coordinate of the center
-        py : float64
-            y-coordinate of the center
-        pr : float64
-            radius of the circular diffraction pattern
-
+        fig : matplotlib.figure.Figure
+            The figure window used for interactive refinement.
+            
+        circle : matplotlib.patches.Circle
+            The circle object initially defined from 3 selected points.
+            
+        center : tuple
+            The initial (x, y) center coordinates estimated from the selected 
+            points.
+            
+        plot_results : bool, optional, default=False
+            If True, the results of the adjustment are visualized.
+      
         Returns
         -------
-        x : float64
-            new x-coordinate of the center
-        y : float64
-            new y-coordinate of the center
-        r : float64
-            new radius of the circular diffraction pattern
-        '''
-        
-        # Load original image
+        xy[0] : float
+            x-coordinate of the adjusted center of the diffraction pattern.
+            
+        xy[1] : float
+            y-coordinate of the adjusted center of the diffraction pattern.
+            
+        r : float
+            Adjusted radius of the diffraction ring.
+      
+        Notes
+        -----
+        - Interactive adjustments are visualized in real time.
+        - Intensity sum at the current center/radius is printed if print_sums
+          is True.
+        - Arrow key defaults in Matplotlib (e.g., navigation) are temporarily 
+          disabled to allow movement control.
+        """
+             
+        # (0) Load original image ---------------------------------------------
         im = np.copy(self.parent.to_refine)
 
         # Edit contrast with a user-predefined parameter
@@ -2900,13 +3211,12 @@ class CenterRefinement:
                               self.parent.icut, 
                               im)
             
-        
-        # Initialize variables and flags
+        # (1) Initialize variables and flags ----------------------------------
         xy = np.array((px, py))
         r = np.copy(pr)
         termination_flag = False
 
-        # User information:
+        # (2) User information ------------------------------------------------
         if self.parent.messages:
             instructions = dedent("""
             
@@ -2929,7 +3239,7 @@ class CenterRefinement:
         if self.parent.print_sums:
             print("Intensity sums during refinement:")
             
-        # Create a figure and display the image
+        # (3) Create a figure and display the image ---------------------------
         fig, ax = plt.subplots(figsize=(12, 12))
         
         # Allow using arrows to move back and forth between view ports
@@ -2950,15 +3260,15 @@ class CenterRefinement:
         ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
         
-        # Enable interactive mode
+        # (4) Enable interactive mode -----------------------------------------
         plt.ion()
         
 
-        # Display the image
+        # (5) Display the image -----------------------------------------------
         # fig.set_size_inches(self.fig_width, self.fig_height)
         plt.show(block=False)
         
-        ### Define the event handler for figure close event
+        # (6) Define the event handler for figure close event -----------------
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
@@ -2966,7 +3276,7 @@ class CenterRefinement:
         # Connect the event handler to the figure close event
         fig.canvas.mpl_connect('close_event', onclose)
 
-        # Define the callback function for key press events
+        # (7) Define the callback function for key press events ---------------
         def onkeypress2(event):
             # Use nonlocal to modify the center position in the outer scope
             nonlocal xy, r, termination_flag
@@ -3042,7 +3352,7 @@ class CenterRefinement:
                 # If the user manually closes the figure, terminate the loop
                 termination_flag = True
          
-        # Turn off interactive mode
+        # (8) Turn off interactive mode ---------------------------------------
         plt.ioff()
         
         # Display the final figure with the selected center position and radius
@@ -3062,43 +3372,54 @@ class CenterRefinement:
         
     
     def ref_var(self, px, py, pr, plot_results=0):
-        '''         
-        Adjust center coordinates of a detected circular diffraction pattern.
-        The center adjustment is based on variance minimization.
-        
-        The 8-neighbourhood pixels (x) of the current center (o) 
-        will be tested regarding the minimization:
-    
-        - x x x : (px - dx, py + dy) (px, py + dy) ( px + dx, py + dy)
-    
-        - x o x : (px - dx, py)      (px, py)      (px + dx, py)
-    
-        - x x x : (px - dx, py - dy) (px, py - dy) (px + dx, py - dy)
-        
+        """
+        Refine the center coordinates (px, py) and radius (pr) of a circular 
+        diffraction pattern by minimizing the variance of pixel intensities 
+        along the circle's border.
+
+        This method performs iterative local search in the 8-neighbourhood 
+        around the current center to find a position and radius that minimize 
+        the intensity variance. The refinement stops when convergence criteria 
+        are met or after a maximum number of iterations.
+
+        Neighborhood pattern tested (o = current center, x = candidate center):
+            x x x   --> (px - dx, py + dy) (px, py + dy) (px + dx, py + dy)
+            x o x   --> (px - dx, py)      (px, py)      (px + dx, py)
+            x x x   --> (px - dx, py - dy) (px, py - dy) (px + dx, py - dy)
 
         Parameters
         ----------
-        self.image : array of uint8
-            Input image in which the diffraction pattern is to be found
-        px : float64
-            x-coordinate of the detected center to be adjusted
-        py : float64
-            y-coordinate of the detected center to be adjusted
-        pr : float64
-            radius of the detected center
-        plot_results : integer (default = 1)
-            Plot Detected center. The default is 1.
-        
+        px : float
+            Initial x-coordinate of the detected center.
+            
+        py : float
+            Initial y-coordinate of the detected center.
+            
+        pr : float
+            Initial radius of the detected circular pattern.
+            
+        plot_results : int, optional (default=0)
+            Whether to plot the refinement result (1 = yes, 0 = no).
+
         Returns
         -------
-        px : array of int32
-           corrected x-coordinates of pixels from circle border
-        py : array of int32
-            corrected y-coordinates of pixels from circle border
-        pr : array of int32
-            radius of the detected center
+        px : float
+            Refined x-coordinate of the center.
             
-        '''
+        py : float
+            Refined y-coordinate of the center.
+            
+        pr : float
+            Refined radius of the circular pattern.
+
+        Notes
+        -----
+        - The function avoids overfitting to local minima by enforcing 
+          convergence thresholds and consistency checks.
+        - If the refinement worsens the initial variance significantly or 
+          suggests an invalid coordinate swap, the original input is preserved.
+        - Uses `self.parent.intensity_variance()` for evaluating the criterion.
+        """
         
         # Store input for plot
         bckup = [np.copy(px), np.copy(py), np.copy(pr)]
@@ -3223,41 +3544,54 @@ class CenterRefinement:
     
     
     def ref_sum(self, px, py, pr, plot_results=0):
-        ''' 
-        Adjust center position based on gradient optimization method
-        via maximization of intensity sum.
-        
-        The 8-neighbourhood pixels (x) of the current center (o) 
-        will be tested regarding the maximization:
-    
-        - x x x : (px - dx, py + dy) (px, py + dy) ( px + dx, py + dy)
-    
-        - x o x : (px - dx, py)      (px, py)      (px + dx, py)
-    
-        - x x x : (px - dx, py - dy) (px, py - dy) (px + dx, py - dy)
-        
-    
+        """
+        Refine the center coordinates (px, py) and radius (pr) of a circular 
+        diffraction pattern by maximizing the summed pixel intensity along 
+        a circular ring.
+
+        The method uses an iterative local search strategy based on gradient 
+        ascent in the 8-neighbourhood around the current center to find 
+        a position and radius that maximize the intensity sum. The center 
+        is updated based on the best neighbor until convergence criteria 
+        or maximum iteration limits are met.
+
+        Neighborhood pattern tested (o = current center, x = candidate center):
+            x x x   --> (px - dx, py + dy) (px, py + dy) (px + dx, py + dy)
+            x o x   --> (px - dx, py)      (px, py)      (px + dx, py)
+            x x x   --> (px - dx, py - dy) (px, py - dy) (px + dx, py - dy)
+
         Parameters
         ----------
-        px : float64
-            x-coordinate of the detected center to be adjusted.
-        py : float64
-            y-coordinate of the detected center to be adjusted.
-        pr : float64
-            radius of the detected center.
-        plot_results : int, optional
-            Plot Detected center. 
-            The default is 1.
-    
-        Returns  
+        px : float
+            Initial x-coordinate of the detected center.
+            
+        py : float
+            Initial y-coordinate of the detected center.
+            
+        pr : float
+            Initial radius of the detected circular pattern.
+            
+        plot_results : int, optional (default=0)
+            If set to 1, plots the final result of the refinement.
+
+        Returns
         -------
-        best_center[0] : float64
-            Adjusted x-coordinate of the center.
-        best_center[1] : float64
-            Adjusted y-coordinate of the center.
-        best_radius : float64
-            The adjusted radius of the circular diffraction pattern.
-        '''
+        px : float
+            Refined x-coordinate of the center.
+            
+        py : float
+            Refined y-coordinate of the center.
+            
+        pr : float
+            Refined radius of the circular pattern.
+
+        Notes
+        -----
+        - Uses `self.parent.intensity_sum()` as the optimization criterion.
+        - Alternates between optimizing the center and the radius.
+        - Stops after no significant improvement over multiple iterations.
+        - If refinement worsens the result, the original values are retained.
+        """
         # Store input for plot via self.visualize_refinement()
         bckup = [np.copy(px), np.copy(py), np.copy(pr)]
     
@@ -3387,27 +3721,87 @@ class CenterRefinement:
     
     def diagnose_landscape(self, px, py, pr, metric='std', search_range=2.0, steps=21):
         """
-        Plots the optimization landscape in a small region around the initial point.
+        Visualize the optimization landscape of a center refinement metric
+        around a candidate center location and radius.
+    
+        This function evaluates the selected metric over a grid of positions
+        in a 2D neighborhood around the given (px, py) center, using a fixed
+        radius `pr`, and visualizes the results as a heatmap with contours.
+    
+        It can be useful for diagnosing whether the optimization function
+        (e.g., standard deviation, median, or sum of pixel intensities) has
+        a smooth and well-behaved landscape, which is important for gradient
+        optimization methods.
+    
+        Parameters
+        ----------
+        px : float
+            X-coordinate of the candidate center.
+            
+        py : float
+            Y-coordinate of the candidate center.
+            
+        pr : float
+            Radius of the circular region to evaluate the metric on.
+            
+        metric : str, optional
+            The metric to evaluate. Options are:
+            - 'std': standard deviation of pixel values (default)
+            - 'median': median of pixel values
+            - 'sum': sum of pixel values
+            
+        search_range : float, optional, default=2.0
+            The radius of the square region (in pixels) around the center 
+            to explore. The grid will extend ±`search_range` in both x and y 
+            directions.
+            
+        steps : int, optional, default=21
+            The number of points to sample along each axis (grid resolution).
+            Must be an odd number to ensure the center point is included.
+    
+        Returns
+        -------
+        None
+            This method produces a matplotlib plot and does not return any value.
         """
+        # Helper functions ----------------------------------------------------
+        def intensity_sum(self, image, cx, cy, r):
+            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
+            return np.sum(pixels)
+        
+        def intensity_std(self, image, cx, cy, r):
+            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
+            return np.std(pixels)
+        
+        def intensity_median(self, image, cx, cy, r):
+            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
+            return np.median(pixels)
+
         print(f"Diagnosing landscape around ({px:.1f}, {py:.1f}) with r={pr:.1f}...")
         
-        # Select the metric function
-        metric_map = { 'std': self.intensity_std, 'median': self.intensity_median, 'sum': self.intensity_sum }
-        metric_func = metric_map.get(metric, self.intensity_std)
+        # (0) Select the metric function --------------------------------------
+        metric_map = {'std': intensity_std, 
+                      'median': intensity_median, 
+                      'sum': intensity_sum }
+        metric_func = metric_map.get(metric, intensity_std)
     
-        # Create a grid of x and y coordinates to test
+        # (1) Create a grid of x and y coordinates to test --------------------
         x_range = np.linspace(px - search_range, px + search_range, steps)
         y_range = np.linspace(py - search_range, py + search_range, steps)
         score_grid = np.zeros((steps, steps))
     
-        # Calculate the metric score at each point on the grid
+        # (2) Calculate the metric score at each point on the grid ------------
         for i, y in enumerate(y_range):
             for j, x in enumerate(x_range):
                 score_grid[i, j] = metric_func(self.parent.image, x, y, pr)
     
-        # Plot the results
+        # (3) Plot the results ------------------------------------------------
         plt.figure(figsize=(4, 4))
-        plt.imshow(score_grid, origin='lower', extent=[x_range[0], x_range[-1], y_range[0], y_range[-1]])
+        plt.imshow(
+            score_grid, 
+            origin='lower', 
+            extent=[x_range[0], x_range[-1], y_range[0], y_range[-1]]
+            )
         plt.colorbar(label=f"Metric Score ('{metric}')")
         plt.contour(x_range, y_range, score_grid, colors='white', alpha=0.5)
         
@@ -3419,87 +3813,6 @@ class CenterRefinement:
         plt.legend()
         plt.show()
         
-
-    def ref_ultimate(self, px, py, pr=None, plot_results=False,
-                     max_iter=50, step_size=2.0, radius_step=0.2,
-                     min_step=0.1, min_radius_step=0.02):
-        image = self.parent.image
-    
-        # Step 1: Initial estimate from radial profile
-        if pr is None:
-            profile = ediff.radial.calc_radial_distribution(image, center=(px, py))
-            p0, p1 = profile
-            idx_max = np.argmax(p1[50:]) + 50
-            pr = p0[idx_max]
-    
-            if plot_results:
-                fig, axs = plt.subplots(1, 2, figsize=(8, 3))
-                axs[0].imshow(image, cmap='gray')
-                axs[0].add_patch(Circle((py, px), pr, edgecolor='red', fill=False, linewidth=2))
-                axs[0].scatter(py, px, color="red", marker="x")
-                axs[0].set_title("Initial Estimate")
-                axs[0].axis('off')
-                axs[1].plot(p0, p1)
-                axs[1].axvline(pr, color='red', linestyle='--', label='Initial Radius')
-                axs[1].set_title("Radial Profile")
-                axs[1].legend()
-                plt.tight_layout()
-                plt.show()
-    
-        # Step 2: Iterative refinement
-        current_params = np.array([px, py, pr])
-        best_sum = self.parent.intensity_sum(image, *current_params)
-    
-        for iteration in range(max_iter):
-            improved = False
-            candidates = []
-    
-            # Larger neighborhood: try ±2*step for more aggressive moves
-            for dx in [-2*step_size, -step_size, 0, step_size, 2*step_size]:
-                for dy in [-2*step_size, -step_size, 0, step_size, 2*step_size]:
-                    for dr in [-2*radius_step*pr, -radius_step*pr, 0, radius_step*pr, 2*radius_step*pr]:
-                        if dx == dy == dr == 0:
-                            continue
-                        new_params = current_params + np.array([dx, dy, dr])
-                        cx, cy, cr = new_params
-                        if cr <= 1 or not (0 <= cx < image.shape[0] and 0 <= cy < image.shape[1]):
-                            continue
-                        val = self.parent.intensity_sum(image, *new_params)
-                        candidates.append((val, new_params))
-    
-            if not candidates:
-                break
-    
-            val_max, best_candidate = max(candidates, key=lambda x: x[0])
-            if val_max > best_sum:
-                current_params = best_candidate
-                best_sum = val_max
-                improved = True
-            else:
-                # Reduce step size if no improvement
-                step_size *= 0.5
-                radius_step *= 0.5
-    
-            if step_size < min_step and radius_step < min_radius_step:
-                break
-    
-        # Final values
-        px, py, pr = current_params
-    
-        if plot_results:
-            print(f"Refined center: ({px:.2f}, {py:.2f}), radius: {pr:.2f}")
-            fig, ax = plt.subplots(figsize=(4, 4))
-            ax.imshow(image, cmap='gray')
-            ax.add_patch(Circle((py, px), pr, edgecolor='green', fill=False, linewidth=2))
-            ax.scatter(py, px, color="green", marker="x")
-            ax.set_title("Refined Result")
-            ax.axis('off')
-            plt.tight_layout()
-            plt.show()
-    
-        return px, py, pr
-
-
 
 class HandlerCircle(HandlerBase):
     """
@@ -3617,11 +3930,7 @@ class PocketFFTBackend:
         workers = kwargs.pop("workers", CPU_COUNT)
         return fn(*args, workers=workers, **kwargs)
 
-
-
-
         
-
 class IntensityCenter: 
     '''
     Simple center determination for a symmetric diffractogram.
