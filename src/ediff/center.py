@@ -33,9 +33,12 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.legend_handler import HandlerBase
 from math import floor
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, minimize
+from scipy.ndimage import map_coordinates
+from scipy.optimize import dual_annealing
 
 import ediff.io 
+import ediff.radial 
 import os
 import cv2
 
@@ -139,6 +142,7 @@ class CenterLocator:
                  input_image, 
                  determination = None, 
                  refinement = None,
+                 rtype = 0,
                  in_file = None,
                  out_file = None,
                  sobel = False,
@@ -169,6 +173,8 @@ class CenterLocator:
         # Methods of center determination and center refinement
         self.determination = determination
         self.refinement = refinement
+        self.rtype = rtype
+        
         # For reproducibility, convert the method names to lowercase
         if determination is not None:
             self.determination = determination.lower()
@@ -223,7 +229,7 @@ class CenterLocator:
         # * The center coordinates may have been determined
         #   in a previous run of the program and saved to a text file.
         # * We can Load coordinates from an input file if specified,
-        #   this is done by the following commant.
+        #   this is done by the following command.
         # * As the saved coordinates can be used INSTEAD of CenterDetermination
         #   we will read them here.
         if self.in_file is not None: self.load_results()  
@@ -246,6 +252,7 @@ class CenterLocator:
         #      which is needed for the next step = CenterRefimenement.
         if self.determination != "manual":
             self.center1.r = self.center1.get_radius(
+                self.rtype,
                 self.image, 
                 self.center1.x, 
                 self.center1.y, 
@@ -290,19 +297,10 @@ class CenterLocator:
             
         if (self.determination =="ccorr" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
-            
-        if (self.determination == "intensity" and self.refinement == "sum"):
-            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
-            
+                        
         if (self.determination == "curvefit" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
-        
-        if (self.determination == "intensity" and self.refinement == "sum2"):
-            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
-            
-        # if (self.determination == "manual" and self.refinement == "sum2"):
-        #     self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
-                    
+                            
         ## (8) Print the coordinates if required
         if self.final_print:
             self.dText=str(self.dText)
@@ -481,83 +479,26 @@ class CenterLocator:
                     return x1_values, y1_values
         else:
             print("Error reading text file with center coordinates!")
+            return
 
 
-    def get_circle_pixels(self, xc, yc, radius, num_points=360):
-        '''         
-        Get coordinates of pixels defining circle border
-    
-        Parameters
-        ----------
-        self.image_path : str
-            direct path to a image with diffraction patterns
-        xc : float64
-            x-coordinate of the detected center
-        yc : float64
-            y-coordinate of the detected center
-        radius : float64
-            radius of the detected center
-        num_points : float64 
-            number of border points. The default is 360
-        
-        Returns
-        -------
-        x : array of float64
-            x-coordinates of pixels from circle border
-        y : array of float64
-            y-coordinates of pixels from circle border
-            
-        '''
-        
-        # Generate angles from 0 to 2*pi
-        theta = np.linspace(0, 2*np.pi, num=num_points)  
-                
-        # Calculate x,y-coordinates of points on the actual circle border
-        x_actual = xc + radius * np.cos(theta)
-        y_actual = yc + radius * np.sin(theta)
-        
-        return x_actual, y_actual
-          
-    
-    def intensity_sum_bckp(self, image, px, py, pr, gaussian_weight=False):
-        # Extract region around the center
-        x, y = np.arange(image.shape[1]), np.arange(image.shape[0])
-        X, Y = np.meshgrid(x, y)
-        
-        # Compute distance from center
-        distance = np.sqrt((X - px) ** 2 + (Y - py) ** 2)
-        
-        # Apply Gaussian weight if enabled
-        if gaussian_weight:
-            sigma = pr / 2  # Adjust sigma relative to radius
-            weight = np.exp(-distance**2 / (2 * sigma**2))
-            weighted_image = image * weight
-            return np.sum(weighted_image)
-        
-        # Default behavior: Sum intensity within radius
-        mask = distance <= pr
-        return np.sum(image[mask])
-    
-    
-    def intensity_sum(self, image, px, py, pr, gaussian_weight=False):
-        # Extract region around the center
-        x, y = np.arange(image.shape[0]), np.arange(image.shape[1])
-        X, Y = np.meshgrid(x, y)
-        
-        # Compute distance from center
-        distance = np.sqrt((X - px) ** 2 + (Y - py) ** 2)
-        
-        # Apply Gaussian weight if enabled
-        if gaussian_weight:
-            sigma = pr / 2  # Adjust sigma relative to radius
-            weight = np.exp(-distance**2 / (2 * sigma**2))
-            weighted_image = image * weight
-            return np.sum(weighted_image)
-        
-        # Default behavior: Sum intensity within radius
-        mask = distance <= pr
-        return np.sum(image[mask])
-
+    def get_circle_pixels(self, image, cx, cy, r, num_points=360):
+        """Helper to get interpolated pixel values along a circle's circumference."""
+        points = np.linspace(0, 2 * np.pi, num_points)
+        # Generate coordinates for the circle
+        x = cx + r * np.cos(points)
+        y = cy + r * np.sin(points)
+        # Use map_coordinates for accurate sub-pixel interpolation
+        coords = np.vstack((y, x))
+        # 'order=1' is linear interpolation
+        pixels = map_coordinates(image, coords, order=1, mode='constant', cval=0.0)
+        return pixels
+     
+     
+    def intensity_sum(self, im, cx, cy, r):
+        """Original function."""
+        pixels = self.get_circle_pixels(im, cx, cy, r)
+        return np.sum(pixels)
     
     
     def intensity_variance(self, image, px, py, pr):
@@ -635,23 +576,9 @@ class CenterLocator:
         x1, y1 = (self.x1, self.y1)
         r1 = self.center1.r
 
-        
         x2, y2 = (self.x2, self.y2)
         r2 = self.center2.rr
-        
-        # if (self.determination == "intensity" and self.refinement=="sum2"):
-        #     x2, y2 = self.convert_coords(x2, y2)
-        
 
-        # if (self.refinement != "manual" and self.determination=="manual"):
-        #     x2, y2 = x2, self.to_refine.shape[0] - y2
-        #     print("v")
-        
-
-
-        # # Ensure y2 is correctly displayed
-        # y2_display = self.to_refine.shape[0] - y2  
-    
         # (1) Prepare the image of the diffractogram
         image = np.copy(self.to_refine)
         if self.icut is not None:
@@ -721,77 +648,6 @@ class CenterLocator:
     
         ax.axis('off')
         plt.show(block=False)
-
-   
-    def fit_2d_gaussian(self, image, center):
-        """
-        Fits a 2D Gaussian function to the intensity distribution in the given 
-        image to refine the center.
-    
-        Parameters
-        ----------
-        image : numpy.ndarray
-            The 2D array representing the image intensities.
-        center : tuple
-            Initial estimate of the center coordinates (x, y).
-    
-        Returns
-        -------
-        tuple: Refined center coordinates (x_refined, y_refined) after Gaussian 
-            fitting.
-        """
-        
-        def gaussian_2d(xy, amp, x0, y0, sigx, sigy):
-            """
-            Defines a 2D Gaussian function to model intensity distribution.
-            
-            Parameters
-            ----------
-            xy : tuple
-                A tuple of x and y coordinate arrays.
-            amp : float
-                Amplitude of the Gaussian peak.
-            x0, y0 : float
-                Center of the Gaussian function.
-            sigx, sigy : float
-                Standard deviations along x and y axes.
-            
-            Returns
-            -------
-            numpy.ndarray
-                Flattened Gaussian function values.
-            """
-            x, y = xy
-            fit = amp*np.exp(-(((x-x0)**2)/(2*sigx**2)+((y-y0)**2)/(2*sigy**2)))
-            return fit
-        
-        # Create a grid of x and y coordinates corresponding to pixel positions 
-        # in the image
-        x, y = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
-        
-        # Flatten the coordinates and image data for curve fitting
-        x_flat, y_flat, image_flat = x.ravel(), y.ravel(), image.ravel()
-        
-        # Initial parameter guesses:
-        #   - Peak intensity as amplitude
-        #   - Initial center estimate from input
-        #   - Standard deviations arbitrarily set to 5 for fitting
-        initial_guess = [np.max(image), center[0], center[1], 5, 5]
-        
-        try:
-            # Perform curve fitting to find the best Gaussian parameters
-            popt, _ = curve_fit(gaussian_2d, 
-                                (x_flat, y_flat), 
-                                image_flat, 
-                                p0=initial_guess)
-            
-            # Extract refined center coordinates from the fitted parameters
-            x_refined, y_refined = popt[1], popt[2]
-        except RuntimeError:
-            # If fitting fails, return the original center estimate
-            x_refined, y_refined = center
-        
-        return (x_refined, y_refined)
 
 
     def ellipse_distortion(self, img, show=True, method=None):
@@ -909,7 +765,6 @@ class CenterLocator:
             plt.show()
     
         return corrected
-
 
 
 class CenterDetermination:
@@ -2505,13 +2360,18 @@ class CenterDetermination:
 
 
     def get_radius(
-            self, im:np.ndarray, x:float, y:float, disp:bool=False) -> float:
+            self, rtype:int, im:np.ndarray, x:float, y:float, disp:bool=False) -> float:
         """
         Calculate the radius of a circle based on intensity profiles along 
         horizontal and vertical axes.
     
         Parameters
         ----------
+        rtype : integer
+            Method for radius calculation. Default is 0.
+            - rtype=0 : peaks matching method
+            - rtype=1 : radial distribution method
+            
         im : np.ndarray
             The 2D image array containing the circle.
         x : float
@@ -2573,103 +2433,137 @@ class CenterDetermination:
                         best_pair = (left_indices[i], right_indices[j])
     
             return best_pair
+        
+        if rtype == 0:
+            self.xpeaks, self.ypeaks = None, None
+            self.xyvals, self.yyvals = None, None
+        
+            x_line = im[int(x), :]
+            y_line = im[:, int(y)]
+        
+            # Define threshold for peak detection
+            x_thr = 0.5 * max(x_line)
+            y_thr = 0.5 * max(y_line)
+        
+            # Find peaks with dynamic height thresholds
+            self.xpeaks, _ = find_peaks(x_line, 
+                                        height=x_thr, 
+                                        prominence=1, 
+                                        distance=30)
+            self.xyvals = x_line[self.xpeaks]
+            self.ypeaks, _ = find_peaks(y_line, 
+                                        height=y_thr, 
+                                        prominence=1, 
+                                        distance=30)
+            self.yyvals = y_line[self.ypeaks]
+        
+            # Define half the length of the image
+            half_length_x = x_line.shape[0] / 2
+            half_length_y = y_line.shape[0] / 2
+        
+            # Check the additional condition for xpeaks
+            if len(self.xpeaks) == 2 and (
+                (self.xpeaks[0]<half_length_x and self.xpeaks[1]<half_length_x) or
+                (self.xpeaks[0]>half_length_x and self.xpeaks[1]>half_length_x)):
+                if self.parent.messages:
+                    print("xpeaks condition met: Both peaks are on the same side of the center.")
+                self.pairX = None
+            else:
+                self.pairX = match_peaks(self.xyvals)
+        
+            # Check the additional condition for ypeaks
+            if len(self.ypeaks) == 2 and (
+                (self.ypeaks[0]<half_length_y and self.ypeaks[1]<half_length_y) or
+                (self.ypeaks[0]>half_length_y and self.ypeaks[1]>half_length_y)):
+                if self.parent.messages:
+                    print("ypeaks condition met: Both peaks are on the same side of the center.")
+                self.pairY = None
+            else:
+                self.pairY = match_peaks(self.yyvals)
+        
+            # Determine radius based on available pairs
+            if self.pairX is None or None in self.pairX:
+                rx_x = None
+            else:
+                x1 = self.xpeaks[self.pairX[0]]
+                x2 = self.xpeaks[self.pairX[1]]
+                rx_x = abs(x1 - x2) / 2
+        
+            if self.pairY is None or None in self.pairY:
+                rx_y = None
+            else:
+                y1 = self.ypeaks[self.pairY[0]]
+                y2 = self.ypeaks[self.pairY[1]]
+                rx_y = abs(y1 - y2) / 2
+        
+            if rx_x is not None and rx_y is not None:
+                rx = np.mean([rx_x, rx_y])
+            elif rx_x is not None:
+                rx = rx_x
+            elif rx_y is not None:
+                rx = rx_y
+            else:
+                if self.parent.messages:
+                    print("No valid pairs detected for radius calculation.")
+                return 100  # Default radius or error handling
+        
+            if disp:
+                # Plot xline with peaks
+                plt.figure(figsize=(12, 6))
+        
+                # Plot for xline
+                plt.subplot(2, 1, 1)
+                plt.plot(x_line, label='xline')
+                plt.plot(self.xpeaks, self.xyvals, "ro", label='Peaks')
+                plt.title('Peaks in xline')
+                plt.xlabel('Index')
+                plt.ylabel('Value')
+                plt.legend()
+        
+                # Plot for yline
+                plt.subplot(2, 1, 2)
+                plt.plot(y_line, label='yline')
+                plt.plot(self.ypeaks, self.yyvals, "ro", label='Peaks')  
+                plt.title('Peaks in yline')
+                plt.xlabel('Index')
+                plt.ylabel('Value')
+                plt.legend()
+        
+                plt.tight_layout()
+                plt.show()
+
+        elif rtype == 1:
+            profile = ediff.radial.calc_radial_distribution(
+                im, 
+                center=(x, y)
+                )
+            p0, p1 = profile
+            idx_max = np.argmax(p1[50:]) + 50
+            rx = p0[idx_max]
+            max_val = p1[idx_max]
     
-        self.xpeaks, self.ypeaks = None, None
-        self.xyvals, self.yyvals = None, None
-    
-        x_line = im[int(x), :]
-        y_line = im[:, int(y)]
-    
-        # Define threshold for peak detection
-        x_thr = 0.5 * max(x_line)
-        y_thr = 0.5 * max(y_line)
-    
-        # Find peaks with dynamic height thresholds
-        self.xpeaks, _ = find_peaks(x_line, 
-                                    height=x_thr, 
-                                    prominence=1, 
-                                    distance=30)
-        self.xyvals = x_line[self.xpeaks]
-        self.ypeaks, _ = find_peaks(y_line, 
-                                    height=y_thr, 
-                                    prominence=1, 
-                                    distance=30)
-        self.yyvals = y_line[self.ypeaks]
-    
-        # Define half the length of the image
-        half_length_x = x_line.shape[0] / 2
-        half_length_y = y_line.shape[0] / 2
-    
-        # Check the additional condition for xpeaks
-        if len(self.xpeaks) == 2 and (
-            (self.xpeaks[0]<half_length_x and self.xpeaks[1]<half_length_x) or
-            (self.xpeaks[0]>half_length_x and self.xpeaks[1]>half_length_x)):
-            if self.parent.messages:
-                print("xpeaks condition met: Both peaks are on the same side of the center.")
-            self.pairX = None
-        else:
-            self.pairX = match_peaks(self.xyvals)
-    
-        # Check the additional condition for ypeaks
-        if len(self.ypeaks) == 2 and (
-            (self.ypeaks[0]<half_length_y and self.ypeaks[1]<half_length_y) or
-            (self.ypeaks[0]>half_length_y and self.ypeaks[1]>half_length_y)):
-            if self.parent.messages:
-                print("ypeaks condition met: Both peaks are on the same side of the center.")
-            self.pairY = None
-        else:
-            self.pairY = match_peaks(self.yyvals)
-    
-        # Determine radius based on available pairs
-        if self.pairX is None or None in self.pairX:
-            rx_x = None
-        else:
-            x1 = self.xpeaks[self.pairX[0]]
-            x2 = self.xpeaks[self.pairX[1]]
-            rx_x = abs(x1 - x2) / 2
-    
-        if self.pairY is None or None in self.pairY:
-            rx_y = None
-        else:
-            y1 = self.ypeaks[self.pairY[0]]
-            y2 = self.ypeaks[self.pairY[1]]
-            rx_y = abs(y1 - y2) / 2
-    
-        if rx_x is not None and rx_y is not None:
-            rx = np.mean([rx_x, rx_y])
-        elif rx_x is not None:
-            rx = rx_x
-        elif rx_y is not None:
-            rx = rx_y
-        else:
-            if self.parent.messages:
-                print("No valid pairs detected for radius calculation.")
-            return 100  # Default radius or error handling
-    
-        if disp:
-            # Plot xline with peaks
-            plt.figure(figsize=(12, 6))
-    
-            # Plot for xline
-            plt.subplot(2, 1, 1)
-            plt.plot(x_line, label='xline')
-            plt.plot(self.xpeaks, self.xyvals, "ro", label='Peaks')
-            plt.title('Peaks in xline')
-            plt.xlabel('Index')
-            plt.ylabel('Value')
-            plt.legend()
-    
-            # Plot for yline
-            plt.subplot(2, 1, 2)
-            plt.plot(y_line, label='yline')
-            plt.plot(self.ypeaks, self.yyvals, "ro", label='Peaks')  
-            plt.title('Peaks in yline')
-            plt.xlabel('Index')
-            plt.ylabel('Value')
-            plt.legend()
-    
-            plt.tight_layout()
-            plt.show()
+            if disp:
+                fig, axs = plt.subplots(1, 2, figsize=(8, 3))
+                axs[0].imshow(im, cmap=self.parent.cmap)
+                axs[0].add_patch(
+                    Circle(
+                        (y, x), rx, 
+                        edgecolor='red', 
+                        fill=False, 
+                        linewidth=2))
+                axs[0].scatter(y, x, color="red", marker="x")
+                axs[0].set_title("Initial Estimate")
+                axs[0].axis('off')
+                axs[1].plot(p0, p1)
+                axs[1].set_ylim(0,max_val+20)
+                axs[1].axvline(rx, 
+                               color='red', 
+                               linestyle='--', 
+                               label='Initial Radius')
+                axs[1].set_title("Radial Profile")
+                axs[1].legend()
+                plt.tight_layout()
+                plt.show()
     
         return rx
 
@@ -2936,13 +2830,6 @@ class CenterRefinement:
                 self.xx, self.yy, self.rr = self.ref_sum(
                     par_short.x, par_short.y, par_short.r)
             
-            elif refinement == "sum2":
-                # Intensity sum refinement
-                self.xx, self.yy, self.rr = self.ref_sum2(
-                    par_short.x, par_short.y, par_short.r,
-                    live_plot=self.parent.live_plot)
-                
-
             else:
                 print("Selected refinement method is not supported.")
                 sys.exit()
@@ -3484,137 +3371,136 @@ class CenterRefinement:
         return best_center[0], best_center[1], best_radius
 
 
-    def ref_sum2(self, px, py, pr, plot_results=0, live_plot=True):
-        '''
-        Adjust center position based on gradient optimization method
-        via maximization of intensity sum.
-        
-        Parameters
-        ----------
-        px : float64
-            x-coordinate of the detected center to be adjusted.
-        py : float64
-            y-coordinate of the detected center to be adjusted.
-        pr : float64
-            radius of the detected center.
-        plot_results : int, optional
-            Unused here.
-        live_plot : bool, optional
-            Show an interactive plot of the refinement process in real time.
     
-        Returns  
-        -------
-        best_center[0] : float64
-            Adjusted x-coordinate of the center.
-        best_center[1] : float64
-            Adjusted y-coordinate of the center.
-        best_radius : float64
-            The adjusted radius of the circular diffraction pattern.
-        '''
-      
-        bckup = [np.copy(px), np.copy(py), np.copy(pr)]
-        image = np.copy(self.parent.image)
-        
-        init_sum = self.parent.intensity_sum(image, px, py, pr,
-                                             gaussian_weight=True)
-        max_intensity_sum = init_sum
-        best_center = (px, py)
-        best_radius = pr
-        
-        max_iterations = 100
-        step, initial_step = 0.5, 2.0
-        final_step = 0.1
-        decay_rate = 0.98  # Slower decay for better convergence
-        recent_sums = []  # Track recent intensity sums for convergence check
-        l = image.shape[1]
-        
-        # Set up live plot
-        if live_plot:
-            if self.parent.icut is not None:
-                im = np.where(
-                    image > self.parent.icut, self.parent.icut, image)
-            else:
-                im = np.copy(image)
-                
-            fig, ax = plt.subplots()
-            ax.imshow(im, cmap=self.parent.cmap)
-            circle = Circle((px, py), pr, color='r', fill=False, linewidth=1.5)
-            ax.add_patch(circle)
-            title_text = ax.set_title(f'Intensity sum: {init_sum:.3f}')
-            plt.ion()
-            plt.axis("off")
-            plt.show()
+        best_params = result.x
+        initial_score = -objective_func(initial_params)
+        final_score = result.fun * -1 # result.fun is the minimized value
     
-        # Iterative optimization
-        for iteration in range(max_iterations):
-            step = max(final_step, initial_step*(decay_rate**(iteration/10)))
+        if result.success and final_score > initial_score:
+            print("\n✅ Global optimization successful!")
+            print(f"   Initial: Center=({initial_params[0]:.2f}, {initial_params[1]:.2f}), R={initial_params[2]:.2f}, Score={initial_score:.3f}")
+            print(f"   Final:   Center=({best_params[0]:.2f}, {best_params[1]:.2f}), R={best_params[2]:.2f}, Score={final_score:.3f}")
+            return best_params[0], best_params[1], best_params[2]
+        else:
+            print("\n❌ Global optimization failed or did not find a better solution.")
+            print(f"   Final score ({final_score:.3f}) was not an improvement over initial ({initial_score:.3f}).")
+            return initial_params[0], initial_params[1], initial_params[2]
+    
+    
+    def diagnose_landscape(self, px, py, pr, metric='std', search_range=2.0, steps=21):
+        """
+        Plots the optimization landscape in a small region around the initial point.
+        """
+        print(f"Diagnosing landscape around ({px:.1f}, {py:.1f}) with r={pr:.1f}...")
         
-            # Step 1: Optimize center position with fixed radius
-            neighbors = [(dx, dy) for dx in np.linspace(-step, step, 3)
-                         for dy in np.linspace(-step, step, 3)]
-            best_pos = best_center  # Keep track of best (x, y)
+        # Select the metric function
+        metric_map = { 'std': self.intensity_std, 'median': self.intensity_median, 'sum': self.intensity_sum }
+        metric_func = metric_map.get(metric, self.intensity_std)
+    
+        # Create a grid of x and y coordinates to test
+        x_range = np.linspace(px - search_range, px + search_range, steps)
+        y_range = np.linspace(py - search_range, py + search_range, steps)
+        score_grid = np.zeros((steps, steps))
+    
+        # Calculate the metric score at each point on the grid
+        for i, y in enumerate(y_range):
+            for j, x in enumerate(x_range):
+                score_grid[i, j] = metric_func(self.parent.image, x, y, pr)
+    
+        # Plot the results
+        plt.figure(figsize=(4, 4))
+        plt.imshow(score_grid, origin='lower', extent=[x_range[0], x_range[-1], y_range[0], y_range[-1]])
+        plt.colorbar(label=f"Metric Score ('{metric}')")
+        plt.contour(x_range, y_range, score_grid, colors='white', alpha=0.5)
         
-            for dx, dy in neighbors:
-                nx, ny = best_center[0] + dx, best_center[1] + dy
-                intensity = self.parent.intensity_sum(image, nx, ny, 
-                                                      best_radius, 
-                                                      gaussian_weight=True)
-                if intensity > max_intensity_sum:
-                    max_intensity_sum = intensity
-                    best_pos = (nx, ny)
+        # Mark the starting point
+        plt.plot(px, py, 'r+', markersize=15, label='Initial Guess')
+        plt.title("Optimization Landscape")
+        plt.xlabel("X-coordinate")
+        plt.ylabel("Y-coordinate")
+        plt.legend()
+        plt.show()
         
-            best_center = best_pos  # Update best position
-        
-            # Step 2: Optimize radius with updated (x, y)
-            radius_variations = np.linspace(best_radius-step, 
-                                            best_radius+step, 3)  # Reduce to 3
-            for nr in radius_variations:
-                intensity = self.parent.intensity_sum(image, 
-                                                      best_center[0], 
-                                                      best_center[1],
-                                                      nr, 
-                                                      gaussian_weight=True)
-                if intensity > max_intensity_sum:
-                    max_intensity_sum = intensity
-                    best_radius = nr
-                
-            # Convergence check
-            recent_sums.append(max_intensity_sum)
-            if len(recent_sums) > 10:
-                recent_sums.pop(0)
-        
-            if len(recent_sums) == 10 and np.std(recent_sums) < 0.01:
+
+    def ref_ultimate(self, px, py, pr=None, plot_results=False,
+                     max_iter=50, step_size=2.0, radius_step=0.2,
+                     min_step=0.1, min_radius_step=0.02):
+        image = self.parent.image
+    
+        # Step 1: Initial estimate from radial profile
+        if pr is None:
+            profile = ediff.radial.calc_radial_distribution(image, center=(px, py))
+            p0, p1 = profile
+            idx_max = np.argmax(p1[50:]) + 50
+            pr = p0[idx_max]
+    
+            if plot_results:
+                fig, axs = plt.subplots(1, 2, figsize=(8, 3))
+                axs[0].imshow(image, cmap='gray')
+                axs[0].add_patch(Circle((py, px), pr, edgecolor='red', fill=False, linewidth=2))
+                axs[0].scatter(py, px, color="red", marker="x")
+                axs[0].set_title("Initial Estimate")
+                axs[0].axis('off')
+                axs[1].plot(p0, p1)
+                axs[1].axvline(pr, color='red', linestyle='--', label='Initial Radius')
+                axs[1].set_title("Radial Profile")
+                axs[1].legend()
+                plt.tight_layout()
+                plt.show()
+    
+        # Step 2: Iterative refinement
+        current_params = np.array([px, py, pr])
+        best_sum = self.parent.intensity_sum(image, *current_params)
+    
+        for iteration in range(max_iter):
+            improved = False
+            candidates = []
+    
+            # Larger neighborhood: try ±2*step for more aggressive moves
+            for dx in [-2*step_size, -step_size, 0, step_size, 2*step_size]:
+                for dy in [-2*step_size, -step_size, 0, step_size, 2*step_size]:
+                    for dr in [-2*radius_step*pr, -radius_step*pr, 0, radius_step*pr, 2*radius_step*pr]:
+                        if dx == dy == dr == 0:
+                            continue
+                        new_params = current_params + np.array([dx, dy, dr])
+                        cx, cy, cr = new_params
+                        if cr <= 1 or not (0 <= cx < image.shape[0] and 0 <= cy < image.shape[1]):
+                            continue
+                        val = self.parent.intensity_sum(image, *new_params)
+                        candidates.append((val, new_params))
+    
+            if not candidates:
                 break
-        
-            # Update live plot
-            if live_plot:
-                circle.center = (best_center[0], l - best_center[1])
-                circle.radius = best_radius
-                title_text.set_text(f'Intensity sum: {max_intensity_sum:.3f}')
-                plt.pause(0.02)
     
-        if live_plot:
-            plt.ioff()
+            val_max, best_candidate = max(candidates, key=lambda x: x[0])
+            if val_max > best_sum:
+                current_params = best_candidate
+                best_sum = val_max
+                improved = True
+            else:
+                # Reduce step size if no improvement
+                step_size *= 0.5
+                radius_step *= 0.5
+    
+            if step_size < min_step and radius_step < min_radius_step:
+                break
+    
+        # Final values
+        px, py, pr = current_params
+    
+        if plot_results:
+            print(f"Refined center: ({px:.2f}, {py:.2f}), radius: {pr:.2f}")
+            fig, ax = plt.subplots(figsize=(4, 4))
+            ax.imshow(image, cmap='gray')
+            ax.add_patch(Circle((py, px), pr, edgecolor='green', fill=False, linewidth=2))
+            ax.scatter(py, px, color="green", marker="x")
+            ax.set_title("Refined Result")
+            ax.axis('off')
+            plt.tight_layout()
             plt.show()
     
-        # Final Gaussian fitting for better accuracy
-        best_center = self.parent.fit_2d_gaussian(image, best_center)
-    
-        # # Check if refinement actually improved the result
-        # if (init_sum - max_intensity_sum) / init_sum < 0.1:
-        #     print("Refinement unsuccessful.")
-        #     best_center = (bckup[0], bckup[1])
-        #     best_radius = bckup[2]
-    
-        if (self.parent.messages or self.parent.final_print):
-            self.parent.rText = \
-                "Center Refinement (IntensitySum2)     : ({:.3f}, {:.3f})".\
-                    format(best_center[0], best_center[1])
-    
-        if live_plot:
-            plt.close(fig)
-    
-        return best_center[0], best_center[1], best_radius
+        return px, py, pr
+
 
 
 class HandlerCircle(HandlerBase):
