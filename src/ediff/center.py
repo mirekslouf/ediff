@@ -553,7 +553,7 @@ class CenterLocator:
         return y, x
 
 
-    def visualize_results(self, csquare=None):
+    def visualize_results(self, csquare=None, out_file=None, out_dpi=200):
         '''
         Visualize diffractogram and its center after
         center determination + refinement.
@@ -564,6 +564,12 @@ class CenterLocator:
             If csquare argument is given,
             only the central square of the diffractogram will be plotted;
             the size of the central square will be equal to csquare argument.
+        out_file : str, optional, default is None
+            If out_file is given,
+            save the final plot to image named *out_file*.
+        out_dpi : int, optional, default is 300
+            DPI of the output image file;
+            this parameter is relevant only if out_file is given.
     
         Returns
         -------
@@ -609,10 +615,10 @@ class CenterLocator:
             ymax -= edge
     
         # (4) Final plot: show the diffractogram + refinement results
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(layout='constrained')
         ax.imshow(im, cmap=self.cmap)
     
-        ax.set_title(f'Center Location ({self.determination}/{self.refinement})')
+        ax.set_title(f'Center :: {self.determination}/{self.refinement}')
     
         ax.scatter(x1, y1, 
                    label=labeld, 
@@ -622,7 +628,7 @@ class CenterLocator:
         c0 = plt.Circle((x1, y1), r1, 
                         color='red', 
                         fill=False, 
-                        label='detected', 
+                        label='detected center', 
                         lw=1)
         ax.add_patch(c0)
     
@@ -633,7 +639,7 @@ class CenterLocator:
         c1 = plt.Circle((x2, y2), r2, 
                         color='springgreen', 
                         fill=False, 
-                        label='refined', 
+                        label='refined center', 
                         lw=1)
         ax.add_patch(c1)
     
@@ -642,11 +648,19 @@ class CenterLocator:
                   bbox_to_anchor=(.98, 1.01), 
                   bbox_transform=ax.transAxes)
     
+        # Remove axes (= tick and ticklabels) around the diffractogram
+        ax.axis('off')
+        
+        # Plot only the central square region if requested
         if csquare is not None:
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, ymax)
-    
-        ax.axis('off')
+        
+        # Save the result to output file if requested
+        if out_file is not None:
+            fig.savefig(out_file, dpi=out_dpi)
+        
+        # Show the plot on screen
         plt.show(block=False)
 
 
