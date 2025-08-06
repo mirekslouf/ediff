@@ -3383,22 +3383,6 @@ class CenterRefinement:
                 "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
                 
         return best_center[0], best_center[1], best_radius
-
-
-    
-        best_params = result.x
-        initial_score = -objective_func(initial_params)
-        final_score = result.fun * -1 # result.fun is the minimized value
-    
-        if result.success and final_score > initial_score:
-            print("\n✅ Global optimization successful!")
-            print(f"   Initial: Center=({initial_params[0]:.2f}, {initial_params[1]:.2f}), R={initial_params[2]:.2f}, Score={initial_score:.3f}")
-            print(f"   Final:   Center=({best_params[0]:.2f}, {best_params[1]:.2f}), R={best_params[2]:.2f}, Score={final_score:.3f}")
-            return best_params[0], best_params[1], best_params[2]
-        else:
-            print("\n❌ Global optimization failed or did not find a better solution.")
-            print(f"   Final score ({final_score:.3f}) was not an improvement over initial ({initial_score:.3f}).")
-            return initial_params[0], initial_params[1], initial_params[2]
     
     
     def diagnose_landscape(self, px, py, pr, metric='std', search_range=2.0, steps=21):
