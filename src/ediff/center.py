@@ -680,7 +680,7 @@ class CenterLocator:
             If out_file is given,
             save the final plot to image named *out_file*.
         
-        out_dpi : int, optional, default is 300
+        out_dpi : int, optional, default is 200
             DPI of the output image file;
             this parameter is relevant only if out_file is given.
     
@@ -735,11 +735,11 @@ class CenterLocator:
     
         ax.scatter(x1, y1, 
                    label=labeld, 
-                   color='red', 
+                   color='gold', 
                    marker='x', 
                    s=60, lw=1)
         c0 = plt.Circle((x1, y1), r1, 
-                        color='red', 
+                        color='gold', 
                         fill=False, 
                         label='detected center', 
                         lw=1)
@@ -747,10 +747,10 @@ class CenterLocator:
     
         ax.scatter(x2, y2,
                    label=labelr, 
-                   color='springgreen', 
+                   color='red', 
                    marker='x', lw=1, s=60)
         c1 = plt.Circle((x2, y2), r2, 
-                        color='springgreen', 
+                        color='red', 
                         fill=False, 
                         label='refined center', 
                         lw=1)
