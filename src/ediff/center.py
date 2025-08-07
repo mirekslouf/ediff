@@ -4,7 +4,7 @@ Module: ediff.center
 Find the center of a 2D diffraction pattern.
 
 * The center determination may be surprisingly tricky in certain cases.
-* Nevertheless, usually it is enough to call the CenterLocator shown below.
+* Nevertheless, usually it is enough to call `CenterLocator` as shown below.
 * More details and examples at GitHub: https://mirekslouf.github.io/ediff/docs
 
 >>> # Example: How to use CenterLocator and get results?
