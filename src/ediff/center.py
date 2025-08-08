@@ -77,31 +77,32 @@ class CenterLocator:
     determination : str or None, optional, default=None
         Method used for the initial center determination.
         Options include:
-        - 'manual': Manual detection = interactive plot where the user
+        - *'manual'* : Manual detection = interactive plot where the user
           selects 3 points defining a diffraction ring with a mouse.
-        - 'intensity' : Auto-detection = the intensity center
+        - *'intensity'* : Auto-detection = the intensity center
           from the central region.
-        - 'curvefit': Automatic detection = fit the intensity center
+        - *'curvefit'* : Automatic detection = fit the intensity center
           from the central region using pseudo-Voigt profile.                      
-        - 'hough' : Automatic detection using Hough transform
+        - *'hough'* : Automatic detection using Hough transform
           to find center of ring-like structures.
-        - 'phase' : Automatic detection using phase correlation
+        - *'phase'* : Automatic detection using phase correlation
           to find the symmetry center.
-        - 'ccorr' : Automatic detection using cross-correlation
+        - *'ccorr'* : Automatic detection using cross-correlation
           to find the symmetry center.
-        - None : Skip the center determination;
+        - *None* : Skip the center determination;
           it is supposed that the center coordinates
           will be read from *in_file* argument - see below.
           
     refinement : str or None, optional, default=None
         Method used for refining the initially detected center.
         Options include:
-        - 'manual': Manual fine-tuning of the center along
+        - *'manual'* : Manual fine-tuning of the center along
           the selected diffraction ring.
-        - 'sum' : Automatic refinement by maximizing the intensity sum
+        - *'sum'* : Automatic refinement by maximizing the intensity sum
           the selected diffraction ring.
-        - 'var': Automatic refinement by minimizing intensity variance
+        - *'var'* : Automatic refinement by minimizing intensity variance
           the selected diffraction ring.
+        - *'None'* : Skip the center refinement
 
     rtype : int, default=1
         How to determine a radius of a difraction ring for center refinement.
@@ -170,18 +171,7 @@ class CenterLocator:
     * The class automatically initializes and uses two internal components:
       `CenterDetermination` and `CenterRefinement`.
     * These internal processes are hidden from the user but can be accessed 
-      directly if needed.
-
-    Examples
-    --------
-    >>> import ediff as ed
-    >>>
-    >>> locator = ed.center.CenterLocator(
-    >>>    input_image   = '.r/path/to/your/data.png',   
-    >>>    determination = 'manual',           
-    >>>    refinement    = 'sum',
-    >>>    final_print   = True)   
-                              
+      directly if needed.                             
     '''
     
     
@@ -283,28 +273,41 @@ class CenterLocator:
         # by the following command. As the saved coordinates can be used INSTEAD 
         # of CenterDetermination we will read them here.
         if self.in_file is not None: 
-            self.load_results()  
             if self.verbose==3:
                 print("[INFO] Loading saved center coordinates.")
-        
-        ## (4) Run CenterDetermination ----------------------------------------
-        if self.verbose == 3:
-            print("[INFO] Detecting center...", end="", flush=True)
+
+            self.load_results()  
             
-        #  (4a) Initialize/run CenterDetermination
-        self.center1 = CenterDetermination(self,
-                self.input_image,
-                self.determination,
-                self.heq,
-                self.icut,
-                self.cmap,
-                self.csquare,
-                self.cintensity,
-                self.verbose,
-                self.print_sums)
-        
-        if self.verbose == 3:
-            print(" [DONE]")
+            self.center1 = CenterDetermination(
+                self,
+                self.input_image
+                )
+            self.center1.x = self.x1
+            self.center1.y = self.y1
+            if (self.verbose or self.final_print):
+                self.dText = \
+                    "Center Determination (fromInFile)     : ({:.3f}, {:.3f})"
+
+             
+        else:
+            ## (4) Run CenterDetermination ----------------------------------------
+            if self.verbose == 3:
+                print("[INFO] Detecting center... ", end="", flush=True)
+                
+            #  (4a) Initialize/run CenterDetermination
+            self.center1 = CenterDetermination(self,
+                    self.input_image,
+                    self.determination,
+                    self.heq,
+                    self.icut,
+                    self.cmap,
+                    self.csquare,
+                    self.cintensity,
+                    self.verbose,
+                    self.print_sums)
+            
+            if self.verbose == 3:
+                print("[DONE]")
     
         #  (4b) Find radius of a circle/diffraction ring, which is needed 
         #       for the next step = CenterRefimenement.
@@ -341,7 +344,6 @@ class CenterLocator:
         
         if self.verbose == 3:
             print(" [DONE]")
-            
             
         ## (6) Collect results ------------------------------------------------
         if self.verbose==3:
@@ -1096,35 +1098,42 @@ class CenterDetermination:
         self.preprocess(preInit=1)
         
         #  (2b) Center detection methods
-        if determination.lower() == "manual":
+        if determination == "manual":
             self.x, self.y, self.r = self.detection_3points()
             
-        elif determination.lower() == "hough":
+        elif determination == "hough":
             self.x, self.y, self.r = self.detection_Hough(
                 sobel=self.parent.sobel,
                 live_plot=self.parent.live_plot)
             
-        elif determination.lower() == "intensity":
+        elif determination== "intensity":
             self.x, self.y, self.r = self.detection_intensity(
                 self.parent.csquare, 
                 self.parent.cintensity,
                 sobel=self.parent.sobel)
             
-        elif determination.lower() == "phase":
+        elif determination == "phase":
             self.y, self.x, self.r = self.detection_phase(
                 sobel=self.parent.sobel,
                 masking=self.parent.masking)
          
-        elif determination.lower() == "ccorr":
+        elif determination == "ccorr":
             self.y, self.x, self.r = self.detection_crosscorr(
                 sobel=self.parent.sobel,
                 disp=False)
         
-        elif determination.lower() == "curvefit":
+        elif determination == "curvefit":
             self.x, self.y, self.r = self.detection_curvefit()
-                
-        else: 
-            print("Selected determination method does not exist.")
+        
+        elif determination is None:
+            if self.parent.in_file is not None:
+                pass
+            else:
+                print("\n[ERROR] No determination method specified and no input file provided. Process aborted.")
+                sys.exit()
+        
+        else:
+            print(f"[ERROR] Determination method '{determination}' is not recognized. Process aborted.")
             sys.exit()
 
 
@@ -1444,7 +1453,6 @@ class CenterDetermination:
         # (2) Prepare mask and compute weighted center ------------------------
         if masking:
             mask = self.auto_masking(image) 
-            # print("masked")
         else: mask = np.ones_like(image, dtype=bool) # binary mask
         
         weights = image                        # 
@@ -2201,7 +2209,7 @@ class CenterDetermination:
                     
                     fig.canvas.draw()
                 else:
-                    print("No points to delete.")
+                    print("\n[WARNING] No points to delete.")
     
             # Delete recent point (last added) -- independent on the cursor
             if event.key == '2':
@@ -2233,7 +2241,7 @@ class CenterDetermination:
 
                         fig.canvas.draw()
                 else:
-                    print("No points to delete.")
+                    print("\n[WARNING] No points to delete.")
                     
             ## Select points 
             elif event.key == '1':
@@ -2244,7 +2252,7 @@ class CenterDetermination:
                     
                     if new_point in self.coords:
                         # Do not allow multiple selection of one point
-                        print("The selected point already exists.")
+                        print("\n[WARNING] The selected point already exists.")
                     else:
                         # Add selected point
                         self.coords.append(new_point)
@@ -2268,7 +2276,6 @@ class CenterDetermination:
                     # Turn off interactive mode
                     plt.ioff()
     
-
     
             # (8) Calculate circle or terminate -------------------------------
             elif event.key == 'd':
@@ -2276,7 +2283,7 @@ class CenterDetermination:
                     calculate_circle_flag = True
  
                 else:
-                    print("Select exactly 3 points to calculate the circle.")
+                    print("\n[WARNING] Select exactly 3 points to calculate the circle.")
                     fig.canvas.draw()
     
         # Connect the callback function to the key press event
@@ -2293,48 +2300,52 @@ class CenterDetermination:
  
             try:
                 plt.waitforbuttonpress(timeout=0.1)
-                # Store the zoom level
-                current_xlim = ax.get_xlim()
-                current_ylim = ax.get_ylim()
- 
-                # Plot detected diffraction pattern
-                if calculate_circle_flag:
- 
-                    self.calculate_circle(plot_results=0)
-                    
-                    ax.clear()
-                    ax.imshow(im, cmap = self.parent.cmap,
-                              origin="upper")
-                    # Retore the previous zoom level
-                    ax.set_xlim(current_xlim)
-                    ax.set_ylim(current_ylim)
-                 
-                    circle = plt.Circle(
-                        (self.x, self.y), self.r, color='r', fill=False)
-                    ax.add_artist(circle)
-        
-                    # Plot center point
-                    center, = ax.plot(self.x, self.y, 'rx', markersize=12)
-                    plt.title('Manually adjust the position of the center using keys.')
-        
-                    # Display the image
-                    plt.draw()
-                    ax.axis('off')
-
-                    plt.show(block = False)
-
             except KeyboardInterrupt:
-                print("Execution manually interrupted by user.")
+                print("[INFO] Execution manually interrupted by user.")
                 break
-            except ValueError as e:
-                print("ValueError:", e)
-                break
-           
         # If the termination_flag is True, stop the code
         if termination_flag: 
-             print("No points selected. Returned None values.")
+             print("\n[WARNING] No points selected. Returned None values.")
              sys.exit()
              return None, None, None
+             
+        # Store the zoom level
+        current_xlim = ax.get_xlim()
+        current_ylim = ax.get_ylim()
+ 
+        # Plot detected diffraction pattern
+        if calculate_circle_flag:
+ 
+            self.x, self.y, self.r, self.center, self.circle = \
+                self.calculate_circle(plot_results=0)
+            
+            ax.clear()
+            ax.imshow(im, cmap = self.parent.cmap,
+                      origin="upper")
+            # Retore the previous zoom level
+            ax.set_xlim(current_xlim)
+            ax.set_ylim(current_ylim)
+         
+            circle = plt.Circle(
+                self.center, self.r, color='r', fill=False)
+            ax.add_artist(circle)
+
+            # Plot center point
+            center, = ax.plot(self.x, self.y, 'rx', markersize=12)
+            plt.title('Manually adjust the position of the center using keys.')
+
+            # Display the image
+            plt.draw()
+            ax.axis('off')
+
+            plt.show(block = False)
+
+      
+            # except ValueError as e:
+            #     print("ValueError:", e)
+            #     break
+           
+
         
         # Disconnect key press events
         fig.canvas.mpl_disconnect(cid0) 
@@ -2618,11 +2629,6 @@ class CenterDetermination:
         br = b**0.5
         cr = c**0.5 
         self.r = ar*br*cr/((ar+br+cr)*(-ar+br+cr)*(ar-br+cr)*(ar+br-cr))**0.5
-        
-        # # Print results
-        # if self.parent.verbose:
-        #     print("CenterEstimator :: manual center detection")
-        #     print(f"Center coordinates: {self.x:.2f} {self.y:.2f}")
                     
         if plot_results==1:
             # Create and manage the figure
@@ -2743,7 +2749,7 @@ class CenterDetermination:
             """
             if len(arr) < 2:  # Not enough values to compare
                 if self.parent.verbose==2:
-                    print("Not enough values to find similar pairs.")
+                    print("[ERROR] Not enough values to find similar pairs.")
                 return None, None
     
             # Special case: if there are exactly 2 peaks, return them
@@ -2763,7 +2769,7 @@ class CenterDetermination:
     
             if len(left) == 0 or len(right) == 0:  # Check for empty halves
                 if self.parent.verbose==2:
-                    print("One of the halves is empty.")
+                    print("[ERROR] One of the halves is empty.")
                 return None, None
     
             # Initialize variables for tracking the smallest difference
@@ -2851,7 +2857,7 @@ class CenterDetermination:
                 rx = rx_y
             else:
                 if self.parent.verbose==2:
-                    print("No valid pairs detected for radius calculation.")
+                    print("\n[WARNING] No valid pairs detected for radius calculation.")
                 return 100  # Default radius or error handling
         
             if disp:
@@ -3193,7 +3199,7 @@ class CenterRefinement:
             
 
             else:
-                print("Selected refinement method is not supported.")
+                print("[ERROR] Selected refinement method is not supported. Process aborted.")
                 sys.exit()
        
             plt.close("all")          
@@ -3587,7 +3593,7 @@ class CenterRefinement:
         
         ## (2) worsened final maximum intensity sum than the initial one
         if np.round(init_var,-2) < np.round(min_intensity_var,-2):
-            print("Refinement redundant.")
+            print("\n[WARNING] Refinement redundant.")
             best_center = np.copy(bckup)
     
         # Print results
@@ -3783,7 +3789,7 @@ class CenterRefinement:
         
         ## (2) worsened final maximum intensity sum than the initial one
         if np.round(init_sum,-2) > np.round(max_intensity_sum,-2):
-            print("Refinement redundant.")
+            print("[] Refinement redundant.")
             best_center = np.copy(bckup)
     
         # Print results
@@ -3901,7 +3907,7 @@ class HandlerCircle(HandlerBase):
     default. It is intended for internal use within the module and not 
     for general use.
 
-    Methods:
+    Methods
     --------
     create_artists(legend, 
                    orig_handle, 
@@ -3933,7 +3939,7 @@ class HandlerCircle(HandlerBase):
         trans : matplotlib.transforms.Transform
             Transformation applied to the marker's coordinates.
 
-    Returns:
+    Returns
     --------
     list of matplotlib.patches.Circle
         A list containing a single circular marker artist.
