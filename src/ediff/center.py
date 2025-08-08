@@ -4,7 +4,8 @@ Module: ediff.center
 Find the center of a 2D diffraction pattern.
 
 * The center determination may be surprisingly tricky in certain cases.
-* Nevertheless, the user just calls the CenterLocator class as shown below.
+* Nevertheless, usually it is enough to call `CenterLocator` as shown below.
+* More details and examples at GitHub: https://mirekslouf.github.io/ediff/docs
 
 >>> # Example: How to use CenterLocator and get results?
 >>> import ediff as ed
@@ -94,11 +95,11 @@ class CenterLocator:
         - 'sum'   : Automatic refinement by maximizing the intensity sum along 
         - 'var'   : Automatic refinement by minimizing intensity variance along 
 
-    rtype : int, default=0
+    rtype : int, default=1
         Radius estimation method.
         Options:
-        - 0 : Peak matching method.
-        - 1 : Radial distribution method.
+        - 0 : Peak matching method (historical).
+        - 1 : Radial distribution method (more universal, new default).
         
     in_file : str or None, optional, default=None
         Path to the file from which previously saved coordinates will be loaded.
@@ -173,7 +174,7 @@ class CenterLocator:
                  input_image, 
                  determination = None, 
                  refinement = None,
-                 rtype = 0,
+                 rtype = 1,
                  in_file = None,
                  out_file = None,
                  sobel = False,
