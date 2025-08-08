@@ -77,35 +77,50 @@ class CenterLocator:
     determination : str or None, optional, default=None
         Method used for the initial center determination.
         Options include:
-        - 'manual'   : Manual selection of 3 points on a diffraction ring.
-        - 'hough'    : Automatic detection using Hough transform.
-        - 'intensity': Automatic detection based on the intensity center 
-                       of the central region.
-        - 'phase'    : Automatic detection using phase correlation to find 
-                       the symmetry center.
-        - 'ccorr'    : Automatic detection using cross-correlation to find 
-                       the symmetry center.
-        - 'curvefit' : Automatic detecting using pseudo-Voigt profile fitting                      
-
+        - 'manual': Manual detection = interactive plot where the user
+          selects 3 points defining a diffraction ring with a mouse.
+        - 'intensity' : Auto-detection = the intensity center
+          from the central region.
+        - 'curvefit': Automatic detection = fit the intensity center
+          from the central region using pseudo-Voigt profile.                      
+        - 'hough' : Automatic detection using Hough transform
+          to find center of ring-like structures.
+        - 'phase' : Automatic detection using phase correlation
+          to find the symmetry center.
+        - 'ccorr' : Automatic detection using cross-correlation
+          to find the symmetry center.
+        - None : Skip the center determination;
+          it is supposed that the center coordinates
+          will be read from *in_file* argument - see below.
+          
     refinement : str or None, optional, default=None
         Method used for refining the initially detected center.
         Options include:
-        - 'manual': Manual fine-tuning of the center along the selected 
-                    diffraction ring.
-        - 'sum'   : Automatic refinement by maximizing the intensity sum along 
-        - 'var'   : Automatic refinement by minimizing intensity variance along 
+        - 'manual': Manual fine-tuning of the center along
+          the selected diffraction ring.
+        - 'sum' : Automatic refinement by maximizing the intensity sum
+          the selected diffraction ring.
+        - 'var': Automatic refinement by minimizing intensity variance
+          the selected diffraction ring.
 
     rtype : int, default=1
-        Radius estimation method.
-        Options:
-        - 0 : Peak matching method (historical).
-        - 1 : Radial distribution method (more universal, new default).
+        How to determine a radius of a difraction ring for center refinement.
+        In powder diffractograms, the diffraction rings are clearly defined.
+        In spotty diffractograms, the diffraction ring is an fictive ring
+        connecting at least three diffraction spots.
+        Options include:
+        - 0 : Peak matching method
+          (fast and simple, but failing for non-powders, historical).
+        - 1 : Radial distribution method
+          (slower but more universal, new default).
         
     in_file : str or None, optional, default=None
-        Path to the file from which previously saved coordinates will be loaded.
+        Path to a file from which the (previously saved)
+        center coordinates will be loaded.
 
     out_file : str or None, optional, default=None
-        Path to the file where the determined coordinates will be saved.
+        Path to a file where the determined
+        center coordinates will be saved.
         
     sobel : bool, optional, default=False
         If True, apply Sobel filter to the image before processing.
@@ -119,7 +134,7 @@ class CenterLocator:
     cmap : str, optional, default='gray'
         Matplotlib colormap name used for displaying the image.
         
-    csquare : int, optional, defaul=50
+    csquare : int, optional, default=50
         Size (in pixels) of the central square used for initial center search.
         
     cintensity : float, optional, default=0.8
@@ -687,7 +702,7 @@ class CenterLocator:
     def convert_coords(self, x, y):
         """
         Convert coordinates between numpy and matplotlib systems.
-    
+
         Parameters
         ----------
         x : int or float
@@ -695,7 +710,7 @@ class CenterLocator:
         
         y : int or float
             The y-coordinate in the numpy (row index) format.
-    
+
         Returns
         -------
         tuple of (int or float, int or float)
@@ -2340,18 +2355,16 @@ class CenterDetermination:
     
     def adjustment_3points(self, fig, circle, center, plot_results=0) -> tuple:
         """
-        Interactive refinement of the diffraction pattern center after initial
-        detection via 3 points.
-
-        This method allows the user to fine-tune the estimated center and radius
-        of a diffraction ring (initially determined using 3 manually selected 
-        points) through interactive keyboard controls.
-
-        The user interacts directly with the figure window containing the image 
-        and the detected circle.
+        Manual/interactive refinement of the diffraction pattern center
+        after initial detection via 3 points.
 
         User Controls (during point selection)
         --------------------------------------
+        This method allows the user to fine-tune the estimated
+        center and radius of a diffraction ring,
+        (which was determined manually by selecting 3 points)
+        by means of the following interactive keyboard controls:
+
         - Arrow keys (←, →, ↑, ↓): Move the center left, right, up, or down
         - **'+'** : Increase the radius
         - **'-'** : Decrease the radius
@@ -3094,7 +3107,7 @@ class CenterRefinement:
     icut : float, optional, default=None
         Cut-off intensity level for processing the image
         
-   cmap : str, optional, default='gray'
+    cmap : str, optional, default='gray'
         Colormap to be used when displaying the image for manual refinement.
     
     verbose : bool, optional, default=False
@@ -3191,18 +3204,13 @@ class CenterRefinement:
            
     def ref_interactive(self, px, py, pr):
         """
-        Interactive refinement of the diffraction pattern center after initial
-        detection via 3 points.
+        Manual/interactive refinement of the diffraction pattern center.
       
-        This method allows the user to fine-tune the estimated center and radius
-        of a diffraction ring (initially determined using 3 manually selected 
-        points) through interactive keyboard controls.
+        This method allows the user to fine-tune the estimated center
+        and radius of a diffraction ring through interactive keyboard controls.
       
-        The user interacts directly with the figure window containing the image 
-        and the detected circle.
-      
-        ### Keyboard Controls
-        ---------------------
+        An new window is opened and the user can adjust the position
+        of the diffraction ring using the following keys (keyboard controls):
         - Arrow keys (←, →, ↑, ↓): Move the center left, right, up, or down
         - '+' : Increase the radius
         - '-' : Decrease the radius
@@ -3218,11 +3226,12 @@ class CenterRefinement:
             The figure window used for interactive refinement.
             
         circle : matplotlib.patches.Circle
-            The circle object initially defined from 3 selected points.
+            The circle object known from
+            the previous step = from the center determination.
             
         center : tuple
-            The initial (x, y) center coordinates estimated from the selected 
-            points.
+            The initial (x, y) center coordinates from
+            the previous step = from the center determination.
             
         plot_results : bool, optional, default=False
             If True, the results of the adjustment are visualized.
@@ -3241,10 +3250,10 @@ class CenterRefinement:
         Notes
         -----
         - Interactive adjustments are visualized in real time.
-        - Intensity sum at the current center/radius is printed if print_sums
-          is True.
-        - Arrow key defaults in Matplotlib (e.g., navigation) are temporarily 
-          disabled to allow movement control.
+        - Intensity sum at the current center/radius is printed
+          if *print_sums* argument is True.
+        - Arrow key defaults in Matplotlib (e.g., navigation)
+          are temporarily disabled to allow movement control.
         """
              
         # (0) Load original image ---------------------------------------------
@@ -3300,7 +3309,6 @@ class CenterRefinement:
         # Plot center point
         center, = ax.plot(px, py, 'rx', markersize=12)
                     
-
         plt.title('Manually adjust the center position.', 
                   fontsize=20)
 
