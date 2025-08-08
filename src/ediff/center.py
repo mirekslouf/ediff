@@ -7,7 +7,7 @@ Find the center of a 2D diffraction pattern.
 * Nevertheless, usually it is enough to call `CenterLocator` as shown below.
 * More details and examples at GitHub: https://mirekslouf.github.io/ediff/docs
 
->>> # Example: How to use CenterLocator and get results?
+>>> # Example: How to use CenterLocator and get center coordinates.
 >>> import ediff as ed
 >>>
 >>> center = ed.center.CenterLocator(
