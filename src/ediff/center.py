@@ -312,7 +312,7 @@ class CenterLocator:
         #  (4b) Find radius of a circle/diffraction ring, which is needed 
         #       for the next step = CenterRefimenement.
         if self.verbose==3:
-            print("[INFO] Estimating radius of the diffraction pattern...",
+            print("[INFO] Estimating radius of a diffraction ring...",
                   end="", flush=True)
     
         if self.determination != "manual":
