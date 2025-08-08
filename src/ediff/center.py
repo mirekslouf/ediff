@@ -269,9 +269,10 @@ class CenterLocator:
         ## (3) Read center coordinates ----------------------------------------
         # The center coordinates may have been determined in a previous run 
         # of the program and saved to a text file.
-        # We can Load coordinates from an input file if specified, this is done 
-        # by the following command. As the saved coordinates can be used INSTEAD 
-        # of CenterDetermination we will read them here.
+        # We can Load coordinates from an input file if specified
+        # and this is done by the following command.
+        # As the saved coordinates can be used INSTEAD of CenterDetermination,
+        # we will read them here.
         if self.in_file is not None: 
             if self.verbose==3:
                 print("[INFO] Loading saved center coordinates.")
@@ -410,10 +411,12 @@ class CenterLocator:
         Returns
         -------
         x1 : float
-            x-coordinate of the center determined by the *determination* method.
+            x-coordinate of the center determined
+            by the *determination* method.
             
         y1 : float
-            y-coordinate of the center determined by the *determination* method.
+            y-coordinate of the center determined
+            by the *determination* method.
         
         x2 : float
             x-coordinate of the center after *refinement*, or same as x1 if no 
@@ -462,13 +465,12 @@ class CenterLocator:
         Save the determined and refined center coordinates to a file.
     
         This method writes the coordinates (x1, y1) from the *determination*
-        step and (x2, y2) from the *refinement* step to a file specified by the 
-        `out_file` attribute.
+        step and (x2, y2) from the *refinement* step to a file specified
+        by the `out_file` attribute.
     
         - If the file already exists, the results are appended to the end.
-        - If the file does not exist, it is created and the results are written.
+        - If the file does not exist, it is created.
         - Coordinates are formatted to four decimal places for clarity.
-        
         
         Parameters
         ----------
@@ -480,10 +482,11 @@ class CenterLocator:
         
         Notes
         -----
-        - If `self.out_file` is None, the method does nothing.
+        - If `self.out_file` is None (which is the default),
+          the method does nothing.
         - The results are written in the format:
-            x1: <value>, y1: <value>
-            x2: <value>, y2: <value>
+            - Line 1: `x1: value, y1: value`
+            - Line 2: `x2: value, y2: value`
         - This method does not raise an error if the path is invalid;
           ensure `out_file` is a valid writable path.
         '''
@@ -4033,13 +4036,17 @@ class IntensityCenter:
     >>> # Center determination in a simple symmetric diffraction pattern
     >>> # (center = just center_of_intensity, no refinement
     >>>
-    >>> # (1) Old way = this (old, legacy) IntensityCenter class:
+    >>> # (1) Old way = this IntensityCenter class:
+    >>> # (old, legacy method; just center determination, no refinement
     >>> xc,yc = ediff.center.IntensityCenter.center_of_intensity(
     >>>     arr, csquare=30, cintensity=0.8)
     >>>
-    >>> # (2) New way = newer (and more universal) CenterLocator class:
-    >>> xc,yc = ediff.center.CenterLocator(
-    >>>     arr, detection_method='intensity', csquare=30, cintensity=0.8)
+    >>> # (2) New way = CenterLocator class:
+    >>> # (newer, more universal, with center refinement and other options
+    >>> xc,yc = ediff.center.CenterLocator(arr,
+    >>>     determination='intensity',
+    >>>     refinement='sum', 
+    >>>     csquare=30, cintensity=0.8)
     '''
     
     @staticmethod
