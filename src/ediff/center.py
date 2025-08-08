@@ -13,7 +13,7 @@ Find the center of a 2D diffraction pattern.
 >>>    input_image='some_diffractogram.png',
 >>>    determination='intensity',
 >>>    refinement='sum',
->>>    messages=False, final_replot=True)
+>>>    verbose=False, final_replot=True)
 >>>
 >>> print('Determined center coordinates:', center.x1, center.y1)
 >>> print('Refined center coordinates   :', center.x2, center.y2)
@@ -125,8 +125,13 @@ class CenterLocator:
         Threshold intensity for finding the intensity center. Pixels with a 
         (relative) intensity lower than cintensity are ignored.
         
-    messages : bool, optional, default=False
-        If True, print informational messages during the detection process.
+    verbose : int, optional, default=0
+        Verbosity level for printing messages during processing:
+        - 0 : Silent mode — no messages are printed.
+        - 1 : Show help messages during manual refinement only.
+        - 2 : Full verbose mode — print all messages and debug information.
+        - 3 : Progress mode — print brief status updates during time-consuming 
+              processing.
         
     print_sums : bool, optional, default=False
         If True, print intensity sums after each adjustment (in manual modes).
@@ -180,7 +185,7 @@ class CenterLocator:
                  cmap = 'gray',
                  csquare=50,
                  cintensity=0.8,
-                 messages = False,
+                 verbose = 0,
                  print_sums = False,
                  final_print = True,
                  live_plot = False):
@@ -223,7 +228,7 @@ class CenterLocator:
         self.cintensity = cintensity
         
         # Process-Information parameters
-        self.messages = messages
+        self.verbose = verbose
         self.print_sums = print_sums
         self.final_print = final_print
         self.live_plot = live_plot
@@ -237,6 +242,8 @@ class CenterLocator:
         self.marker_size = 100          
 
         ## (1) Read input image -----------------------------------------------
+        if self.verbose==3:
+            print("[INFO] Loading image.")
         # The input image can be numpy.array (ndarray) or image file (path/str)
         if isinstance(input_image, np.ndarray):
             self.image = input_image
@@ -245,18 +252,29 @@ class CenterLocator:
         
         ## (2) Correct ellipse ------------------------------------------------
         if self.ellipse:
+            if self.verbose==3:
+                print("[INFO] Correcting ellipse distortion... ", 
+                      end="", flush=True)
             self.image = self.ellipse_distortion(self.image, show=True,
                                                  method=self.mcorrect)
-        
+            if self.verbose == 3:
+                print(" [DONE]")
+                
         ## (3) Read center coordinates ----------------------------------------
         # The center coordinates may have been determined in a previous run 
         # of the program and saved to a text file.
         # We can Load coordinates from an input file if specified, this is done 
         # by the following command. As the saved coordinates can be used INSTEAD 
         # of CenterDetermination we will read them here.
-        if self.in_file is not None: self.load_results()  
+        if self.in_file is not None: 
+            self.load_results()  
+            if self.verbose==3:
+                print("[INFO] Loading saved center coordinates.")
         
         ## (4) Run CenterDetermination ----------------------------------------
+        if self.verbose == 3:
+            print("[INFO] Detecting center...", end="", flush=True)
+            
         #  (4a) Initialize/run CenterDetermination
         self.center1 = CenterDetermination(self,
                 self.input_image,
@@ -266,11 +284,18 @@ class CenterLocator:
                 self.cmap,
                 self.csquare,
                 self.cintensity,
-                self.messages,
+                self.verbose,
                 self.print_sums)
         
+        if self.verbose == 3:
+            print(" [DONE]")
+    
         #  (4b) Find radius of a circle/diffraction ring, which is needed 
         #       for the next step = CenterRefimenement.
+        if self.verbose==3:
+            print("[INFO] Estimating radius of the diffraction pattern...",
+                  end="", flush=True)
+    
         if self.determination != "manual":
             self.center1.r = self.center1.get_radius(
                 self.rtype,
@@ -278,8 +303,15 @@ class CenterLocator:
                 self.center1.x, 
                 self.center1.y, 
                 disp=False)
-
+        
+        if self.verbose == 3:
+            print(" [DONE]")
+            
         ## (5) Initialize/run CenterRefinement --------------------------------
+        if self.verbose==3:
+            print("[INFO] Refining center coordinates...",
+                  end="", flush=True)
+                
         self.center2 = CenterRefinement(self,
             self.input_image, 
             self.refinement,
@@ -288,10 +320,16 @@ class CenterLocator:
             self.heq, 
             self.icut,
             self.cmap,
-            self.messages,
+            self.verbose,
             self.print_sums)
         
+        if self.verbose == 3:
+            print(" [DONE]")
+            
+            
         ## (6) Collect results ------------------------------------------------
+        if self.verbose==3:
+            print("[INFO] Collecting results.")
         self.x1 = self.center1.x
         self.y1 = self.center1.y
         
@@ -340,8 +378,11 @@ class CenterLocator:
                 print(self.rText.format(float(self.x2),float(self.y2)))
                         
         ## (9) Save results to a .txt file if specified -----------------------
+        
         if out_file is not None:
             self.save_results()
+            if self.verbose==3:
+                print("[INFO] Saving results.")
 
     
     def output(self):
@@ -646,7 +687,7 @@ class CenterLocator:
         """
         Convert coordinates between numpy and matplotlib systems.
     
-        Parameters:
+        Parameters
         ----------
         x : int or float
             The x-coordinate in the numpy (column index) format.
@@ -654,7 +695,7 @@ class CenterLocator:
         y : int or float
             The y-coordinate in the numpy (row index) format.
     
-        Returns:
+        Returns
         -------
         tuple of (int or float, int or float)
             The converted coordinates in matplotlib format, where:
@@ -803,6 +844,7 @@ class CenterLocator:
         corrected : np.ndarray
             The distortion-corrected image.
         """
+            
         # Helper function
         def refine_to_local_max(img, pt, window=9):
             """
@@ -986,8 +1028,8 @@ class CenterDetermination:
         Threshold intensity for finding the intensity center. Pixels with a 
         (relative) intensity lower than cintensity are ignored.
         
-    messages : bool, optional, default=False
-        If True, print informational messages during the detection process.
+    verbose : bool, optional, default=False
+        If True, print informational verbose during the detection process.
         
     print_sums : bool, optional, default=False
         If True, print intensity sums after each adjustment (in manual modes).
@@ -1018,7 +1060,7 @@ class CenterDetermination:
                  cmap = 'gray',
                  csquare=50,
                  cintensity=0.8,
-                 messages = False,
+                 verbose = 0,
                  print_sums = False):
 
         
@@ -1103,7 +1145,7 @@ class CenterDetermination:
         -----
         This function performs different preprocessing steps depending on the
         detection/refinement strategy selected. It is modular and supports
-        optional display of intermediate results if `self.parent.messages` is True.
+        optional display of intermediate results if `self.parent.verbose` is True.
         """
     
         # Flags
@@ -1119,7 +1161,7 @@ class CenterDetermination:
         if preInit == 1:
             # Enhance diffraction pattern to make it more visible
             if self.parent.heq == 1:
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("Histogram equalized.")
                 image = sk.exposure.equalize_adapthist(image)
 
@@ -1133,7 +1175,7 @@ class CenterDetermination:
                 
                 # Beam stopper present in image
                 if np.median(csq)<100 and np.median(csq) > 0:
-                    if self.parent.messages:
+                    if self.parent.verbose==2:
                         print('Beamstopper removed.')
                     max_indices=np.where(self.parent.to_refine>np.median(csq))
         
@@ -1450,7 +1492,7 @@ class CenterDetermination:
 
 
         # (6) User information (if required) ----------------------------------
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = \
                 "Center Determination (PhaseCorrCenter): ({:.3f}, {:.3f})"
         
@@ -1601,7 +1643,7 @@ class CenterDetermination:
             plt.show()
         
         # (5) User information (if required) ----------------------------------
-        if self.parent.messages or self.parent.final_print:
+        if self.parent.verbose or self.parent.final_print:
             self.parent.dText = \
                 "Center Determination (CrossCorrCenter): ({:.3f}, {:.3f})"
 
@@ -1680,7 +1722,7 @@ class CenterDetermination:
             disp=False)
         
         # (6) User information (if required) ----------------------------------
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.dText =\
                 "Center Determination (IntensityCenter): ({:.3f}, {:.3f})"
 
@@ -1802,7 +1844,7 @@ class CenterDetermination:
             float(self.x[0]), float(self.y[0]), float(self.r[0])
     
         ## (4) User information -----------------------------------------------
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = \
                 "Center Determination (HoughTransform) : ({:.3f}, {:.3f})".\
                     format(self.x, self.y)
@@ -1985,8 +2027,8 @@ class CenterDetermination:
         # Add the offset of the cropped region to get coordinates in full image
         self.x, self.y = x_refined + x_min, y_refined + y_min
         
-        # Print the result if messages are enabled
-        if self.parent.messages or self.parent.final_print:
+        # Print the result if verbose are enabled
+        if self.parent.verbose or self.parent.final_print:
             self.parent.dText = (
                 f"Center Determination (CurveFitting) :   ({self.x:.3f}, {self.y:.3f})"
                 + (" [fallback]" if used_fallback else "")
@@ -2010,12 +2052,13 @@ class CenterDetermination:
         that, the user can manually adjust the center position using
         an interactive interface.
 
-        ### User Controls (during point selection):
-        - **Press '1'**: Add a point at the current mouse cursor position 
+        User Controls (during point selection)
+        --------------------------------------
+        - **'1'**: Add a point at the current mouse cursor position 
                          (max 3 points).
-        - **Press '2'**: Delete the most recently added point.
-        - **Press '3'**: Delete the point closest to the mouse cursor.
-        - **Press 'd'**: When 3 points are selected (DONE), proceed 
+        - **'2'**: Delete the most recently added point.
+        - **'3'**: Delete the point closest to the mouse cursor.
+        - **'d'**: When 3 points are selected (DONE), proceed 
         - **Close**    : Terminate the process without detecting a center.
         
         Parameters
@@ -2041,7 +2084,7 @@ class CenterDetermination:
         
         # Edit contrast with a user-predefined parameter
         if self.parent.icut is not None:
-            if self.parent.messages:
+            if self.parent.verbose==2:
                 print("Contrast enhanced.")
             im = np.where(im > self.parent.icut, 
                               self.parent.icut, 
@@ -2071,7 +2114,7 @@ class CenterDetermination:
             Close the figure to terminate. No center will be detected.
             """)
 
-        if self.parent.messages:
+        if (self.parent.verbose==1 or self.parent.verbose==2):
             print(instructions)
        
         # (4) Enable interactive mode -----------------------------------------
@@ -2092,7 +2135,7 @@ class CenterDetermination:
         def onclose(event):
             nonlocal termination_flag
             termination_flag = True
-            if self.parent.messages:
+            if self.parent.verbose==2:
                 print('Execution terminated.')
                 print("------------------------------------------------------------")
 
@@ -2306,14 +2349,14 @@ class CenterDetermination:
         The user interacts directly with the figure window containing the image 
         and the detected circle.
 
-        ### Keyboard Controls
-        ---------------------
+        User Controls (during point selection)
+        --------------------------------------
         - Arrow keys (←, →, ↑, ↓): Move the center left, right, up, or down
-        - '+' : Increase the radius
-        - '-' : Decrease the radius
-        - 'b' : Increase step size (×5)
-        - 'l' : Decrease step size (/5, with minimum step size 0.5)
-        - 'd' : Done — finalize the center and radius
+        - **'+'** : Increase the radius
+        - **'-'** : Decrease the radius
+        - **'b'** : Increase step size (×5)
+        - **'l'** : Decrease step size (/5, with minimum step size 0.5)
+        - **'d'**: Done — finalize the center and radius
         - Closing the figure: Cancels refinement and returns the original input 
           center and radius
 
@@ -2356,7 +2399,7 @@ class CenterDetermination:
         plt.rcParams['keymap.back'].remove('left')
         plt.rcParams['keymap.forward'].remove('right')
         
-        if self.parent.messages:
+        if (self.parent.verbose==1 or self.parent.verbose==2):
             instructions = dedent(
             """
             CenterDetermination :: ThreePoints (interactive adjustment)
@@ -2486,7 +2529,7 @@ class CenterDetermination:
             plt.close()  # Close the figure
 
         # User information:
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = "Center Determination (ThreePoints)    : ({:.3f}, {:.3f})"
         
     
@@ -2563,7 +2606,7 @@ class CenterDetermination:
         self.r = ar*br*cr/((ar+br+cr)*(-ar+br+cr)*(ar-br+cr)*(ar+br-cr))**0.5
         
         # # Print results
-        # if self.parent.messages:
+        # if self.parent.verbose:
         #     print("CenterEstimator :: manual center detection")
         #     print(f"Center coordinates: {self.x:.2f} {self.y:.2f}")
                     
@@ -2685,13 +2728,13 @@ class CenterDetermination:
               ring peaks.
             """
             if len(arr) < 2:  # Not enough values to compare
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("Not enough values to find similar pairs.")
                 return None, None
     
             # Special case: if there are exactly 2 peaks, return them
             if len(arr) == 2:
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("Exactly two peaks detected. Returning them as the best pair.")
                 return 0, 1
     
@@ -2705,7 +2748,7 @@ class CenterDetermination:
             right_indices = np.arange(center_idx + 1, len(arr))
     
             if len(left) == 0 or len(right) == 0:  # Check for empty halves
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("One of the halves is empty.")
                 return None, None
     
@@ -2755,7 +2798,7 @@ class CenterDetermination:
             if len(self.xpeaks) == 2 and (
                 (self.xpeaks[0]<half_length_x and self.xpeaks[1]<half_length_x) or
                 (self.xpeaks[0]>half_length_x and self.xpeaks[1]>half_length_x)):
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("xpeaks condition met: Both peaks are on the same side of the center.")
                 self.pairX = None
             else:
@@ -2765,7 +2808,7 @@ class CenterDetermination:
             if len(self.ypeaks) == 2 and (
                 (self.ypeaks[0]<half_length_y and self.ypeaks[1]<half_length_y) or
                 (self.ypeaks[0]>half_length_y and self.ypeaks[1]>half_length_y)):
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("ypeaks condition met: Both peaks are on the same side of the center.")
                 self.pairY = None
             else:
@@ -2793,7 +2836,7 @@ class CenterDetermination:
             elif rx_y is not None:
                 rx = rx_y
             else:
-                if self.parent.messages:
+                if self.parent.verbose==2:
                     print("No valid pairs detected for radius calculation.")
                 return 100  # Default radius or error handling
         
@@ -3053,8 +3096,8 @@ class CenterRefinement:
    cmap : str, optional, default='gray'
         Colormap to be used when displaying the image for manual refinement.
     
-    messages : bool, optional, default=False
-        Flag to enable or disable informational messages during processing. 
+    verbose : bool, optional, default=False
+        Flag to enable or disable informational verbose during processing. 
 
     print_sums : bool, optional, default=False
         If True, prints the sum of intensity values for the refined circle 
@@ -3086,7 +3129,7 @@ class CenterRefinement:
                  heq = False, 
                  icut = None,
                  cmap = 'gray',
-                 messages = False,
+                 verbose = 0,
                  print_sums = False):
         
         ######################################################################
@@ -3113,7 +3156,7 @@ class CenterRefinement:
                         par_short.x, par_short.y, par_short.r
                     par_short.x, par_short.y = \
                         par_short.backip[0], par_short.backip[1]
-                    if (self.parent.messages or self.parent.final_print):
+                    if (self.parent.verbose or self.parent.final_print):
                         self.parent.rText = \
                             "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
                 elif parent.determination == 'intensity':
@@ -3131,12 +3174,15 @@ class CenterRefinement:
             elif refinement == "sum":
                 # Intensity sum refinement
                 self.xx, self.yy, self.rr = self.ref_sum(
-                    par_short.x, par_short.y, par_short.r)
+                    par_short.x, par_short.y, par_short.r,
+                    live_plot=self.parent.live_plot)
             
+
             else:
                 print("Selected refinement method is not supported.")
                 sys.exit()
-                        
+       
+            plt.close("all")          
         else: 
             # Flag for later
             self.ret = 2
@@ -3205,7 +3251,7 @@ class CenterRefinement:
 
         # Edit contrast with a user-predefined parameter
         if self.parent.icut is not None:
-            if self.parent.messages:
+            if self.parent.verbose==2:
                 print("Contrast enhanced.")
             im = np.where(im > self.parent.icut, 
                               self.parent.icut, 
@@ -3217,7 +3263,7 @@ class CenterRefinement:
         termination_flag = False
 
         # (2) User information ------------------------------------------------
-        if self.parent.messages:
+        if (self.parent.verbose==1 or self.parent.verbose==2):
             instructions = dedent("""
             
             Interactive refinement. Use these keys:
@@ -3365,7 +3411,7 @@ class CenterRefinement:
             plt.close()  # Close the figure
 
         # User information:
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.rText = "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
 
         return xy[0], xy[1], r    
@@ -3536,14 +3582,14 @@ class CenterRefinement:
             best_center = np.copy(bckup)
     
         # Print results
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.rText = \
                 "Center Refinement (IntensityVar)      : ({:.3f}, {:.3f})"
                                   
         return best_center[0], best_center[1], best_radius
     
     
-    def ref_sum(self, px, py, pr, plot_results=0):
+    def ref_sum(self, px, py, pr, plot_results=0, live_plot=False):
         """
         Refine the center coordinates (px, py) and radius (pr) of a circular 
         diffraction pattern by maximizing the summed pixel intensity along 
@@ -3623,6 +3669,18 @@ class CenterRefinement:
         neighbors = [(float(dx), float(dy))
             for dx in np.arange(-1.0, 1.0 + step, step)
             for dy in np.arange(-1.0, 1.0 + step, step)]
+        
+        # Live plot initialization 
+        if live_plot:
+            plt.ion()
+            fig, ax = plt.subplots()
+            ax.imshow(image, cmap='gray')
+            circ_artist = Circle(best_center, best_radius, 
+                                 fill=False, color='red', lw=1.5)
+            ax.add_patch(circ_artist)
+            ax.set_title("Refinement Progress")
+            ax.axis("off")
+            fig.show()
     
         for iteration in range(max_iterations):    
             # Refine center while keeping radius constant
@@ -3697,7 +3755,15 @@ class CenterRefinement:
                 if no_improvement_count == 25:
                     break
                 
-    
+            # --- Live plot update ---
+            if live_plot:
+                circ_artist.center = best_center
+                circ_artist.set_radius(best_radius)
+                ax.set_title(
+                    f"Iteration {iteration+1} | Sum={max_intensity_sum:.1f}")
+                fig.canvas.draw()
+                fig.canvas.flush_events()
+                plt.pause(0.01)  # small delay for visual update
         
         # Avoid incorrect/redundant refinement
         # ## (1) swapped coordinates
@@ -3712,10 +3778,14 @@ class CenterRefinement:
             best_center = np.copy(bckup)
     
         # Print results
-        if (self.parent.messages or self.parent.final_print):
+        if (self.parent.verbose or self.parent.final_print):
             self.parent.rText = \
                 "Center Refinement (IntensitySum)      : ({:.3f}, {:.3f})"
-                
+        
+        if live_plot:
+            plt.ioff()
+            plt.show()
+
         return best_center[0], best_center[1], best_radius
     
     
