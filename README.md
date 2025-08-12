@@ -1,10 +1,13 @@
-EDIFF :: processing powder electron diffraction patterns
---------------------------------------------------------
+EDIFF :: processing electron diffraction patterns
+-------------------------------------------------
 
 * EDIFF package:
-	- converts a 2D powder electron diffractogram to a 1D diffractogram (ELD)
-	- calculates a theoretical 1D powder X-ray diffractogram (XRD)
-	- compares the experimental ELD with the theoretically calculated XRD
+	- processes an experimental 2D electron diffractogram (ELD)
+	- calculates a theoretical X-ray diffractogram (XRD)
+	- compares ELD and XRD to identify the structure
+* Powder vs. monocrystal diffractograms:
+	- powder/polycrystal diffractograms - finished, working (see examples below)
+	- monocrystal diffractograms - under development (not fully implemented yet)
 * If you use EDIFF in your research, **please cite** our recent paper:
 	- *Microscopy and Microanalysis* 31, 2025, ozaf045. <br>
 	  [https://doi.org/10.1093/mam/ozaf045](https://doi.org/10.1093/mam/ozaf045)
@@ -19,7 +22,7 @@ Principle
 Installation
 ------------
 
-* Requirement: Python with sci-modules: numpy, matplotlib, scipy, pandas
+* Requirement: Python with sci-modules: numpy, matplotlib, scipy, pandas, pillow
 * `pip install scikit-image` = 3rd party package for advanced image processing 
 * `pip install pymatgen` = 3rd party package employed in PXRD calculation
 * `pip install bground` = our package, interactive background subtraction
@@ -57,7 +60,8 @@ Versions of EDIFF
 * Version 0.4 = {center} module: better structure + better funcs + saving coords
 * Version 0.5 = consolidation of code and documentation - all stable and working
 * Version 0.6 = finalization of {center} module
-* Version 1.0 = TODO: complete release with finalized documentation
+* Version 1.0 = TODO: complete processing of powder diffractograms
+* Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
 
 
 Acknowledgement
