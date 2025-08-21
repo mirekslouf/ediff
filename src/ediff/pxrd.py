@@ -601,11 +601,14 @@ class PXRDcalculation:
         ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         # (5) Final adjustments
         fig.tight_layout()
-        if output_file == False:
+        # (6) Show  or save the plot, depending on output_file argument
+        # (note: default is output_file=None => plot is shown, not saved
+        # (reason: this func is usually used for interactive plots
+        if output_file is None:
             plt.show()
         else:
             plt.savefig(output_file, dpi=300)
-        # (6) Revert to original rcParams.
+        # (7) Revert to original rcParams.
         plt.rcParams.update(original_rcParams)
         
 
@@ -614,7 +617,7 @@ class PXRDcalculation:
         print('-----')
         print('* Just diffraction intensities, not the whole pattern.')
         print('* Reason: the whole diffraction pattern is too long.')
-        print('* Note: save_diffractogram save the pattern to TXT-file.')
+        print('* Use save_diffractogram func save the pattern to a file.')
     
 
     def save_diffractogram(self, outfile):
