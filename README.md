@@ -24,7 +24,7 @@ Installation
 
 * Requirement: Python with sci-modules: numpy, matplotlib, scipy, pandas, pillow
 * `pip install scikit-image` = 3rd party package for advanced image processing 
-* `pip install pymatgen` = 3rd party package employed in PXRD calculation
+* `pip install pymatgen` = 3rd party package employed in XRD calculations
 * `pip install bground` = our package, interactive background subtraction
 * `pip install ediff` = EDIFF package itself (uses all packages above)
 
@@ -53,13 +53,14 @@ Documentation, help and examples
 Versions of EDIFF
 -----------------
 
-* Version 0.0 = the 1st drafts, testing of {pxrd} module
+* Version 0.0 = the 1st draft, testing of {pxrd} module
 * Version 0.1 = the 1st functional version with basic documentation
 * Version 0.2 = important improvements of {center} module
 * Version 0.3 = {calibration} module + various updates + better ediff template
 * Version 0.4 = {center} module: better structure + better funcs + saving coords
 * Version 0.5 = consolidation of code and documentation - all stable and working
 * Version 0.6 = finalization of {center} module
+* Version 0.7 = {gcryst} module: geometrical crystallography, zone axes ...
 * Version 1.0 = TODO: complete processing of powder diffractograms
 * Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
 

@@ -1,13 +1,26 @@
 '''
 Package: EDIFF
 --------------
-Processing of powder electron diffraction patterns.
+Processing of electron diffraction patterns.
 
-* Input:  2D powder electron diffraction pattern (raw experimental data).
-* Output: 1D powder electron diffraction pattern (final, compared with PXRD).
-    - The 1D pattern/profile is obtained by radial averaging of 2D pattern.
-    - The 1D profile is calibrated and compared with the theoretical PXRD.
-    - The calculation of theoretical PXRD patterns is a part of this package. 
+* Input:
+    - 2D electron diffraction pattern (image file, from experiment).
+    - CIF file describing the expected crystal structure (text file, from www).
+* Processing:
+    - Experimental diffractogram is adjusted (background, calibration, etc.).
+    - Theoretical diffractogram is calculated from the CIF file.
+* Output:
+    - Comparison of the *experimental* and *theoretical* diffractogram.
+    - If the two difractograms are equivalent, the sample is identified.
+
+Technical notes:
+
+* CIF files can be downloaded from open-acces databases:
+    - Good source of CIF's: https://www.crystallography.net/cod
+    - Alternativelly, CIF's can be created within EDIFF or found in www.
+* EDIFF provides algorithms for calculation of theoretical diffractograms.
+    - Polycrystal/powder diffractograms - finalized, fully working.
+    - Monocrystal/spotty diffractograms - under development. 
 
 EDIFF modules:
 
@@ -25,7 +38,7 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 
 # Import of modules so that we could use the package as follows:
