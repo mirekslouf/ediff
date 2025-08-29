@@ -38,7 +38,7 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.7.1"
+__version__ = "0.7.2"
 
 
 # Import of modules so that we could use the package as follows:
@@ -74,7 +74,7 @@ import ediff.background
 #  The usage of __main__.py is not very common, but still quite standard.
 
 def acknowledgement():
-    print('EDIFF package - process powder electron diffraction patterns.')
+    print('EDIFF package - process electron diffraction patterns.')
     print('------')
     print('The development of the package was co-funded by')
     print('the Technology agency of the Czech Republic,')

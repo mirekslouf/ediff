@@ -71,6 +71,15 @@
             <li>
                     <a class="class" href="#ZoneAxis">ZoneAxis</a>
                             <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#ZoneAxis.from_two_diffs">from_two_diffs</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ZoneAxis.from_multiple_diffs">from_multiple_diffs</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#ZoneAxis.weiss_zone_law">weiss_zone_law</a>
+                        </li>
                 </ul>
 
             </li>
@@ -371,7 +380,108 @@
 </span><span id="L-270"><a href="#L-270"><span class="linenos">270</span></a><span class="sd">    Class with functions to determine *zone axis* of a 2D diffractogram.</span>
 </span><span id="L-271"><a href="#L-271"><span class="linenos">271</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-272"><a href="#L-272"><span class="linenos">272</span></a>
-</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a>    <span class="k">pass</span>    
+</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+</span><span id="L-274"><a href="#L-274"><span class="linenos">274</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-275"><a href="#L-275"><span class="linenos">275</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
+</span><span id="L-276"><a href="#L-276"><span class="linenos">276</span></a>
+</span><span id="L-277"><a href="#L-277"><span class="linenos">277</span></a><span class="sd">        Parameters</span>
+</span><span id="L-278"><a href="#L-278"><span class="linenos">278</span></a><span class="sd">        ----------</span>
+</span><span id="L-279"><a href="#L-279"><span class="linenos">279</span></a><span class="sd">        diff1 : tuple or list or array of three integers</span>
+</span><span id="L-280"><a href="#L-280"><span class="linenos">280</span></a><span class="sd">            Miller indices (hkl) of the 1st diffraction within given zone </span>
+</span><span id="L-281"><a href="#L-281"><span class="linenos">281</span></a><span class="sd">        diff2 : TYPE</span>
+</span><span id="L-282"><a href="#L-282"><span class="linenos">282</span></a><span class="sd">            Miller indices (hkl) of the 2nd diffraction within given zone.</span>
+</span><span id="L-283"><a href="#L-283"><span class="linenos">283</span></a>
+</span><span id="L-284"><a href="#L-284"><span class="linenos">284</span></a><span class="sd">        Returns</span>
+</span><span id="L-285"><a href="#L-285"><span class="linenos">285</span></a><span class="sd">        -------</span>
+</span><span id="L-286"><a href="#L-286"><span class="linenos">286</span></a><span class="sd">        zone_axis : tuple of three integers</span>
+</span><span id="L-287"><a href="#L-287"><span class="linenos">287</span></a><span class="sd">            Miller indices [uvw] of the zone axis</span>
+</span><span id="L-288"><a href="#L-288"><span class="linenos">288</span></a><span class="sd">            calculated from *diff1* and *diff2*.</span>
+</span><span id="L-289"><a href="#L-289"><span class="linenos">289</span></a><span class="sd">        </span>
+</span><span id="L-290"><a href="#L-290"><span class="linenos">290</span></a><span class="sd">        Technical notes</span>
+</span><span id="L-291"><a href="#L-291"><span class="linenos">291</span></a><span class="sd">        ---------------</span>
+</span><span id="L-292"><a href="#L-292"><span class="linenos">292</span></a><span class="sd">        * Zone axis should be perpendicular</span>
+</span><span id="L-293"><a href="#L-293"><span class="linenos">293</span></a><span class="sd">          to any two diffractions of given zone.</span>
+</span><span id="L-294"><a href="#L-294"><span class="linenos">294</span></a><span class="sd">        * Therefore, it can be calculated as a vector cross-product</span>
+</span><span id="L-295"><a href="#L-295"><span class="linenos">295</span></a><span class="sd">          of any two diffractoins of given zone.</span>
+</span><span id="L-296"><a href="#L-296"><span class="linenos">296</span></a><span class="sd">        * We use np.cross to calculate the cross product</span>
+</span><span id="L-297"><a href="#L-297"><span class="linenos">297</span></a><span class="sd">          and convert the result to tuple for the sake of consistency</span>
+</span><span id="L-298"><a href="#L-298"><span class="linenos">298</span></a><span class="sd">          as all other functions in this module return vectors as tuples.</span>
+</span><span id="L-299"><a href="#L-299"><span class="linenos">299</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="L-300"><a href="#L-300"><span class="linenos">300</span></a>        <span class="n">zone_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span><span class="n">diff2</span><span class="p">)</span>
+</span><span id="L-301"><a href="#L-301"><span class="linenos">301</span></a>        <span class="k">return</span><span class="p">(</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">)</span> <span class="p">)</span>
+</span><span id="L-302"><a href="#L-302"><span class="linenos">302</span></a>
+</span><span id="L-303"><a href="#L-303"><span class="linenos">303</span></a>
+</span><span id="L-304"><a href="#L-304"><span class="linenos">304</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="L-305"><a href="#L-305"><span class="linenos">305</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-306"><a href="#L-306"><span class="linenos">306</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
+</span><span id="L-307"><a href="#L-307"><span class="linenos">307</span></a>
+</span><span id="L-308"><a href="#L-308"><span class="linenos">308</span></a><span class="sd">        Parameters</span>
+</span><span id="L-309"><a href="#L-309"><span class="linenos">309</span></a><span class="sd">        ----------</span>
+</span><span id="L-310"><a href="#L-310"><span class="linenos">310</span></a><span class="sd">        diffs : list of 3-item lists = list of (hkl) of multiple diffractions</span>
+</span><span id="L-311"><a href="#L-311"><span class="linenos">311</span></a><span class="sd">            The list containing (hkl) indices of multiple diffractions</span>
+</span><span id="L-312"><a href="#L-312"><span class="linenos">312</span></a><span class="sd">            that are supposed to correspond to one zone axis [uvw].</span>
+</span><span id="L-313"><a href="#L-313"><span class="linenos">313</span></a>
+</span><span id="L-314"><a href="#L-314"><span class="linenos">314</span></a><span class="sd">        Returns</span>
+</span><span id="L-315"><a href="#L-315"><span class="linenos">315</span></a><span class="sd">        -------</span>
+</span><span id="L-316"><a href="#L-316"><span class="linenos">316</span></a><span class="sd">        None</span>
+</span><span id="L-317"><a href="#L-317"><span class="linenos">317</span></a><span class="sd">            The list of vector cross-products is printed on the screen.</span>
+</span><span id="L-318"><a href="#L-318"><span class="linenos">318</span></a><span class="sd">            If all cross-products are the same (up to scale/sign),</span>
+</span><span id="L-319"><a href="#L-319"><span class="linenos">319</span></a><span class="sd">            then the zone axis [uvw] explains the presense of all *diffs*</span>
+</span><span id="L-320"><a href="#L-320"><span class="linenos">320</span></a><span class="sd">            in the observed diffraction pattern.</span>
+</span><span id="L-321"><a href="#L-321"><span class="linenos">321</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="L-322"><a href="#L-322"><span class="linenos">322</span></a>        <span class="k">for</span> <span class="n">d1</span> <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="L-323"><a href="#L-323"><span class="linenos">323</span></a>            <span class="k">for</span> <span class="n">d2</span>  <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="L-324"><a href="#L-324"><span class="linenos">324</span></a>                <span class="n">index_d1</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="L-325"><a href="#L-325"><span class="linenos">325</span></a>                <span class="n">index_d2</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="L-326"><a href="#L-326"><span class="linenos">326</span></a>                <span class="k">if</span> <span class="n">index_d1</span> <span class="o">&lt;</span> <span class="n">index_d2</span><span class="p">:</span>
+</span><span id="L-327"><a href="#L-327"><span class="linenos">327</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;d</span><span class="si">{</span><span class="n">index_d1</span><span class="si">}</span><span class="s1"> x d</span><span class="si">{</span><span class="n">index_d2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span><span id="L-328"><a href="#L-328"><span class="linenos">328</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="L-329"><a href="#L-329"><span class="linenos">329</span></a>
+</span><span id="L-330"><a href="#L-330"><span class="linenos">330</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+</span><span id="L-331"><a href="#L-331"><span class="linenos">331</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-332"><a href="#L-332"><span class="linenos">332</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
+</span><span id="L-333"><a href="#L-333"><span class="linenos">333</span></a>
+</span><span id="L-334"><a href="#L-334"><span class="linenos">334</span></a><span class="sd">        Parameters</span>
+</span><span id="L-335"><a href="#L-335"><span class="linenos">335</span></a><span class="sd">        ----------</span>
+</span><span id="L-336"><a href="#L-336"><span class="linenos">336</span></a><span class="sd">        zone_axis : tuple or list or array of three integers</span>
+</span><span id="L-337"><a href="#L-337"><span class="linenos">337</span></a><span class="sd">            Crystallographic direction [uvw] that defines zone axis.</span>
+</span><span id="L-338"><a href="#L-338"><span class="linenos">338</span></a>
+</span><span id="L-339"><a href="#L-339"><span class="linenos">339</span></a><span class="sd">        Returns</span>
+</span><span id="L-340"><a href="#L-340"><span class="linenos">340</span></a><span class="sd">        -------</span>
+</span><span id="L-341"><a href="#L-341"><span class="linenos">341</span></a><span class="sd">        WZL : string</span>
+</span><span id="L-342"><a href="#L-342"><span class="linenos">342</span></a><span class="sd">            A condition for (hkl) indices of diffractions</span>
+</span><span id="L-343"><a href="#L-343"><span class="linenos">343</span></a><span class="sd">            that satisfy Weis Zone Law for given zone axis/direction [uvw].</span>
+</span><span id="L-344"><a href="#L-344"><span class="linenos">344</span></a><span class="sd">        </span>
+</span><span id="L-345"><a href="#L-345"><span class="linenos">345</span></a><span class="sd">        Technical note</span>
+</span><span id="L-346"><a href="#L-346"><span class="linenos">346</span></a><span class="sd">        --------------</span>
+</span><span id="L-347"><a href="#L-347"><span class="linenos">347</span></a><span class="sd">        * The condition is a simple string.</span>
+</span><span id="L-348"><a href="#L-348"><span class="linenos">348</span></a><span class="sd">        * It would be more straightforward to use a SymPy expression.</span>
+</span><span id="L-349"><a href="#L-349"><span class="linenos">349</span></a><span class="sd">        * Nevertheless, in this simple case the &quot;manual symbolic calculation&quot;</span>
+</span><span id="L-350"><a href="#L-350"><span class="linenos">350</span></a><span class="sd">          is quite easy and so we do not need the heavy-weight SymPy library.</span>
+</span><span id="L-351"><a href="#L-351"><span class="linenos">351</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="L-352"><a href="#L-352"><span class="linenos">352</span></a>        <span class="c1"># WZL = Weiss Zone Law = h*u + k*v + l*w = 0</span>
+</span><span id="L-353"><a href="#L-353"><span class="linenos">353</span></a>        <span class="n">WZL</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+</span><span id="L-354"><a href="#L-354"><span class="linenos">354</span></a>        <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">zone_axis</span>
+</span><span id="L-355"><a href="#L-355"><span class="linenos">355</span></a>        <span class="c1"># Process h*u part of WZL</span>
+</span><span id="L-356"><a href="#L-356"><span class="linenos">356</span></a>        <span class="k">if</span>   <span class="n">u</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="L-357"><a href="#L-357"><span class="linenos">357</span></a>        <span class="k">elif</span> <span class="n">u</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;-h&#39;</span>
+</span><span id="L-358"><a href="#L-358"><span class="linenos">358</span></a>        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="L-359"><a href="#L-359"><span class="linenos">359</span></a>        <span class="c1"># Process k*v part of WZL</span>
+</span><span id="L-360"><a href="#L-360"><span class="linenos">360</span></a>        <span class="k">if</span>   <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + k&#39;</span>
+</span><span id="L-361"><a href="#L-361"><span class="linenos">361</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - k&#39;</span>
+</span><span id="L-362"><a href="#L-362"><span class="linenos">362</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="L-363"><a href="#L-363"><span class="linenos">363</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="L-364"><a href="#L-364"><span class="linenos">364</span></a>        <span class="c1"># Process l*w part of WZL</span>
+</span><span id="L-365"><a href="#L-365"><span class="linenos">365</span></a>        <span class="k">if</span>   <span class="n">w</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + l&#39;</span>
+</span><span id="L-366"><a href="#L-366"><span class="linenos">366</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - l&#39;</span>
+</span><span id="L-367"><a href="#L-367"><span class="linenos">367</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="L-368"><a href="#L-368"><span class="linenos">368</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="L-369"><a href="#L-369"><span class="linenos">369</span></a>        <span class="c1"># Add right-hand side of WZL</span>
+</span><span id="L-370"><a href="#L-370"><span class="linenos">370</span></a>        <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; = 0&#39;</span>
+</span><span id="L-371"><a href="#L-371"><span class="linenos">371</span></a>        <span class="c1"># Return the result</span>
+</span><span id="L-372"><a href="#L-372"><span class="linenos">372</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">WZL</span><span class="p">)</span>
+</span><span id="L-373"><a href="#L-373"><span class="linenos">373</span></a>        
+</span><span id="L-374"><a href="#L-374"><span class="linenos">374</span></a>    
 </span></pre></div>
 
 
@@ -1122,7 +1232,106 @@ Miller indices [uvw] of the crystallographic direction.</li>
 </span><span id="ZoneAxis-271"><a href="#ZoneAxis-271"><span class="linenos">271</span></a><span class="sd">    Class with functions to determine *zone axis* of a 2D diffractogram.</span>
 </span><span id="ZoneAxis-272"><a href="#ZoneAxis-272"><span class="linenos">272</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-273"><a href="#ZoneAxis-273"><span class="linenos">273</span></a>
-</span><span id="ZoneAxis-274"><a href="#ZoneAxis-274"><span class="linenos">274</span></a>    <span class="k">pass</span>    
+</span><span id="ZoneAxis-274"><a href="#ZoneAxis-274"><span class="linenos">274</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+</span><span id="ZoneAxis-275"><a href="#ZoneAxis-275"><span class="linenos">275</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-276"><a href="#ZoneAxis-276"><span class="linenos">276</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
+</span><span id="ZoneAxis-277"><a href="#ZoneAxis-277"><span class="linenos">277</span></a>
+</span><span id="ZoneAxis-278"><a href="#ZoneAxis-278"><span class="linenos">278</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis-279"><a href="#ZoneAxis-279"><span class="linenos">279</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis-280"><a href="#ZoneAxis-280"><span class="linenos">280</span></a><span class="sd">        diff1 : tuple or list or array of three integers</span>
+</span><span id="ZoneAxis-281"><a href="#ZoneAxis-281"><span class="linenos">281</span></a><span class="sd">            Miller indices (hkl) of the 1st diffraction within given zone </span>
+</span><span id="ZoneAxis-282"><a href="#ZoneAxis-282"><span class="linenos">282</span></a><span class="sd">        diff2 : TYPE</span>
+</span><span id="ZoneAxis-283"><a href="#ZoneAxis-283"><span class="linenos">283</span></a><span class="sd">            Miller indices (hkl) of the 2nd diffraction within given zone.</span>
+</span><span id="ZoneAxis-284"><a href="#ZoneAxis-284"><span class="linenos">284</span></a>
+</span><span id="ZoneAxis-285"><a href="#ZoneAxis-285"><span class="linenos">285</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis-286"><a href="#ZoneAxis-286"><span class="linenos">286</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis-287"><a href="#ZoneAxis-287"><span class="linenos">287</span></a><span class="sd">        zone_axis : tuple of three integers</span>
+</span><span id="ZoneAxis-288"><a href="#ZoneAxis-288"><span class="linenos">288</span></a><span class="sd">            Miller indices [uvw] of the zone axis</span>
+</span><span id="ZoneAxis-289"><a href="#ZoneAxis-289"><span class="linenos">289</span></a><span class="sd">            calculated from *diff1* and *diff2*.</span>
+</span><span id="ZoneAxis-290"><a href="#ZoneAxis-290"><span class="linenos">290</span></a><span class="sd">        </span>
+</span><span id="ZoneAxis-291"><a href="#ZoneAxis-291"><span class="linenos">291</span></a><span class="sd">        Technical notes</span>
+</span><span id="ZoneAxis-292"><a href="#ZoneAxis-292"><span class="linenos">292</span></a><span class="sd">        ---------------</span>
+</span><span id="ZoneAxis-293"><a href="#ZoneAxis-293"><span class="linenos">293</span></a><span class="sd">        * Zone axis should be perpendicular</span>
+</span><span id="ZoneAxis-294"><a href="#ZoneAxis-294"><span class="linenos">294</span></a><span class="sd">          to any two diffractions of given zone.</span>
+</span><span id="ZoneAxis-295"><a href="#ZoneAxis-295"><span class="linenos">295</span></a><span class="sd">        * Therefore, it can be calculated as a vector cross-product</span>
+</span><span id="ZoneAxis-296"><a href="#ZoneAxis-296"><span class="linenos">296</span></a><span class="sd">          of any two diffractoins of given zone.</span>
+</span><span id="ZoneAxis-297"><a href="#ZoneAxis-297"><span class="linenos">297</span></a><span class="sd">        * We use np.cross to calculate the cross product</span>
+</span><span id="ZoneAxis-298"><a href="#ZoneAxis-298"><span class="linenos">298</span></a><span class="sd">          and convert the result to tuple for the sake of consistency</span>
+</span><span id="ZoneAxis-299"><a href="#ZoneAxis-299"><span class="linenos">299</span></a><span class="sd">          as all other functions in this module return vectors as tuples.</span>
+</span><span id="ZoneAxis-300"><a href="#ZoneAxis-300"><span class="linenos">300</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-301"><a href="#ZoneAxis-301"><span class="linenos">301</span></a>        <span class="n">zone_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span><span class="n">diff2</span><span class="p">)</span>
+</span><span id="ZoneAxis-302"><a href="#ZoneAxis-302"><span class="linenos">302</span></a>        <span class="k">return</span><span class="p">(</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">)</span> <span class="p">)</span>
+</span><span id="ZoneAxis-303"><a href="#ZoneAxis-303"><span class="linenos">303</span></a>
+</span><span id="ZoneAxis-304"><a href="#ZoneAxis-304"><span class="linenos">304</span></a>
+</span><span id="ZoneAxis-305"><a href="#ZoneAxis-305"><span class="linenos">305</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis-306"><a href="#ZoneAxis-306"><span class="linenos">306</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-307"><a href="#ZoneAxis-307"><span class="linenos">307</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
+</span><span id="ZoneAxis-308"><a href="#ZoneAxis-308"><span class="linenos">308</span></a>
+</span><span id="ZoneAxis-309"><a href="#ZoneAxis-309"><span class="linenos">309</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis-310"><a href="#ZoneAxis-310"><span class="linenos">310</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis-311"><a href="#ZoneAxis-311"><span class="linenos">311</span></a><span class="sd">        diffs : list of 3-item lists = list of (hkl) of multiple diffractions</span>
+</span><span id="ZoneAxis-312"><a href="#ZoneAxis-312"><span class="linenos">312</span></a><span class="sd">            The list containing (hkl) indices of multiple diffractions</span>
+</span><span id="ZoneAxis-313"><a href="#ZoneAxis-313"><span class="linenos">313</span></a><span class="sd">            that are supposed to correspond to one zone axis [uvw].</span>
+</span><span id="ZoneAxis-314"><a href="#ZoneAxis-314"><span class="linenos">314</span></a>
+</span><span id="ZoneAxis-315"><a href="#ZoneAxis-315"><span class="linenos">315</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis-316"><a href="#ZoneAxis-316"><span class="linenos">316</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis-317"><a href="#ZoneAxis-317"><span class="linenos">317</span></a><span class="sd">        None</span>
+</span><span id="ZoneAxis-318"><a href="#ZoneAxis-318"><span class="linenos">318</span></a><span class="sd">            The list of vector cross-products is printed on the screen.</span>
+</span><span id="ZoneAxis-319"><a href="#ZoneAxis-319"><span class="linenos">319</span></a><span class="sd">            If all cross-products are the same (up to scale/sign),</span>
+</span><span id="ZoneAxis-320"><a href="#ZoneAxis-320"><span class="linenos">320</span></a><span class="sd">            then the zone axis [uvw] explains the presense of all *diffs*</span>
+</span><span id="ZoneAxis-321"><a href="#ZoneAxis-321"><span class="linenos">321</span></a><span class="sd">            in the observed diffraction pattern.</span>
+</span><span id="ZoneAxis-322"><a href="#ZoneAxis-322"><span class="linenos">322</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-323"><a href="#ZoneAxis-323"><span class="linenos">323</span></a>        <span class="k">for</span> <span class="n">d1</span> <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis-324"><a href="#ZoneAxis-324"><span class="linenos">324</span></a>            <span class="k">for</span> <span class="n">d2</span>  <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis-325"><a href="#ZoneAxis-325"><span class="linenos">325</span></a>                <span class="n">index_d1</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="ZoneAxis-326"><a href="#ZoneAxis-326"><span class="linenos">326</span></a>                <span class="n">index_d2</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="ZoneAxis-327"><a href="#ZoneAxis-327"><span class="linenos">327</span></a>                <span class="k">if</span> <span class="n">index_d1</span> <span class="o">&lt;</span> <span class="n">index_d2</span><span class="p">:</span>
+</span><span id="ZoneAxis-328"><a href="#ZoneAxis-328"><span class="linenos">328</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;d</span><span class="si">{</span><span class="n">index_d1</span><span class="si">}</span><span class="s1"> x d</span><span class="si">{</span><span class="n">index_d2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span><span id="ZoneAxis-329"><a href="#ZoneAxis-329"><span class="linenos">329</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span><span id="ZoneAxis-330"><a href="#ZoneAxis-330"><span class="linenos">330</span></a>
+</span><span id="ZoneAxis-331"><a href="#ZoneAxis-331"><span class="linenos">331</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+</span><span id="ZoneAxis-332"><a href="#ZoneAxis-332"><span class="linenos">332</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-333"><a href="#ZoneAxis-333"><span class="linenos">333</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
+</span><span id="ZoneAxis-334"><a href="#ZoneAxis-334"><span class="linenos">334</span></a>
+</span><span id="ZoneAxis-335"><a href="#ZoneAxis-335"><span class="linenos">335</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis-336"><a href="#ZoneAxis-336"><span class="linenos">336</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis-337"><a href="#ZoneAxis-337"><span class="linenos">337</span></a><span class="sd">        zone_axis : tuple or list or array of three integers</span>
+</span><span id="ZoneAxis-338"><a href="#ZoneAxis-338"><span class="linenos">338</span></a><span class="sd">            Crystallographic direction [uvw] that defines zone axis.</span>
+</span><span id="ZoneAxis-339"><a href="#ZoneAxis-339"><span class="linenos">339</span></a>
+</span><span id="ZoneAxis-340"><a href="#ZoneAxis-340"><span class="linenos">340</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis-341"><a href="#ZoneAxis-341"><span class="linenos">341</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis-342"><a href="#ZoneAxis-342"><span class="linenos">342</span></a><span class="sd">        WZL : string</span>
+</span><span id="ZoneAxis-343"><a href="#ZoneAxis-343"><span class="linenos">343</span></a><span class="sd">            A condition for (hkl) indices of diffractions</span>
+</span><span id="ZoneAxis-344"><a href="#ZoneAxis-344"><span class="linenos">344</span></a><span class="sd">            that satisfy Weis Zone Law for given zone axis/direction [uvw].</span>
+</span><span id="ZoneAxis-345"><a href="#ZoneAxis-345"><span class="linenos">345</span></a><span class="sd">        </span>
+</span><span id="ZoneAxis-346"><a href="#ZoneAxis-346"><span class="linenos">346</span></a><span class="sd">        Technical note</span>
+</span><span id="ZoneAxis-347"><a href="#ZoneAxis-347"><span class="linenos">347</span></a><span class="sd">        --------------</span>
+</span><span id="ZoneAxis-348"><a href="#ZoneAxis-348"><span class="linenos">348</span></a><span class="sd">        * The condition is a simple string.</span>
+</span><span id="ZoneAxis-349"><a href="#ZoneAxis-349"><span class="linenos">349</span></a><span class="sd">        * It would be more straightforward to use a SymPy expression.</span>
+</span><span id="ZoneAxis-350"><a href="#ZoneAxis-350"><span class="linenos">350</span></a><span class="sd">        * Nevertheless, in this simple case the &quot;manual symbolic calculation&quot;</span>
+</span><span id="ZoneAxis-351"><a href="#ZoneAxis-351"><span class="linenos">351</span></a><span class="sd">          is quite easy and so we do not need the heavy-weight SymPy library.</span>
+</span><span id="ZoneAxis-352"><a href="#ZoneAxis-352"><span class="linenos">352</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis-353"><a href="#ZoneAxis-353"><span class="linenos">353</span></a>        <span class="c1"># WZL = Weiss Zone Law = h*u + k*v + l*w = 0</span>
+</span><span id="ZoneAxis-354"><a href="#ZoneAxis-354"><span class="linenos">354</span></a>        <span class="n">WZL</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+</span><span id="ZoneAxis-355"><a href="#ZoneAxis-355"><span class="linenos">355</span></a>        <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">zone_axis</span>
+</span><span id="ZoneAxis-356"><a href="#ZoneAxis-356"><span class="linenos">356</span></a>        <span class="c1"># Process h*u part of WZL</span>
+</span><span id="ZoneAxis-357"><a href="#ZoneAxis-357"><span class="linenos">357</span></a>        <span class="k">if</span>   <span class="n">u</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="ZoneAxis-358"><a href="#ZoneAxis-358"><span class="linenos">358</span></a>        <span class="k">elif</span> <span class="n">u</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;-h&#39;</span>
+</span><span id="ZoneAxis-359"><a href="#ZoneAxis-359"><span class="linenos">359</span></a>        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="ZoneAxis-360"><a href="#ZoneAxis-360"><span class="linenos">360</span></a>        <span class="c1"># Process k*v part of WZL</span>
+</span><span id="ZoneAxis-361"><a href="#ZoneAxis-361"><span class="linenos">361</span></a>        <span class="k">if</span>   <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + k&#39;</span>
+</span><span id="ZoneAxis-362"><a href="#ZoneAxis-362"><span class="linenos">362</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - k&#39;</span>
+</span><span id="ZoneAxis-363"><a href="#ZoneAxis-363"><span class="linenos">363</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="ZoneAxis-364"><a href="#ZoneAxis-364"><span class="linenos">364</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="ZoneAxis-365"><a href="#ZoneAxis-365"><span class="linenos">365</span></a>        <span class="c1"># Process l*w part of WZL</span>
+</span><span id="ZoneAxis-366"><a href="#ZoneAxis-366"><span class="linenos">366</span></a>        <span class="k">if</span>   <span class="n">w</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + l&#39;</span>
+</span><span id="ZoneAxis-367"><a href="#ZoneAxis-367"><span class="linenos">367</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - l&#39;</span>
+</span><span id="ZoneAxis-368"><a href="#ZoneAxis-368"><span class="linenos">368</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="ZoneAxis-369"><a href="#ZoneAxis-369"><span class="linenos">369</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="ZoneAxis-370"><a href="#ZoneAxis-370"><span class="linenos">370</span></a>        <span class="c1"># Add right-hand side of WZL</span>
+</span><span id="ZoneAxis-371"><a href="#ZoneAxis-371"><span class="linenos">371</span></a>        <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; = 0&#39;</span>
+</span><span id="ZoneAxis-372"><a href="#ZoneAxis-372"><span class="linenos">372</span></a>        <span class="c1"># Return the result</span>
+</span><span id="ZoneAxis-373"><a href="#ZoneAxis-373"><span class="linenos">373</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">WZL</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -1130,6 +1339,230 @@ Miller indices [uvw] of the crystallographic direction.</li>
 </div>
 
 
+                            <div id="ZoneAxis.from_two_diffs" class="classattr">
+                                        <input id="ZoneAxis.from_two_diffs-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">from_two_diffs</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">diff1</span>, </span><span class="param"><span class="n">diff2</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ZoneAxis.from_two_diffs-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ZoneAxis.from_two_diffs"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_two_diffs-274"><a href="#ZoneAxis.from_two_diffs-274"><span class="linenos">274</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+</span><span id="ZoneAxis.from_two_diffs-275"><a href="#ZoneAxis.from_two_diffs-275"><span class="linenos">275</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.from_two_diffs-276"><a href="#ZoneAxis.from_two_diffs-276"><span class="linenos">276</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
+</span><span id="ZoneAxis.from_two_diffs-277"><a href="#ZoneAxis.from_two_diffs-277"><span class="linenos">277</span></a>
+</span><span id="ZoneAxis.from_two_diffs-278"><a href="#ZoneAxis.from_two_diffs-278"><span class="linenos">278</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis.from_two_diffs-279"><a href="#ZoneAxis.from_two_diffs-279"><span class="linenos">279</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis.from_two_diffs-280"><a href="#ZoneAxis.from_two_diffs-280"><span class="linenos">280</span></a><span class="sd">        diff1 : tuple or list or array of three integers</span>
+</span><span id="ZoneAxis.from_two_diffs-281"><a href="#ZoneAxis.from_two_diffs-281"><span class="linenos">281</span></a><span class="sd">            Miller indices (hkl) of the 1st diffraction within given zone </span>
+</span><span id="ZoneAxis.from_two_diffs-282"><a href="#ZoneAxis.from_two_diffs-282"><span class="linenos">282</span></a><span class="sd">        diff2 : TYPE</span>
+</span><span id="ZoneAxis.from_two_diffs-283"><a href="#ZoneAxis.from_two_diffs-283"><span class="linenos">283</span></a><span class="sd">            Miller indices (hkl) of the 2nd diffraction within given zone.</span>
+</span><span id="ZoneAxis.from_two_diffs-284"><a href="#ZoneAxis.from_two_diffs-284"><span class="linenos">284</span></a>
+</span><span id="ZoneAxis.from_two_diffs-285"><a href="#ZoneAxis.from_two_diffs-285"><span class="linenos">285</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis.from_two_diffs-286"><a href="#ZoneAxis.from_two_diffs-286"><span class="linenos">286</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis.from_two_diffs-287"><a href="#ZoneAxis.from_two_diffs-287"><span class="linenos">287</span></a><span class="sd">        zone_axis : tuple of three integers</span>
+</span><span id="ZoneAxis.from_two_diffs-288"><a href="#ZoneAxis.from_two_diffs-288"><span class="linenos">288</span></a><span class="sd">            Miller indices [uvw] of the zone axis</span>
+</span><span id="ZoneAxis.from_two_diffs-289"><a href="#ZoneAxis.from_two_diffs-289"><span class="linenos">289</span></a><span class="sd">            calculated from *diff1* and *diff2*.</span>
+</span><span id="ZoneAxis.from_two_diffs-290"><a href="#ZoneAxis.from_two_diffs-290"><span class="linenos">290</span></a><span class="sd">        </span>
+</span><span id="ZoneAxis.from_two_diffs-291"><a href="#ZoneAxis.from_two_diffs-291"><span class="linenos">291</span></a><span class="sd">        Technical notes</span>
+</span><span id="ZoneAxis.from_two_diffs-292"><a href="#ZoneAxis.from_two_diffs-292"><span class="linenos">292</span></a><span class="sd">        ---------------</span>
+</span><span id="ZoneAxis.from_two_diffs-293"><a href="#ZoneAxis.from_two_diffs-293"><span class="linenos">293</span></a><span class="sd">        * Zone axis should be perpendicular</span>
+</span><span id="ZoneAxis.from_two_diffs-294"><a href="#ZoneAxis.from_two_diffs-294"><span class="linenos">294</span></a><span class="sd">          to any two diffractions of given zone.</span>
+</span><span id="ZoneAxis.from_two_diffs-295"><a href="#ZoneAxis.from_two_diffs-295"><span class="linenos">295</span></a><span class="sd">        * Therefore, it can be calculated as a vector cross-product</span>
+</span><span id="ZoneAxis.from_two_diffs-296"><a href="#ZoneAxis.from_two_diffs-296"><span class="linenos">296</span></a><span class="sd">          of any two diffractoins of given zone.</span>
+</span><span id="ZoneAxis.from_two_diffs-297"><a href="#ZoneAxis.from_two_diffs-297"><span class="linenos">297</span></a><span class="sd">        * We use np.cross to calculate the cross product</span>
+</span><span id="ZoneAxis.from_two_diffs-298"><a href="#ZoneAxis.from_two_diffs-298"><span class="linenos">298</span></a><span class="sd">          and convert the result to tuple for the sake of consistency</span>
+</span><span id="ZoneAxis.from_two_diffs-299"><a href="#ZoneAxis.from_two_diffs-299"><span class="linenos">299</span></a><span class="sd">          as all other functions in this module return vectors as tuples.</span>
+</span><span id="ZoneAxis.from_two_diffs-300"><a href="#ZoneAxis.from_two_diffs-300"><span class="linenos">300</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.from_two_diffs-301"><a href="#ZoneAxis.from_two_diffs-301"><span class="linenos">301</span></a>        <span class="n">zone_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span><span class="n">diff2</span><span class="p">)</span>
+</span><span id="ZoneAxis.from_two_diffs-302"><a href="#ZoneAxis.from_two_diffs-302"><span class="linenos">302</span></a>        <span class="k">return</span><span class="p">(</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">)</span> <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>diff1</strong> (tuple or list or array of three integers):
+Miller indices (hkl) of the 1st diffraction within given zone</li>
+<li><strong>diff2</strong> (TYPE):
+Miller indices (hkl) of the 2nd diffraction within given zone.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>zone_axis</strong> (tuple of three integers):
+Miller indices [uvw] of the zone axis
+calculated from <em>diff1</em> and <em>diff2</em>.</li>
+</ul>
+
+<h6 id="technical-notes">Technical notes</h6>
+
+<ul>
+<li>Zone axis should be perpendicular
+to any two diffractions of given zone.</li>
+<li>Therefore, it can be calculated as a vector cross-product
+of any two diffractoins of given zone.</li>
+<li>We use np.cross to calculate the cross product
+and convert the result to tuple for the sake of consistency
+as all other functions in this module return vectors as tuples.</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="ZoneAxis.from_multiple_diffs" class="classattr">
+                                        <input id="ZoneAxis.from_multiple_diffs-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">from_multiple_diffs</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">diffs</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ZoneAxis.from_multiple_diffs-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ZoneAxis.from_multiple_diffs"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_multiple_diffs-305"><a href="#ZoneAxis.from_multiple_diffs-305"><span class="linenos">305</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis.from_multiple_diffs-306"><a href="#ZoneAxis.from_multiple_diffs-306"><span class="linenos">306</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.from_multiple_diffs-307"><a href="#ZoneAxis.from_multiple_diffs-307"><span class="linenos">307</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
+</span><span id="ZoneAxis.from_multiple_diffs-308"><a href="#ZoneAxis.from_multiple_diffs-308"><span class="linenos">308</span></a>
+</span><span id="ZoneAxis.from_multiple_diffs-309"><a href="#ZoneAxis.from_multiple_diffs-309"><span class="linenos">309</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis.from_multiple_diffs-310"><a href="#ZoneAxis.from_multiple_diffs-310"><span class="linenos">310</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis.from_multiple_diffs-311"><a href="#ZoneAxis.from_multiple_diffs-311"><span class="linenos">311</span></a><span class="sd">        diffs : list of 3-item lists = list of (hkl) of multiple diffractions</span>
+</span><span id="ZoneAxis.from_multiple_diffs-312"><a href="#ZoneAxis.from_multiple_diffs-312"><span class="linenos">312</span></a><span class="sd">            The list containing (hkl) indices of multiple diffractions</span>
+</span><span id="ZoneAxis.from_multiple_diffs-313"><a href="#ZoneAxis.from_multiple_diffs-313"><span class="linenos">313</span></a><span class="sd">            that are supposed to correspond to one zone axis [uvw].</span>
+</span><span id="ZoneAxis.from_multiple_diffs-314"><a href="#ZoneAxis.from_multiple_diffs-314"><span class="linenos">314</span></a>
+</span><span id="ZoneAxis.from_multiple_diffs-315"><a href="#ZoneAxis.from_multiple_diffs-315"><span class="linenos">315</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis.from_multiple_diffs-316"><a href="#ZoneAxis.from_multiple_diffs-316"><span class="linenos">316</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis.from_multiple_diffs-317"><a href="#ZoneAxis.from_multiple_diffs-317"><span class="linenos">317</span></a><span class="sd">        None</span>
+</span><span id="ZoneAxis.from_multiple_diffs-318"><a href="#ZoneAxis.from_multiple_diffs-318"><span class="linenos">318</span></a><span class="sd">            The list of vector cross-products is printed on the screen.</span>
+</span><span id="ZoneAxis.from_multiple_diffs-319"><a href="#ZoneAxis.from_multiple_diffs-319"><span class="linenos">319</span></a><span class="sd">            If all cross-products are the same (up to scale/sign),</span>
+</span><span id="ZoneAxis.from_multiple_diffs-320"><a href="#ZoneAxis.from_multiple_diffs-320"><span class="linenos">320</span></a><span class="sd">            then the zone axis [uvw] explains the presense of all *diffs*</span>
+</span><span id="ZoneAxis.from_multiple_diffs-321"><a href="#ZoneAxis.from_multiple_diffs-321"><span class="linenos">321</span></a><span class="sd">            in the observed diffraction pattern.</span>
+</span><span id="ZoneAxis.from_multiple_diffs-322"><a href="#ZoneAxis.from_multiple_diffs-322"><span class="linenos">322</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.from_multiple_diffs-323"><a href="#ZoneAxis.from_multiple_diffs-323"><span class="linenos">323</span></a>        <span class="k">for</span> <span class="n">d1</span> <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis.from_multiple_diffs-324"><a href="#ZoneAxis.from_multiple_diffs-324"><span class="linenos">324</span></a>            <span class="k">for</span> <span class="n">d2</span>  <span class="ow">in</span> <span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis.from_multiple_diffs-325"><a href="#ZoneAxis.from_multiple_diffs-325"><span class="linenos">325</span></a>                <span class="n">index_d1</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="ZoneAxis.from_multiple_diffs-326"><a href="#ZoneAxis.from_multiple_diffs-326"><span class="linenos">326</span></a>                <span class="n">index_d2</span> <span class="o">=</span> <span class="n">diffs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="ZoneAxis.from_multiple_diffs-327"><a href="#ZoneAxis.from_multiple_diffs-327"><span class="linenos">327</span></a>                <span class="k">if</span> <span class="n">index_d1</span> <span class="o">&lt;</span> <span class="n">index_d2</span><span class="p">:</span>
+</span><span id="ZoneAxis.from_multiple_diffs-328"><a href="#ZoneAxis.from_multiple_diffs-328"><span class="linenos">328</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;d</span><span class="si">{</span><span class="n">index_d1</span><span class="si">}</span><span class="s1"> x d</span><span class="si">{</span><span class="n">index_d2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span><span id="ZoneAxis.from_multiple_diffs-329"><a href="#ZoneAxis.from_multiple_diffs-329"><span class="linenos">329</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>diffs</strong> (list of 3-item lists = list of (hkl) of multiple diffractions):
+The list containing (hkl) indices of multiple diffractions
+that are supposed to correspond to one zone axis [uvw].</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>None</strong>: The list of vector cross-products is printed on the screen.
+If all cross-products are the same (up to scale/sign),
+then the zone axis [uvw] explains the presense of all <em>diffs</em>
+in the observed diffraction pattern.</li>
+</ul>
+</div>
+
+
+                            </div>
+                            <div id="ZoneAxis.weiss_zone_law" class="classattr">
+                                        <input id="ZoneAxis.weiss_zone_law-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">weiss_zone_law</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">zone_axis</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ZoneAxis.weiss_zone_law-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ZoneAxis.weiss_zone_law"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.weiss_zone_law-331"><a href="#ZoneAxis.weiss_zone_law-331"><span class="linenos">331</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+</span><span id="ZoneAxis.weiss_zone_law-332"><a href="#ZoneAxis.weiss_zone_law-332"><span class="linenos">332</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-333"><a href="#ZoneAxis.weiss_zone_law-333"><span class="linenos">333</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
+</span><span id="ZoneAxis.weiss_zone_law-334"><a href="#ZoneAxis.weiss_zone_law-334"><span class="linenos">334</span></a>
+</span><span id="ZoneAxis.weiss_zone_law-335"><a href="#ZoneAxis.weiss_zone_law-335"><span class="linenos">335</span></a><span class="sd">        Parameters</span>
+</span><span id="ZoneAxis.weiss_zone_law-336"><a href="#ZoneAxis.weiss_zone_law-336"><span class="linenos">336</span></a><span class="sd">        ----------</span>
+</span><span id="ZoneAxis.weiss_zone_law-337"><a href="#ZoneAxis.weiss_zone_law-337"><span class="linenos">337</span></a><span class="sd">        zone_axis : tuple or list or array of three integers</span>
+</span><span id="ZoneAxis.weiss_zone_law-338"><a href="#ZoneAxis.weiss_zone_law-338"><span class="linenos">338</span></a><span class="sd">            Crystallographic direction [uvw] that defines zone axis.</span>
+</span><span id="ZoneAxis.weiss_zone_law-339"><a href="#ZoneAxis.weiss_zone_law-339"><span class="linenos">339</span></a>
+</span><span id="ZoneAxis.weiss_zone_law-340"><a href="#ZoneAxis.weiss_zone_law-340"><span class="linenos">340</span></a><span class="sd">        Returns</span>
+</span><span id="ZoneAxis.weiss_zone_law-341"><a href="#ZoneAxis.weiss_zone_law-341"><span class="linenos">341</span></a><span class="sd">        -------</span>
+</span><span id="ZoneAxis.weiss_zone_law-342"><a href="#ZoneAxis.weiss_zone_law-342"><span class="linenos">342</span></a><span class="sd">        WZL : string</span>
+</span><span id="ZoneAxis.weiss_zone_law-343"><a href="#ZoneAxis.weiss_zone_law-343"><span class="linenos">343</span></a><span class="sd">            A condition for (hkl) indices of diffractions</span>
+</span><span id="ZoneAxis.weiss_zone_law-344"><a href="#ZoneAxis.weiss_zone_law-344"><span class="linenos">344</span></a><span class="sd">            that satisfy Weis Zone Law for given zone axis/direction [uvw].</span>
+</span><span id="ZoneAxis.weiss_zone_law-345"><a href="#ZoneAxis.weiss_zone_law-345"><span class="linenos">345</span></a><span class="sd">        </span>
+</span><span id="ZoneAxis.weiss_zone_law-346"><a href="#ZoneAxis.weiss_zone_law-346"><span class="linenos">346</span></a><span class="sd">        Technical note</span>
+</span><span id="ZoneAxis.weiss_zone_law-347"><a href="#ZoneAxis.weiss_zone_law-347"><span class="linenos">347</span></a><span class="sd">        --------------</span>
+</span><span id="ZoneAxis.weiss_zone_law-348"><a href="#ZoneAxis.weiss_zone_law-348"><span class="linenos">348</span></a><span class="sd">        * The condition is a simple string.</span>
+</span><span id="ZoneAxis.weiss_zone_law-349"><a href="#ZoneAxis.weiss_zone_law-349"><span class="linenos">349</span></a><span class="sd">        * It would be more straightforward to use a SymPy expression.</span>
+</span><span id="ZoneAxis.weiss_zone_law-350"><a href="#ZoneAxis.weiss_zone_law-350"><span class="linenos">350</span></a><span class="sd">        * Nevertheless, in this simple case the &quot;manual symbolic calculation&quot;</span>
+</span><span id="ZoneAxis.weiss_zone_law-351"><a href="#ZoneAxis.weiss_zone_law-351"><span class="linenos">351</span></a><span class="sd">          is quite easy and so we do not need the heavy-weight SymPy library.</span>
+</span><span id="ZoneAxis.weiss_zone_law-352"><a href="#ZoneAxis.weiss_zone_law-352"><span class="linenos">352</span></a><span class="sd">        &#39;&#39;&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-353"><a href="#ZoneAxis.weiss_zone_law-353"><span class="linenos">353</span></a>        <span class="c1"># WZL = Weiss Zone Law = h*u + k*v + l*w = 0</span>
+</span><span id="ZoneAxis.weiss_zone_law-354"><a href="#ZoneAxis.weiss_zone_law-354"><span class="linenos">354</span></a>        <span class="n">WZL</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-355"><a href="#ZoneAxis.weiss_zone_law-355"><span class="linenos">355</span></a>        <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="n">zone_axis</span>
+</span><span id="ZoneAxis.weiss_zone_law-356"><a href="#ZoneAxis.weiss_zone_law-356"><span class="linenos">356</span></a>        <span class="c1"># Process h*u part of WZL</span>
+</span><span id="ZoneAxis.weiss_zone_law-357"><a href="#ZoneAxis.weiss_zone_law-357"><span class="linenos">357</span></a>        <span class="k">if</span>   <span class="n">u</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-358"><a href="#ZoneAxis.weiss_zone_law-358"><span class="linenos">358</span></a>        <span class="k">elif</span> <span class="n">u</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39;-h&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-359"><a href="#ZoneAxis.weiss_zone_law-359"><span class="linenos">359</span></a>        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;h&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-360"><a href="#ZoneAxis.weiss_zone_law-360"><span class="linenos">360</span></a>        <span class="c1"># Process k*v part of WZL</span>
+</span><span id="ZoneAxis.weiss_zone_law-361"><a href="#ZoneAxis.weiss_zone_law-361"><span class="linenos">361</span></a>        <span class="k">if</span>   <span class="n">v</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + k&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-362"><a href="#ZoneAxis.weiss_zone_law-362"><span class="linenos">362</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - k&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-363"><a href="#ZoneAxis.weiss_zone_law-363"><span class="linenos">363</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-364"><a href="#ZoneAxis.weiss_zone_law-364"><span class="linenos">364</span></a>        <span class="k">elif</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;k&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-365"><a href="#ZoneAxis.weiss_zone_law-365"><span class="linenos">365</span></a>        <span class="c1"># Process l*w part of WZL</span>
+</span><span id="ZoneAxis.weiss_zone_law-366"><a href="#ZoneAxis.weiss_zone_law-366"><span class="linenos">366</span></a>        <span class="k">if</span>   <span class="n">w</span> <span class="o">==</span> <span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + l&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-367"><a href="#ZoneAxis.weiss_zone_law-367"><span class="linenos">367</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>    <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - l&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-368"><a href="#ZoneAxis.weiss_zone_law-368"><span class="linenos">368</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&gt;</span> <span class="mi">1</span>      <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; + &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-369"><a href="#ZoneAxis.weiss_zone_law-369"><span class="linenos">369</span></a>        <span class="k">elif</span> <span class="n">w</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>     <span class="p">:</span> <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;l&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-370"><a href="#ZoneAxis.weiss_zone_law-370"><span class="linenos">370</span></a>        <span class="c1"># Add right-hand side of WZL</span>
+</span><span id="ZoneAxis.weiss_zone_law-371"><a href="#ZoneAxis.weiss_zone_law-371"><span class="linenos">371</span></a>        <span class="n">WZL</span> <span class="o">+=</span> <span class="s1">&#39; = 0&#39;</span>
+</span><span id="ZoneAxis.weiss_zone_law-372"><a href="#ZoneAxis.weiss_zone_law-372"><span class="linenos">372</span></a>        <span class="c1"># Return the result</span>
+</span><span id="ZoneAxis.weiss_zone_law-373"><a href="#ZoneAxis.weiss_zone_law-373"><span class="linenos">373</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">WZL</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>zone_axis</strong> (tuple or list or array of three integers):
+Crystallographic direction [uvw] that defines zone axis.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>WZL</strong> (string):
+A condition for (hkl) indices of diffractions
+that satisfy Weis Zone Law for given zone axis/direction [uvw].</li>
+</ul>
+
+<h6 id="technical-note">Technical note</h6>
+
+<ul>
+<li>The condition is a simple string.</li>
+<li>It would be more straightforward to use a SymPy expression.</li>
+<li>Nevertheless, in this simple case the "manual symbolic calculation"
+is quite easy and so we do not need the heavy-weight SymPy library.</li>
+</ul>
+</div>
+
+
+                            </div>
                 </section>
     </main>
 <script>

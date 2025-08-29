@@ -270,4 +270,105 @@ class ZoneAxis:
     Class with functions to determine *zone axis* of a 2D diffractogram.
     '''
 
-    pass    
+    def from_two_diffs(diff1, diff2):
+        '''
+        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.
+
+        Parameters
+        ----------
+        diff1 : tuple or list or array of three integers
+            Miller indices (hkl) of the 1st diffraction within given zone 
+        diff2 : TYPE
+            Miller indices (hkl) of the 2nd diffraction within given zone.
+
+        Returns
+        -------
+        zone_axis : tuple of three integers
+            Miller indices [uvw] of the zone axis
+            calculated from *diff1* and *diff2*.
+        
+        Technical notes
+        ---------------
+        * Zone axis should be perpendicular
+          to any two diffractions of given zone.
+        * Therefore, it can be calculated as a vector cross-product
+          of any two diffractoins of given zone.
+        * We use np.cross to calculate the cross product
+          and convert the result to tuple for the sake of consistency
+          as all other functions in this module return vectors as tuples.
+        '''
+        zone_axis = np.cross(diff1,diff2)
+        return( tuple(zone_axis) )
+
+
+    def from_multiple_diffs(diffs):
+        '''
+        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.
+
+        Parameters
+        ----------
+        diffs : list of 3-item lists = list of (hkl) of multiple diffractions
+            The list containing (hkl) indices of multiple diffractions
+            that are supposed to correspond to one zone axis [uvw].
+
+        Returns
+        -------
+        None
+            The list of vector cross-products is printed on the screen.
+            If all cross-products are the same (up to scale/sign),
+            then the zone axis [uvw] explains the presense of all *diffs*
+            in the observed diffraction pattern.
+        '''
+        for d1 in (diffs):
+            for d2  in (diffs):
+                index_d1 = diffs.index(d1) + 1
+                index_d2 = diffs.index(d2) + 1
+                if index_d1 < index_d2:
+                    print(f'd{index_d1} x d{index_d2}', end='')
+                    print(f' = {np.cross(d1,d2)}')
+
+    def weiss_zone_law(zone_axis):
+        '''
+        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. 
+
+        Parameters
+        ----------
+        zone_axis : tuple or list or array of three integers
+            Crystallographic direction [uvw] that defines zone axis.
+
+        Returns
+        -------
+        WZL : string
+            A condition for (hkl) indices of diffractions
+            that satisfy Weis Zone Law for given zone axis/direction [uvw].
+        
+        Technical note
+        --------------
+        * The condition is a simple string.
+        * It would be more straightforward to use a SymPy expression.
+        * Nevertheless, in this simple case the "manual symbolic calculation"
+          is quite easy and so we do not need the heavy-weight SymPy library.
+        '''
+        # WZL = Weiss Zone Law = h*u + k*v + l*w = 0
+        WZL = ''
+        u,v,w = zone_axis
+        # Process h*u part of WZL
+        if   u == 1     : WZL += 'h'
+        elif u == -1    : WZL += '-h'
+        elif abs(u) > 1 : WZL += str(u) + 'h'
+        # Process k*v part of WZL
+        if   v == 1     : WZL += ' + k'
+        elif v == -1    : WZL += ' - k'
+        elif v > 1      : WZL += ' + ' + str(v) + 'k'
+        elif v < -1     : WZL += ' - ' + str(v) + 'k'
+        # Process l*w part of WZL
+        if   w == 1     : WZL += ' + l'
+        elif w == -1    : WZL += ' - l'
+        elif w > 1      : WZL += ' + ' + str(w) + 'l'
+        elif w < -1     : WZL += ' - ' + str(w) + 'l'
+        # Add right-hand side of WZL
+        WZL += ' = 0'
+        # Return the result
+        return(WZL)
+        
+    
