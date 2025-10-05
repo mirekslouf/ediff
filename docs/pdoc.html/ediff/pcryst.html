@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="pdoc 15.0.4"/>
-    <title>ediff.pxrd API documentation</title>
+    <title>ediff.pcryst API documentation</title>
 
     <style>/*! * Bootstrap Reboot v5.0.0 (https://getbootstrap.com/) * Copyright 2011-2021 The Bootstrap Authors * Copyright 2011-2021 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) * Forked from Normalize.css, licensed MIT (https://github.com/necolas/normalize.css/blob/master/LICENSE.md) */*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}h2{font-size:calc(1.325rem + .9vw)}@media (min-width:1200px){h2{font-size:2rem}}h3{font-size:calc(1.3rem + .6vw)}@media (min-width:1200px){h3{font-size:1.75rem}}h4{font-size:calc(1.275rem + .3vw)}@media (min-width:1200px){h4{font-size:1.5rem}}h5{font-size:1.25rem}h6{font-size:1rem}p{margin-top:0;margin-bottom:1rem}abbr[data-bs-original-title],abbr[title]{-webkit-text-decoration:underline dotted;text-decoration:underline dotted;cursor:help;-webkit-text-decoration-skip-ink:none;text-decoration-skip-ink:none}address{margin-bottom:1rem;font-style:normal;line-height:inherit}ol,ul{padding-left:2rem}dl,ol,ul{margin-top:0;margin-bottom:1rem}ol ol,ol ul,ul ol,ul ul{margin-bottom:0}dt{font-weight:700}dd{margin-bottom:.5rem;margin-left:0}blockquote{margin:0 0 1rem}b,strong{font-weight:bolder}small{font-size:.875em}mark{padding:.2em;background-color:#fcf8e3}sub,sup{position:relative;font-size:.75em;line-height:0;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}a{color:#0d6efd;text-decoration:underline}a:hover{color:#0a58ca}a:not([href]):not([class]),a:not([href]):not([class]):hover{color:inherit;text-decoration:none}code,kbd,pre,samp{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;direction:ltr;unicode-bidi:bidi-override}pre{display:block;margin-top:0;margin-bottom:1rem;overflow:auto;font-size:.875em}pre code{font-size:inherit;color:inherit;word-break:normal}code{font-size:.875em;color:#d63384;word-wrap:break-word}a>code{color:inherit}kbd{padding:.2rem .4rem;font-size:.875em;color:#fff;background-color:#212529;border-radius:.2rem}kbd kbd{padding:0;font-size:1em;font-weight:700}figure{margin:0 0 1rem}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}caption{padding-top:.5rem;padding-bottom:.5rem;color:#6c757d;text-align:left}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,tfoot,th,thead,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button:focus:not(:focus-visible){outline:0}button,input,optgroup,select,textarea{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}[role=button]{cursor:pointer}select{word-wrap:normal}select:disabled{opacity:1}[list]::-webkit-calendar-picker-indicator{display:none}[type=button],[type=reset],[type=submit],button{-webkit-appearance:button}[type=button]:not(:disabled),[type=reset]:not(:disabled),[type=submit]:not(:disabled),button:not(:disabled){cursor:pointer}::-moz-focus-inner{padding:0;border-style:none}textarea{resize:vertical}fieldset{min-width:0;padding:0;margin:0;border:0}legend{float:left;width:100%;padding:0;margin-bottom:.5rem;font-size:calc(1.275rem + .3vw);line-height:inherit}@media (min-width:1200px){legend{font-size:1.5rem}}legend+*{clear:left}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}[type=search]{outline-offset:-2px;-webkit-appearance:textfield}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}output{display:inline-block}iframe{border:0}summary{display:list-item;cursor:pointer}progress{vertical-align:baseline}[hidden]{display:none!important}</style>
     <style>/*! syntax-highlighting.css */pre{line-height:125%;}span.linenos{color:inherit; background-color:transparent; padding-left:5px; padding-right:20px;}.pdoc-code .hll{background-color:#ffffcc}.pdoc-code{background:#f8f8f8;}.pdoc-code .c{color:#3D7B7B; font-style:italic}.pdoc-code .err{border:1px solid #FF0000}.pdoc-code .k{color:#008000; font-weight:bold}.pdoc-code .o{color:#666666}.pdoc-code .ch{color:#3D7B7B; font-style:italic}.pdoc-code .cm{color:#3D7B7B; font-style:italic}.pdoc-code .cp{color:#9C6500}.pdoc-code .cpf{color:#3D7B7B; font-style:italic}.pdoc-code .c1{color:#3D7B7B; font-style:italic}.pdoc-code .cs{color:#3D7B7B; font-style:italic}.pdoc-code .gd{color:#A00000}.pdoc-code .ge{font-style:italic}.pdoc-code .gr{color:#E40000}.pdoc-code .gh{color:#000080; font-weight:bold}.pdoc-code .gi{color:#008400}.pdoc-code .go{color:#717171}.pdoc-code .gp{color:#000080; font-weight:bold}.pdoc-code .gs{font-weight:bold}.pdoc-code .gu{color:#800080; font-weight:bold}.pdoc-code .gt{color:#0044DD}.pdoc-code .kc{color:#008000; font-weight:bold}.pdoc-code .kd{color:#008000; font-weight:bold}.pdoc-code .kn{color:#008000; font-weight:bold}.pdoc-code .kp{color:#008000}.pdoc-code .kr{color:#008000; font-weight:bold}.pdoc-code .kt{color:#B00040}.pdoc-code .m{color:#666666}.pdoc-code .s{color:#BA2121}.pdoc-code .na{color:#687822}.pdoc-code .nb{color:#008000}.pdoc-code .nc{color:#0000FF; font-weight:bold}.pdoc-code .no{color:#880000}.pdoc-code .nd{color:#AA22FF}.pdoc-code .ni{color:#717171; font-weight:bold}.pdoc-code .ne{color:#CB3F38; font-weight:bold}.pdoc-code .nf{color:#0000FF}.pdoc-code .nl{color:#767600}.pdoc-code .nn{color:#0000FF; font-weight:bold}.pdoc-code .nt{color:#008000; font-weight:bold}.pdoc-code .nv{color:#19177C}.pdoc-code .ow{color:#AA22FF; font-weight:bold}.pdoc-code .w{color:#bbbbbb}.pdoc-code .mb{color:#666666}.pdoc-code .mf{color:#666666}.pdoc-code .mh{color:#666666}.pdoc-code .mi{color:#666666}.pdoc-code .mo{color:#666666}.pdoc-code .sa{color:#BA2121}.pdoc-code .sb{color:#BA2121}.pdoc-code .sc{color:#BA2121}.pdoc-code .dl{color:#BA2121}.pdoc-code .sd{color:#BA2121; font-style:italic}.pdoc-code .s2{color:#BA2121}.pdoc-code .se{color:#AA5D1F; font-weight:bold}.pdoc-code .sh{color:#BA2121}.pdoc-code .si{color:#A45A77; font-weight:bold}.pdoc-code .sx{color:#008000}.pdoc-code .sr{color:#A45A77}.pdoc-code .s1{color:#BA2121}.pdoc-code .ss{color:#19177C}.pdoc-code .bp{color:#008000}.pdoc-code .fm{color:#0000FF}.pdoc-code .vc{color:#19177C}.pdoc-code .vg{color:#19177C}.pdoc-code .vi{color:#19177C}.pdoc-code .vm{color:#19177C}.pdoc-code .il{color:#666666}</style>
@@ -28,7 +28,7 @@
 
             <h2>Contents</h2>
             <ul>
-  <li><a href="#module-ediffpxrd">Module: ediff.pxrd</a></li>
+  <li><a href="#module-ediffpcryst">Module: ediff.pcryst</a></li>
 </ul>
 
 
@@ -121,32 +121,32 @@
     <main class="pdoc">
             <section class="module-info">
                     <h1 class="modulename">
-<a href="./../ediff.html">ediff</a><wbr>.pxrd    </h1>
+<a href="./../ediff.html">ediff</a><wbr>.pcryst    </h1>
 
-                        <div class="docstring"><h2 id="module-ediffpxrd">Module: <a href="">ediff.pxrd</a></h2>
+                        <div class="docstring"><h2 id="module-ediffpcryst">Module: <a href="">ediff.pcryst</a></h2>
 
-<p>Calculation of powder X-ray diffraction patterns.</p>
+<p>Process polycrystalline/powder diffractin patterns.</p>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># EDIFF/PXRD module ::calculate diffraction pattern of NaCl</span>
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># EDIFF/PCRYST module ::calculate diffraction pattern of NaCl</span>
 <span class="gp">&gt;&gt;&gt; </span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn"><a href="">ediff.pxrd</a></span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn"><a href="">ediff.pcryst</a></span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [0] Crystal structure is defined</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># by means of CIF = Crystallographic Information File.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># CIFs can be downloaded from: https://www.crystallography.net</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">CIF_FILE</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;./nacl_1000041.cif.cif&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CIF_FILE</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;./nacl_1000041.cif&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [1] Crystal, experimental and plot parameters</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># are defined as objects XTAL, EPAR, PPAR and CALC, respectively.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">XTAL</span> <span class="o">=</span> <span class="n"><a href="#Crystal">ediff.pxrd.Crystal</a></span><span class="p">(</span><span class="n">structure</span><span class="o">=</span><span class="n">CIF_FILE</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">EPAR</span> <span class="o">=</span> <span class="n"><a href="#Experiment">ediff.pxrd.Experiment</a></span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="mf">0.71</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">120</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">PPAR</span> <span class="o">=</span> <span class="n"><a href="#PlotParameters">ediff.pxrd.PlotParameters</a></span><span class="p">(</span><span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">XTAL</span> <span class="o">=</span> <span class="n"><a href="#Crystal">ediff.pcryst.Crystal</a></span><span class="p">(</span><span class="n">structure</span><span class="o">=</span><span class="n">CIF_FILE</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">EPAR</span> <span class="o">=</span> <span class="n"><a href="#Experiment">ediff.pcryst.Experiment</a></span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="mf">0.71</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">120</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PPAR</span> <span class="o">=</span> <span class="n"><a href="#PlotParameters">ediff.pcryst.PlotParameters</a></span><span class="p">(</span><span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [2] PXRDcalculation object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># calculates PXRD during initialization</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># and contains the results for further processing.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">CALC</span> <span class="o">=</span> <span class="n"><a href="#PXRDcalculation">ediff.pxrd.PXRDcalculation</a></span><span class="p">(</span><span class="n">XTAL</span><span class="p">,</span> <span class="n">EPAR</span><span class="p">,</span> <span class="n">PPAR</span><span class="p">,</span> <span class="n">peak_profile_sigma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CALC</span> <span class="o">=</span> <span class="n"><a href="#PXRDcalculation">ediff.pcryst.PXRDcalculation</a></span><span class="p">(</span><span class="n">XTAL</span><span class="p">,</span><span class="n">EPAR</span><span class="p">,</span><span class="n">PPAR</span><span class="p">,</span> <span class="n">peak_profile_sigma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># [3] Show/save CALCulation results.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># (it is quite ok to use default settings</span>
@@ -159,35 +159,35 @@
 </div>
 </div>
 
-                        <input id="mod-pxrd-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+                        <input id="mod-pcryst-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 
-                        <label class="view-source-button" for="mod-pxrd-view-source"><span>View Source</span></label>
+                        <label class="view-source-button" for="mod-pcryst-view-source"><span>View Source</span></label>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="sd">&#39;&#39;&#39;</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="sd">Module: ediff.pxrd</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">------------------</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="sd">Module: ediff.pcryst</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="sd">--------------------</span>
 </span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a>
-</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">Calculation of powder X-ray diffraction patterns.</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">Process polycrystalline/powder diffractin patterns.</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a>
-</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">&gt;&gt;&gt; # EDIFF/PXRD module ::calculate diffraction pattern of NaCl</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">&gt;&gt;&gt; # EDIFF/PCRYST module ::calculate diffraction pattern of NaCl</span>
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="sd">&gt;&gt;&gt; </span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">&gt;&gt;&gt; import ediff.pxrd</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">&gt;&gt;&gt; import ediff.pcryst</span>
 </span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="sd">&gt;&gt;&gt;</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="sd">&gt;&gt;&gt; # [0] Crystal structure is defined</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="sd">&gt;&gt;&gt; # by means of CIF = Crystallographic Information File.</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">&gt;&gt;&gt; # CIFs can be downloaded from: https://www.crystallography.net</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">&gt;&gt;&gt; CIF_FILE = r&#39;./nacl_1000041.cif.cif&#39;</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">&gt;&gt;&gt; CIF_FILE = r&#39;./nacl_1000041.cif&#39;</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="sd">&gt;&gt;&gt; </span>
 </span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">&gt;&gt;&gt; # [1] Crystal, experimental and plot parameters</span>
 </span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a><span class="sd">&gt;&gt;&gt; # are defined as objects XTAL, EPAR, PPAR and CALC, respectively.</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">&gt;&gt;&gt; XTAL = ediff.pxrd.Crystal(structure=CIF_FILE, temp_factors=0.8)</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">&gt;&gt;&gt; EPAR = ediff.pxrd.Experiment(wavelength=0.71, two_theta_range=(5,120))</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">&gt;&gt;&gt; PPAR = ediff.pxrd.PlotParameters(x_axis=&#39;q&#39;, xlim=(1,10))</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">&gt;&gt;&gt; XTAL = ediff.pcryst.Crystal(structure=CIF_FILE, temp_factors=0.8)</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a><span class="sd">&gt;&gt;&gt; EPAR = ediff.pcryst.Experiment(wavelength=0.71, two_theta_range=(5,120))</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">&gt;&gt;&gt; PPAR = ediff.pcryst.PlotParameters(x_axis=&#39;q&#39;, xlim=(1,10))</span>
 </span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">&gt;&gt;&gt; </span>
 </span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">&gt;&gt;&gt; # [2] PXRDcalculation object</span>
 </span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">&gt;&gt;&gt; # calculates PXRD during initialization</span>
 </span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">&gt;&gt;&gt; # and contains the results for further processing.</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">&gt;&gt;&gt; CALC = ediff.pxrd.PXRDcalculation(XTAL, EPAR, PPAR, peak_profile_sigma=0.1)</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">&gt;&gt;&gt; CALC = ediff.pcryst.PXRDcalculation(XTAL,EPAR,PPAR, peak_profile_sigma=0.1)</span>
 </span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a><span class="sd">&gt;&gt;&gt; </span>
 </span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">&gt;&gt;&gt; # [3] Show/save CALCulation results.</span>
 </span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">&gt;&gt;&gt; # (it is quite ok to use default settings</span>
@@ -198,16 +198,16 @@
 </span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a><span class="sd">&gt;&gt;&gt; CALC.save_diffractogram(&#39;nacl_pxrd.py.txt&#39;) </span>
 </span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="kn">import</span> <span class="nn">sys</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">convolve</span> <span class="k">as</span> <span class="n">spConvolve</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="kn">from</span> <span class="nn">pymatgen.core.structure</span> <span class="kn">import</span> <span class="n">Structure</span> <span class="k">as</span> <span class="n">pmStructure</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="kn">from</span> <span class="nn">pymatgen.analysis.diffraction.xrd</span> <span class="kn">import</span> <span class="n">XRDCalculator</span> <span class="k">as</span> <span class="n">pmXRDCalculator</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">convolve</span> <span class="k">as</span> <span class="n">spConvolve</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core.structure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Structure</span> <span class="k">as</span> <span class="n">pmStructure</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.analysis.diffraction.xrd</span><span class="w"> </span><span class="kn">import</span> <span class="n">XRDCalculator</span> <span class="k">as</span> <span class="n">pmXRDCalculator</span>
 </span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>
 </span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="k">class</span> <span class="nc">Crystal</span><span class="p">:</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Crystal</span><span class="p">:</span>
 </span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">    Define crystal structure.</span>
 </span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    </span>
@@ -235,7 +235,7 @@
 </span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>
 </span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>    
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">        * Initialize Crystal object.</span>
 </span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -259,7 +259,7 @@
 </span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
 </span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>    
 </span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>    <span class="k">def</span> <span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
 </span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">        Read crystall structure from CIF file.</span>
 </span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>
@@ -284,7 +284,7 @@
 </span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
 </span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>
 </span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>
-</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>    <span class="k">def</span> <span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
 </span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">        Get a list of all elements, which are contained in given structure.</span>
 </span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>
@@ -321,7 +321,7 @@
 </span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">list_of_elements</span><span class="p">)</span>
 </span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>
 </span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>    <span class="k">def</span> <span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a><span class="sd">        Get a dictionary, which contains symbols and temperature factors</span>
 </span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">        of all elements, which are present in given structure.</span>
@@ -355,7 +355,7 @@
 </span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>
 </span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a>
 </span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a>
-</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">:</span>
+</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Experiment</span><span class="p">:</span>
 </span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a><span class="sd">    Define experimental parameters.</span>
 </span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a><span class="sd">    </span>
@@ -370,7 +370,7 @@
 </span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a>
 </span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a>
-</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
+</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
 </span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a><span class="sd">        * Initialize Experimental object.</span>
 </span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -380,7 +380,7 @@
 </span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a>
 </span><span id="L-216"><a href="#L-216"><span class="linenos">216</span></a>
 </span><span id="L-217"><a href="#L-217"><span class="linenos">217</span></a>
-</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a><span class="k">class</span> <span class="nc">PlotParameters</span><span class="p">:</span>
+</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PlotParameters</span><span class="p">:</span>
 </span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a><span class="sd">    Define local+global parameters for plotting.</span>
 </span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a><span class="sd">    </span>
@@ -397,7 +397,7 @@
 </span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-233"><a href="#L-233"><span class="linenos">233</span></a>    
 </span><span id="L-234"><a href="#L-234"><span class="linenos">234</span></a>
-</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
+</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
 </span><span id="L-236"><a href="#L-236"><span class="linenos">236</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-237"><a href="#L-237"><span class="linenos">237</span></a><span class="sd">        * Initialize PlotParameters object.</span>
 </span><span id="L-238"><a href="#L-238"><span class="linenos">238</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -411,7 +411,7 @@
 </span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a>       
 </span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a>
 </span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a>
-</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a><span class="k">class</span> <span class="nc">PeakProfiles</span><span class="p">:</span>
+</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PeakProfiles</span><span class="p">:</span>
 </span><span id="L-250"><a href="#L-250"><span class="linenos">250</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-251"><a href="#L-251"><span class="linenos">251</span></a><span class="sd">    Define profile of diffraction peaks.</span>
 </span><span id="L-252"><a href="#L-252"><span class="linenos">252</span></a>
@@ -420,7 +420,7 @@
 </span><span id="L-255"><a href="#L-255"><span class="linenos">255</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-256"><a href="#L-256"><span class="linenos">256</span></a>
 </span><span id="L-257"><a href="#L-257"><span class="linenos">257</span></a>
-</span><span id="L-258"><a href="#L-258"><span class="linenos">258</span></a>    <span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+</span><span id="L-258"><a href="#L-258"><span class="linenos">258</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="L-259"><a href="#L-259"><span class="linenos">259</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-260"><a href="#L-260"><span class="linenos">260</span></a><span class="sd">        Gaussian function (~ profile for PXRD calculation).</span>
 </span><span id="L-261"><a href="#L-261"><span class="linenos">261</span></a><span class="sd">    </span>
@@ -441,7 +441,7 @@
 </span><span id="L-276"><a href="#L-276"><span class="linenos">276</span></a>        <span class="k">return</span><span class="p">(</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">X</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span>
 </span><span id="L-277"><a href="#L-277"><span class="linenos">277</span></a>    
 </span><span id="L-278"><a href="#L-278"><span class="linenos">278</span></a>
-</span><span id="L-279"><a href="#L-279"><span class="linenos">279</span></a>    <span class="k">def</span> <span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+</span><span id="L-279"><a href="#L-279"><span class="linenos">279</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="L-280"><a href="#L-280"><span class="linenos">280</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-281"><a href="#L-281"><span class="linenos">281</span></a><span class="sd">        Lorentzian function (~ profile for PXRD calculation).</span>
 </span><span id="L-282"><a href="#L-282"><span class="linenos">282</span></a><span class="sd">    </span>
@@ -462,7 +462,7 @@
 </span><span id="L-297"><a href="#L-297"><span class="linenos">297</span></a>        <span class="k">return</span><span class="p">(</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">s</span><span class="o">/</span><span class="p">((</span><span class="n">X</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
 </span><span id="L-298"><a href="#L-298"><span class="linenos">298</span></a>    
 </span><span id="L-299"><a href="#L-299"><span class="linenos">299</span></a>
-</span><span id="L-300"><a href="#L-300"><span class="linenos">300</span></a>    <span class="k">def</span> <span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+</span><span id="L-300"><a href="#L-300"><span class="linenos">300</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
 </span><span id="L-301"><a href="#L-301"><span class="linenos">301</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-302"><a href="#L-302"><span class="linenos">302</span></a><span class="sd">        Pseudo-Voigt function (~ profile for PXRD calculation).</span>
 </span><span id="L-303"><a href="#L-303"><span class="linenos">303</span></a><span class="sd">    </span>
@@ -509,28 +509,28 @@
 </span><span id="L-344"><a href="#L-344"><span class="linenos">344</span></a>
 </span><span id="L-345"><a href="#L-345"><span class="linenos">345</span></a>
 </span><span id="L-346"><a href="#L-346"><span class="linenos">346</span></a>
-</span><span id="L-347"><a href="#L-347"><span class="linenos">347</span></a><span class="k">class</span> <span class="nc">PXRDcalculation</span><span class="p">:</span>
+</span><span id="L-347"><a href="#L-347"><span class="linenos">347</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PXRDcalculation</span><span class="p">:</span>
 </span><span id="L-348"><a href="#L-348"><span class="linenos">348</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-349"><a href="#L-349"><span class="linenos">349</span></a><span class="sd">    Define calculation of PXRD = powder X-ray diffraction pattern.</span>
 </span><span id="L-350"><a href="#L-350"><span class="linenos">350</span></a><span class="sd">    </span>
 </span><span id="L-351"><a href="#L-351"><span class="linenos">351</span></a><span class="sd">    Parameters</span>
 </span><span id="L-352"><a href="#L-352"><span class="linenos">352</span></a><span class="sd">    ----------</span>
-</span><span id="L-353"><a href="#L-353"><span class="linenos">353</span></a><span class="sd">    crystal : ediff.pxrd.Crystal object</span>
+</span><span id="L-353"><a href="#L-353"><span class="linenos">353</span></a><span class="sd">    crystal : ediff.pcryst.Crystal object</span>
 </span><span id="L-354"><a href="#L-354"><span class="linenos">354</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="L-355"><a href="#L-355"><span class="linenos">355</span></a><span class="sd">        as an instance of ediff.pxrd.Crystal class.</span>
-</span><span id="L-356"><a href="#L-356"><span class="linenos">356</span></a><span class="sd">    experiment : ediff.pxrd.Experiment object</span>
+</span><span id="L-355"><a href="#L-355"><span class="linenos">355</span></a><span class="sd">        as an instance of ediff.pcryst.Crystal class.</span>
+</span><span id="L-356"><a href="#L-356"><span class="linenos">356</span></a><span class="sd">    experiment : ediff.pcryst.Experiment object</span>
 </span><span id="L-357"><a href="#L-357"><span class="linenos">357</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="L-358"><a href="#L-358"><span class="linenos">358</span></a><span class="sd">        as an instance of ediff.pxrd.Experiment class.        </span>
-</span><span id="L-359"><a href="#L-359"><span class="linenos">359</span></a><span class="sd">    plot_parameters : ediff.pxrd.PlotParameters object</span>
+</span><span id="L-358"><a href="#L-358"><span class="linenos">358</span></a><span class="sd">        as an instance of ediff.pcryst.Experiment class.        </span>
+</span><span id="L-359"><a href="#L-359"><span class="linenos">359</span></a><span class="sd">    plot_parameters : ediff.pcryst.PlotParameters object</span>
 </span><span id="L-360"><a href="#L-360"><span class="linenos">360</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="L-361"><a href="#L-361"><span class="linenos">361</span></a><span class="sd">        as an instance of ediff.pxrd.PlotParameters class.</span>
+</span><span id="L-361"><a href="#L-361"><span class="linenos">361</span></a><span class="sd">        as an instance of ediff.pcryst.PlotParameters class.</span>
 </span><span id="L-362"><a href="#L-362"><span class="linenos">362</span></a><span class="sd">    peak_profile_sigma : float, optional, the default is 0.03</span>
 </span><span id="L-363"><a href="#L-363"><span class="linenos">363</span></a><span class="sd">        Width of the calculated diffraction peaks.</span>
 </span><span id="L-364"><a href="#L-364"><span class="linenos">364</span></a><span class="sd">        The default = 0.03 is suitable for most of common calculations</span>
 </span><span id="L-365"><a href="#L-365"><span class="linenos">365</span></a><span class="sd">        and corresponds to the default in older PowderCell program (n*FWHM=7).</span>
 </span><span id="L-366"><a href="#L-366"><span class="linenos">366</span></a><span class="sd">        For overlapping peaks it may be slightly decreased,</span>
 </span><span id="L-367"><a href="#L-367"><span class="linenos">367</span></a><span class="sd">        while for more realistic diffractograms it may be slightly increased. </span>
-</span><span id="L-368"><a href="#L-368"><span class="linenos">368</span></a><span class="sd">    peak_profile_type : None or ediff.pxrd.PeakProfiles object, optional</span>
+</span><span id="L-368"><a href="#L-368"><span class="linenos">368</span></a><span class="sd">    peak_profile_type : None or ediff.cryst.PeakProfiles object, optional</span>
 </span><span id="L-369"><a href="#L-369"><span class="linenos">369</span></a><span class="sd">        Profile of the calculated diffraction peaks.</span>
 </span><span id="L-370"><a href="#L-370"><span class="linenos">370</span></a><span class="sd">        The default is PeakProfiles.pseudo_voigt.</span>
 </span><span id="L-371"><a href="#L-371"><span class="linenos">371</span></a><span class="sd">        This default is suitable for common calculations</span>
@@ -538,7 +538,7 @@
 </span><span id="L-373"><a href="#L-373"><span class="linenos">373</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-374"><a href="#L-374"><span class="linenos">374</span></a>
 </span><span id="L-375"><a href="#L-375"><span class="linenos">375</span></a>    
-</span><span id="L-376"><a href="#L-376"><span class="linenos">376</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
+</span><span id="L-376"><a href="#L-376"><span class="linenos">376</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
 </span><span id="L-377"><a href="#L-377"><span class="linenos">377</span></a>                 <span class="n">peak_profile_sigma</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span>
 </span><span id="L-378"><a href="#L-378"><span class="linenos">378</span></a>                 <span class="n">peak_profile_type</span> <span class="o">=</span> <span class="n">PeakProfiles</span><span class="o">.</span><span class="n">pseudo_voigt</span><span class="p">):</span>
 </span><span id="L-379"><a href="#L-379"><span class="linenos">379</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -554,7 +554,7 @@
 </span><span id="L-389"><a href="#L-389"><span class="linenos">389</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">diffractogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_diffractogram</span><span class="p">()</span>
 </span><span id="L-390"><a href="#L-390"><span class="linenos">390</span></a>
 </span><span id="L-391"><a href="#L-391"><span class="linenos">391</span></a>
-</span><span id="L-392"><a href="#L-392"><span class="linenos">392</span></a>    <span class="k">def</span> <span class="nf">calculate_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-392"><a href="#L-392"><span class="linenos">392</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-393"><a href="#L-393"><span class="linenos">393</span></a>        <span class="c1"># (1) Calculate intensities</span>
 </span><span id="L-394"><a href="#L-394"><span class="linenos">394</span></a>        <span class="n">calculation</span> <span class="o">=</span> <span class="n">pmXRDCalculator</span><span class="p">(</span>
 </span><span id="L-395"><a href="#L-395"><span class="linenos">395</span></a>            <span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">wavelength</span><span class="p">,</span>
@@ -569,7 +569,7 @@
 </span><span id="L-404"><a href="#L-404"><span class="linenos">404</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">diffractions_df</span><span class="p">)</span>
 </span><span id="L-405"><a href="#L-405"><span class="linenos">405</span></a>        
 </span><span id="L-406"><a href="#L-406"><span class="linenos">406</span></a>
-</span><span id="L-407"><a href="#L-407"><span class="linenos">407</span></a>    <span class="k">def</span> <span class="nf">calculate_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-407"><a href="#L-407"><span class="linenos">407</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-408"><a href="#L-408"><span class="linenos">408</span></a>        <span class="c1"># (1) Base diffraction profile</span>
 </span><span id="L-409"><a href="#L-409"><span class="linenos">409</span></a>        <span class="c1"># = diffractogram with zero intensities</span>
 </span><span id="L-410"><a href="#L-410"><span class="linenos">410</span></a>        <span class="c1"># = interval theta_min to theta_max with step=0.001, zero intensities</span>
@@ -619,7 +619,7 @@
 </span><span id="L-454"><a href="#L-454"><span class="linenos">454</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </span><span id="L-455"><a href="#L-455"><span class="linenos">455</span></a>        
 </span><span id="L-456"><a href="#L-456"><span class="linenos">456</span></a>
-</span><span id="L-457"><a href="#L-457"><span class="linenos">457</span></a>    <span class="k">def</span> <span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-457"><a href="#L-457"><span class="linenos">457</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-458"><a href="#L-458"><span class="linenos">458</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-459"><a href="#L-459"><span class="linenos">459</span></a><span class="sd">        Print the calculated diffractions to stdout.</span>
 </span><span id="L-460"><a href="#L-460"><span class="linenos">460</span></a><span class="sd">        &#39;&#39;&#39;</span>
@@ -627,7 +627,7 @@
 </span><span id="L-462"><a href="#L-462"><span class="linenos">462</span></a>        <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
 </span><span id="L-463"><a href="#L-463"><span class="linenos">463</span></a>            
 </span><span id="L-464"><a href="#L-464"><span class="linenos">464</span></a>
-</span><span id="L-465"><a href="#L-465"><span class="linenos">465</span></a>    <span class="k">def</span> <span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+</span><span id="L-465"><a href="#L-465"><span class="linenos">465</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
 </span><span id="L-466"><a href="#L-466"><span class="linenos">466</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-467"><a href="#L-467"><span class="linenos">467</span></a><span class="sd">        Save the calculated diffractions to *output_file*.</span>
 </span><span id="L-468"><a href="#L-468"><span class="linenos">468</span></a><span class="sd">        </span>
@@ -648,7 +648,7 @@
 </span><span id="L-483"><a href="#L-483"><span class="linenos">483</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error saving diffractions to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
 </span><span id="L-484"><a href="#L-484"><span class="linenos">484</span></a>    
 </span><span id="L-485"><a href="#L-485"><span class="linenos">485</span></a>
-</span><span id="L-486"><a href="#L-486"><span class="linenos">486</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-486"><a href="#L-486"><span class="linenos">486</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="L-487"><a href="#L-487"><span class="linenos">487</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-488"><a href="#L-488"><span class="linenos">488</span></a><span class="sd">        Plot the calculated diffractions.</span>
 </span><span id="L-489"><a href="#L-489"><span class="linenos">489</span></a><span class="sd">        </span>
@@ -664,7 +664,7 @@
 </span><span id="L-499"><a href="#L-499"><span class="linenos">499</span></a><span class="sd">            The output is the plot on the screen (and outfile).</span>
 </span><span id="L-500"><a href="#L-500"><span class="linenos">500</span></a><span class="sd">            This function plots just diffraction intensities,</span>
 </span><span id="L-501"><a href="#L-501"><span class="linenos">501</span></a><span class="sd">            not profiles.</span>
-</span><span id="L-502"><a href="#L-502"><span class="linenos">502</span></a><span class="sd">            Use ediff.pxrd.plot_diffractions</span>
+</span><span id="L-502"><a href="#L-502"><span class="linenos">502</span></a><span class="sd">            Use ediff.pcryst.plot_diffractions</span>
 </span><span id="L-503"><a href="#L-503"><span class="linenos">503</span></a><span class="sd">            for diffractogram with intensity profiles.</span>
 </span><span id="L-504"><a href="#L-504"><span class="linenos">504</span></a><span class="sd">        &#39;&#39;&#39;</span>
 </span><span id="L-505"><a href="#L-505"><span class="linenos">505</span></a>        
@@ -688,7 +688,7 @@
 </span><span id="L-523"><a href="#L-523"><span class="linenos">523</span></a>            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span><span id="L-524"><a href="#L-524"><span class="linenos">524</span></a>        
 </span><span id="L-525"><a href="#L-525"><span class="linenos">525</span></a>
-</span><span id="L-526"><a href="#L-526"><span class="linenos">526</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-526"><a href="#L-526"><span class="linenos">526</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="L-527"><a href="#L-527"><span class="linenos">527</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-528"><a href="#L-528"><span class="linenos">528</span></a><span class="sd">        Plot indexed diffractions.</span>
 </span><span id="L-529"><a href="#L-529"><span class="linenos">529</span></a><span class="sd">        </span>
@@ -708,7 +708,7 @@
 </span><span id="L-543"><a href="#L-543"><span class="linenos">543</span></a><span class="sd">            If the argument is not None, the plot uses the given two_theta</span>
 </span><span id="L-544"><a href="#L-544"><span class="linenos">544</span></a><span class="sd">            range.</span>
 </span><span id="L-545"><a href="#L-545"><span class="linenos">545</span></a><span class="sd">            If the argument is None, the plot takes the two_theta_range</span>
-</span><span id="L-546"><a href="#L-546"><span class="linenos">546</span></a><span class="sd">            from the (previously defined) ediff.pxrd.Experiment object.</span>
+</span><span id="L-546"><a href="#L-546"><span class="linenos">546</span></a><span class="sd">            from the (previously defined) ediff.pcryst.Experiment object.</span>
 </span><span id="L-547"><a href="#L-547"><span class="linenos">547</span></a><span class="sd">            </span>
 </span><span id="L-548"><a href="#L-548"><span class="linenos">548</span></a><span class="sd">        Returns</span>
 </span><span id="L-549"><a href="#L-549"><span class="linenos">549</span></a><span class="sd">        -------</span>
@@ -762,7 +762,7 @@
 </span><span id="L-597"><a href="#L-597"><span class="linenos">597</span></a>        <span class="c1"># Trick #1: major ticks =&gt; higher MaxNLocator to get dense ticks</span>
 </span><span id="L-598"><a href="#L-598"><span class="linenos">598</span></a>        <span class="c1"># Trick #2: minor ticks =&gt; import special class for them</span>
 </span><span id="L-599"><a href="#L-599"><span class="linenos">599</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">MaxNLocator</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span> <span class="p">))</span>
-</span><span id="L-600"><a href="#L-600"><span class="linenos">600</span></a>        <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">AutoMinorLocator</span>
+</span><span id="L-600"><a href="#L-600"><span class="linenos">600</span></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoMinorLocator</span>
 </span><span id="L-601"><a href="#L-601"><span class="linenos">601</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </span><span id="L-602"><a href="#L-602"><span class="linenos">602</span></a>        <span class="c1"># (5) Final adjustments</span>
 </span><span id="L-603"><a href="#L-603"><span class="linenos">603</span></a>        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
@@ -777,7 +777,7 @@
 </span><span id="L-612"><a href="#L-612"><span class="linenos">612</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">original_rcParams</span><span class="p">)</span>
 </span><span id="L-613"><a href="#L-613"><span class="linenos">613</span></a>        
 </span><span id="L-614"><a href="#L-614"><span class="linenos">614</span></a>
-</span><span id="L-615"><a href="#L-615"><span class="linenos">615</span></a>    <span class="k">def</span> <span class="nf">print_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-615"><a href="#L-615"><span class="linenos">615</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">print_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="L-616"><a href="#L-616"><span class="linenos">616</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">print_diffractions</span><span class="p">()</span>
 </span><span id="L-617"><a href="#L-617"><span class="linenos">617</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----&#39;</span><span class="p">)</span>
 </span><span id="L-618"><a href="#L-618"><span class="linenos">618</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;* Just diffraction intensities, not the whole pattern.&#39;</span><span class="p">)</span>
@@ -785,7 +785,7 @@
 </span><span id="L-620"><a href="#L-620"><span class="linenos">620</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;* Use save_diffractogram func save the pattern to a file.&#39;</span><span class="p">)</span>
 </span><span id="L-621"><a href="#L-621"><span class="linenos">621</span></a>    
 </span><span id="L-622"><a href="#L-622"><span class="linenos">622</span></a>
-</span><span id="L-623"><a href="#L-623"><span class="linenos">623</span></a>    <span class="k">def</span> <span class="nf">save_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+</span><span id="L-623"><a href="#L-623"><span class="linenos">623</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
 </span><span id="L-624"><a href="#L-624"><span class="linenos">624</span></a>        <span class="n">my_title</span> <span class="o">=</span> <span class="s1">&#39;Calculated PXRD diffractogram</span><span class="se">\n</span><span class="s1">&#39;</span>
 </span><span id="L-625"><a href="#L-625"><span class="linenos">625</span></a>        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span>
 </span><span id="L-626"><a href="#L-626"><span class="linenos">626</span></a>            <span class="n">outfile</span><span class="p">,</span>
@@ -795,7 +795,7 @@
 </span><span id="L-630"><a href="#L-630"><span class="linenos">630</span></a>                <span class="s1">&#39;Columns: TwoTheta[deg], S[1/A], q[1/A], Intensity&#39;</span><span class="p">)</span>
 </span><span id="L-631"><a href="#L-631"><span class="linenos">631</span></a>    
 </span><span id="L-632"><a href="#L-632"><span class="linenos">632</span></a>
-</span><span id="L-633"><a href="#L-633"><span class="linenos">633</span></a>    <span class="k">def</span> <span class="nf">plot_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
+</span><span id="L-633"><a href="#L-633"><span class="linenos">633</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
 </span><span id="L-634"><a href="#L-634"><span class="linenos">634</span></a>        
 </span><span id="L-635"><a href="#L-635"><span class="linenos">635</span></a>        <span class="c1"># (1) Make local copies of pre-defined parameters (just convenience)</span>
 </span><span id="L-636"><a href="#L-636"><span class="linenos">636</span></a>        <span class="n">df</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffractogram</span>
@@ -818,7 +818,7 @@
 </span><span id="L-653"><a href="#L-653"><span class="linenos">653</span></a>
 </span><span id="L-654"><a href="#L-654"><span class="linenos">654</span></a>        
 </span><span id="L-655"><a href="#L-655"><span class="linenos">655</span></a>    <span class="nd">@staticmethod</span>    
-</span><span id="L-656"><a href="#L-656"><span class="linenos">656</span></a>    <span class="k">def</span> <span class="nf">diffractions_to_dframe</span><span class="p">(</span><span class="n">intensities</span><span class="p">):</span>
+</span><span id="L-656"><a href="#L-656"><span class="linenos">656</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">diffractions_to_dframe</span><span class="p">(</span><span class="n">intensities</span><span class="p">):</span>
 </span><span id="L-657"><a href="#L-657"><span class="linenos">657</span></a>        <span class="c1"># Prepare hkl indexes</span>
 </span><span id="L-658"><a href="#L-658"><span class="linenos">658</span></a>        <span class="n">h</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">k</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="L-659"><a href="#L-659"><span class="linenos">659</span></a>        <span class="c1"># Test if the structure is hexagonal</span>
@@ -856,7 +856,7 @@
 </span><span id="L-691"><a href="#L-691"><span class="linenos">691</span></a>
 </span><span id="L-692"><a href="#L-692"><span class="linenos">692</span></a>    
 </span><span id="L-693"><a href="#L-693"><span class="linenos">693</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-694"><a href="#L-694"><span class="linenos">694</span></a>    <span class="k">def</span> <span class="nf">dframe_to_table</span><span class="p">(</span><span class="n">dframe</span><span class="p">):</span>
+</span><span id="L-694"><a href="#L-694"><span class="linenos">694</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dframe_to_table</span><span class="p">(</span><span class="n">dframe</span><span class="p">):</span>
 </span><span id="L-695"><a href="#L-695"><span class="linenos">695</span></a>        <span class="c1"># POZOR: parametr formatters je zaludny!</span>
 </span><span id="L-696"><a href="#L-696"><span class="linenos">696</span></a>        <span class="c1"># * musi to byt sada funkci, takze...</span>
 </span><span id="L-697"><a href="#L-697"><span class="linenos">697</span></a>        <span class="c1">#   NEfunguji string-formaty &#39;%.3f&#39; - nejsou to funkce</span>
@@ -902,7 +902,7 @@
 </span><span id="L-737"><a href="#L-737"><span class="linenos">737</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
 </span><span id="L-738"><a href="#L-738"><span class="linenos">738</span></a>
 </span><span id="L-739"><a href="#L-739"><span class="linenos">739</span></a>
-</span><span id="L-740"><a href="#L-740"><span class="linenos">740</span></a>    <span class="k">def</span> <span class="nf">add_diffraction_vectors_to_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+</span><span id="L-740"><a href="#L-740"><span class="linenos">740</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_diffraction_vectors_to_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
 </span><span id="L-741"><a href="#L-741"><span class="linenos">741</span></a>        <span class="c1"># Prepare wavelenght (just shortcut for convenience)</span>
 </span><span id="L-742"><a href="#L-742"><span class="linenos">742</span></a>        <span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">wavelength</span>
 </span><span id="L-743"><a href="#L-743"><span class="linenos">743</span></a>        <span class="c1"># Insert a column with the calculated values of diffration vector S</span>
@@ -917,7 +917,7 @@
 </span><span id="L-752"><a href="#L-752"><span class="linenos">752</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </span><span id="L-753"><a href="#L-753"><span class="linenos">753</span></a>
 </span><span id="L-754"><a href="#L-754"><span class="linenos">754</span></a>
-</span><span id="L-755"><a href="#L-755"><span class="linenos">755</span></a>    <span class="k">def</span> <span class="nf">set_plot_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_axis</span><span class="p">):</span>
+</span><span id="L-755"><a href="#L-755"><span class="linenos">755</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_plot_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_axis</span><span class="p">):</span>
 </span><span id="L-756"><a href="#L-756"><span class="linenos">756</span></a>        <span class="c1"># (1) Make local copies of pre-defined parameters (just convenience)</span>
 </span><span id="L-757"><a href="#L-757"><span class="linenos">757</span></a>        <span class="n">title</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_parameters</span><span class="o">.</span><span class="n">title</span>
 </span><span id="L-758"><a href="#L-758"><span class="linenos">758</span></a>        <span class="n">x_axis</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_parameters</span><span class="o">.</span><span class="n">x_axis</span>
@@ -958,7 +958,7 @@
 
     </div>
     <a class="headerlink" href="#Crystal"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal-46"><a href="#Crystal-46"><span class="linenos"> 46</span></a><span class="k">class</span> <span class="nc">Crystal</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal-46"><a href="#Crystal-46"><span class="linenos"> 46</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Crystal</span><span class="p">:</span>
 </span><span id="Crystal-47"><a href="#Crystal-47"><span class="linenos"> 47</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal-48"><a href="#Crystal-48"><span class="linenos"> 48</span></a><span class="sd">    Define crystal structure.</span>
 </span><span id="Crystal-49"><a href="#Crystal-49"><span class="linenos"> 49</span></a><span class="sd">    </span>
@@ -986,7 +986,7 @@
 </span><span id="Crystal-71"><a href="#Crystal-71"><span class="linenos"> 71</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="Crystal-72"><a href="#Crystal-72"><span class="linenos"> 72</span></a>
 </span><span id="Crystal-73"><a href="#Crystal-73"><span class="linenos"> 73</span></a>    
-</span><span id="Crystal-74"><a href="#Crystal-74"><span class="linenos"> 74</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+</span><span id="Crystal-74"><a href="#Crystal-74"><span class="linenos"> 74</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="Crystal-75"><a href="#Crystal-75"><span class="linenos"> 75</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal-76"><a href="#Crystal-76"><span class="linenos"> 76</span></a><span class="sd">        * Initialize Crystal object.</span>
 </span><span id="Crystal-77"><a href="#Crystal-77"><span class="linenos"> 77</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1010,7 +1010,7 @@
 </span><span id="Crystal-95"><a href="#Crystal-95"><span class="linenos"> 95</span></a>
 </span><span id="Crystal-96"><a href="#Crystal-96"><span class="linenos"> 96</span></a>    
 </span><span id="Crystal-97"><a href="#Crystal-97"><span class="linenos"> 97</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="Crystal-98"><a href="#Crystal-98"><span class="linenos"> 98</span></a>    <span class="k">def</span> <span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
+</span><span id="Crystal-98"><a href="#Crystal-98"><span class="linenos"> 98</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
 </span><span id="Crystal-99"><a href="#Crystal-99"><span class="linenos"> 99</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal-100"><a href="#Crystal-100"><span class="linenos">100</span></a><span class="sd">        Read crystall structure from CIF file.</span>
 </span><span id="Crystal-101"><a href="#Crystal-101"><span class="linenos">101</span></a>
@@ -1035,7 +1035,7 @@
 </span><span id="Crystal-120"><a href="#Crystal-120"><span class="linenos">120</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
 </span><span id="Crystal-121"><a href="#Crystal-121"><span class="linenos">121</span></a>
 </span><span id="Crystal-122"><a href="#Crystal-122"><span class="linenos">122</span></a>
-</span><span id="Crystal-123"><a href="#Crystal-123"><span class="linenos">123</span></a>    <span class="k">def</span> <span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+</span><span id="Crystal-123"><a href="#Crystal-123"><span class="linenos">123</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
 </span><span id="Crystal-124"><a href="#Crystal-124"><span class="linenos">124</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal-125"><a href="#Crystal-125"><span class="linenos">125</span></a><span class="sd">        Get a list of all elements, which are contained in given structure.</span>
 </span><span id="Crystal-126"><a href="#Crystal-126"><span class="linenos">126</span></a>
@@ -1072,7 +1072,7 @@
 </span><span id="Crystal-157"><a href="#Crystal-157"><span class="linenos">157</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">list_of_elements</span><span class="p">)</span>
 </span><span id="Crystal-158"><a href="#Crystal-158"><span class="linenos">158</span></a>
 </span><span id="Crystal-159"><a href="#Crystal-159"><span class="linenos">159</span></a>
-</span><span id="Crystal-160"><a href="#Crystal-160"><span class="linenos">160</span></a>    <span class="k">def</span> <span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+</span><span id="Crystal-160"><a href="#Crystal-160"><span class="linenos">160</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="Crystal-161"><a href="#Crystal-161"><span class="linenos">161</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal-162"><a href="#Crystal-162"><span class="linenos">162</span></a><span class="sd">        Get a dictionary, which contains symbols and temperature factors</span>
 </span><span id="Crystal-163"><a href="#Crystal-163"><span class="linenos">163</span></a><span class="sd">        of all elements, which are present in given structure.</span>
@@ -1150,7 +1150,7 @@ a sample input dictionary: <code>temp_factors = {'Na':1.2, 'Cl':1.1}</code>.</li
 
     </div>
     <a class="headerlink" href="#Crystal.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.__init__-74"><a href="#Crystal.__init__-74"><span class="linenos">74</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.__init__-74"><a href="#Crystal.__init__-74"><span class="linenos">74</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">temp_factors</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="Crystal.__init__-75"><a href="#Crystal.__init__-75"><span class="linenos">75</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal.__init__-76"><a href="#Crystal.__init__-76"><span class="linenos">76</span></a><span class="sd">        * Initialize Crystal object.</span>
 </span><span id="Crystal.__init__-77"><a href="#Crystal.__init__-77"><span class="linenos">77</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1195,7 +1195,7 @@ a sample input dictionary: <code>temp_factors = {'Na':1.2, 'Cl':1.1}</code>.</li
     </div>
     <a class="headerlink" href="#Crystal.read_structure_from_CIF"></a>
             <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.read_structure_from_CIF-97"><a href="#Crystal.read_structure_from_CIF-97"><span class="linenos"> 97</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="Crystal.read_structure_from_CIF-98"><a href="#Crystal.read_structure_from_CIF-98"><span class="linenos"> 98</span></a>    <span class="k">def</span> <span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
+</span><span id="Crystal.read_structure_from_CIF-98"><a href="#Crystal.read_structure_from_CIF-98"><span class="linenos"> 98</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">read_structure_from_CIF</span><span class="p">(</span><span class="n">CIF</span><span class="p">):</span>
 </span><span id="Crystal.read_structure_from_CIF-99"><a href="#Crystal.read_structure_from_CIF-99"><span class="linenos"> 99</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal.read_structure_from_CIF-100"><a href="#Crystal.read_structure_from_CIF-100"><span class="linenos">100</span></a><span class="sd">        Read crystall structure from CIF file.</span>
 </span><span id="Crystal.read_structure_from_CIF-101"><a href="#Crystal.read_structure_from_CIF-101"><span class="linenos">101</span></a>
@@ -1262,7 +1262,7 @@ created from CIF files (pymatgen is hidden for a common user).</li>
 
     </div>
     <a class="headerlink" href="#Crystal.get_elements"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.get_elements-123"><a href="#Crystal.get_elements-123"><span class="linenos">123</span></a>    <span class="k">def</span> <span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.get_elements-123"><a href="#Crystal.get_elements-123"><span class="linenos">123</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
 </span><span id="Crystal.get_elements-124"><a href="#Crystal.get_elements-124"><span class="linenos">124</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal.get_elements-125"><a href="#Crystal.get_elements-125"><span class="linenos">125</span></a><span class="sd">        Get a list of all elements, which are contained in given structure.</span>
 </span><span id="Crystal.get_elements-126"><a href="#Crystal.get_elements-126"><span class="linenos">126</span></a>
@@ -1347,7 +1347,7 @@ temperature factors of the elements contained in given <em>structure</em>.</li>
 
     </div>
     <a class="headerlink" href="#Crystal.get_elements_with_temp_factors"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.get_elements_with_temp_factors-160"><a href="#Crystal.get_elements_with_temp_factors-160"><span class="linenos">160</span></a>    <span class="k">def</span> <span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Crystal.get_elements_with_temp_factors-160"><a href="#Crystal.get_elements_with_temp_factors-160"><span class="linenos">160</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_elements_with_temp_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
 </span><span id="Crystal.get_elements_with_temp_factors-161"><a href="#Crystal.get_elements_with_temp_factors-161"><span class="linenos">161</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Crystal.get_elements_with_temp_factors-162"><a href="#Crystal.get_elements_with_temp_factors-162"><span class="linenos">162</span></a><span class="sd">        Get a dictionary, which contains symbols and temperature factors</span>
 </span><span id="Crystal.get_elements_with_temp_factors-163"><a href="#Crystal.get_elements_with_temp_factors-163"><span class="linenos">163</span></a><span class="sd">        of all elements, which are present in given structure.</span>
@@ -1427,7 +1427,7 @@ temperature factors of the elements contained in given <em>structure</em>.</li>
 
     </div>
     <a class="headerlink" href="#Experiment"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Experiment-194"><a href="#Experiment-194"><span class="linenos">194</span></a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Experiment-194"><a href="#Experiment-194"><span class="linenos">194</span></a><span class="k">class</span><span class="w"> </span><span class="nc">Experiment</span><span class="p">:</span>
 </span><span id="Experiment-195"><a href="#Experiment-195"><span class="linenos">195</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Experiment-196"><a href="#Experiment-196"><span class="linenos">196</span></a><span class="sd">    Define experimental parameters.</span>
 </span><span id="Experiment-197"><a href="#Experiment-197"><span class="linenos">197</span></a><span class="sd">    </span>
@@ -1442,7 +1442,7 @@ temperature factors of the elements contained in given <em>structure</em>.</li>
 </span><span id="Experiment-206"><a href="#Experiment-206"><span class="linenos">206</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="Experiment-207"><a href="#Experiment-207"><span class="linenos">207</span></a>
 </span><span id="Experiment-208"><a href="#Experiment-208"><span class="linenos">208</span></a>
-</span><span id="Experiment-209"><a href="#Experiment-209"><span class="linenos">209</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
+</span><span id="Experiment-209"><a href="#Experiment-209"><span class="linenos">209</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
 </span><span id="Experiment-210"><a href="#Experiment-210"><span class="linenos">210</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Experiment-211"><a href="#Experiment-211"><span class="linenos">211</span></a><span class="sd">        * Initialize Experimental object.</span>
 </span><span id="Experiment-212"><a href="#Experiment-212"><span class="linenos">212</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1477,7 +1477,7 @@ both values are TwoTheta angle in [deg] (for given <em>wavelength</em>).</li>
 
     </div>
     <a class="headerlink" href="#Experiment.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Experiment.__init__-209"><a href="#Experiment.__init__-209"><span class="linenos">209</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Experiment.__init__-209"><a href="#Experiment.__init__-209"><span class="linenos">209</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">two_theta_range</span><span class="p">):</span>
 </span><span id="Experiment.__init__-210"><a href="#Experiment.__init__-210"><span class="linenos">210</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="Experiment.__init__-211"><a href="#Experiment.__init__-211"><span class="linenos">211</span></a><span class="sd">        * Initialize Experimental object.</span>
 </span><span id="Experiment.__init__-212"><a href="#Experiment.__init__-212"><span class="linenos">212</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1507,7 +1507,7 @@ both values are TwoTheta angle in [deg] (for given <em>wavelength</em>).</li>
 
     </div>
     <a class="headerlink" href="#PlotParameters"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PlotParameters-219"><a href="#PlotParameters-219"><span class="linenos">219</span></a><span class="k">class</span> <span class="nc">PlotParameters</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PlotParameters-219"><a href="#PlotParameters-219"><span class="linenos">219</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PlotParameters</span><span class="p">:</span>
 </span><span id="PlotParameters-220"><a href="#PlotParameters-220"><span class="linenos">220</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PlotParameters-221"><a href="#PlotParameters-221"><span class="linenos">221</span></a><span class="sd">    Define local+global parameters for plotting.</span>
 </span><span id="PlotParameters-222"><a href="#PlotParameters-222"><span class="linenos">222</span></a><span class="sd">    </span>
@@ -1524,7 +1524,7 @@ both values are TwoTheta angle in [deg] (for given <em>wavelength</em>).</li>
 </span><span id="PlotParameters-233"><a href="#PlotParameters-233"><span class="linenos">233</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="PlotParameters-234"><a href="#PlotParameters-234"><span class="linenos">234</span></a>    
 </span><span id="PlotParameters-235"><a href="#PlotParameters-235"><span class="linenos">235</span></a>
-</span><span id="PlotParameters-236"><a href="#PlotParameters-236"><span class="linenos">236</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
+</span><span id="PlotParameters-236"><a href="#PlotParameters-236"><span class="linenos">236</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
 </span><span id="PlotParameters-237"><a href="#PlotParameters-237"><span class="linenos">237</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PlotParameters-238"><a href="#PlotParameters-238"><span class="linenos">238</span></a><span class="sd">        * Initialize PlotParameters object.</span>
 </span><span id="PlotParameters-239"><a href="#PlotParameters-239"><span class="linenos">239</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1565,7 +1565,7 @@ This enables to override current rcParams, if necessary.</li>
 
     </div>
     <a class="headerlink" href="#PlotParameters.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PlotParameters.__init__-236"><a href="#PlotParameters.__init__-236"><span class="linenos">236</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PlotParameters.__init__-236"><a href="#PlotParameters.__init__-236"><span class="linenos">236</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">xlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rcParams</span><span class="o">=</span><span class="p">{}):</span>
 </span><span id="PlotParameters.__init__-237"><a href="#PlotParameters.__init__-237"><span class="linenos">237</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PlotParameters.__init__-238"><a href="#PlotParameters.__init__-238"><span class="linenos">238</span></a><span class="sd">        * Initialize PlotParameters object.</span>
 </span><span id="PlotParameters.__init__-239"><a href="#PlotParameters.__init__-239"><span class="linenos">239</span></a><span class="sd">        * The parameters are described above in class definition.</span>
@@ -1599,7 +1599,7 @@ This enables to override current rcParams, if necessary.</li>
 
     </div>
     <a class="headerlink" href="#PeakProfiles"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles-250"><a href="#PeakProfiles-250"><span class="linenos">250</span></a><span class="k">class</span> <span class="nc">PeakProfiles</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles-250"><a href="#PeakProfiles-250"><span class="linenos">250</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PeakProfiles</span><span class="p">:</span>
 </span><span id="PeakProfiles-251"><a href="#PeakProfiles-251"><span class="linenos">251</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles-252"><a href="#PeakProfiles-252"><span class="linenos">252</span></a><span class="sd">    Define profile of diffraction peaks.</span>
 </span><span id="PeakProfiles-253"><a href="#PeakProfiles-253"><span class="linenos">253</span></a>
@@ -1608,7 +1608,7 @@ This enables to override current rcParams, if necessary.</li>
 </span><span id="PeakProfiles-256"><a href="#PeakProfiles-256"><span class="linenos">256</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="PeakProfiles-257"><a href="#PeakProfiles-257"><span class="linenos">257</span></a>
 </span><span id="PeakProfiles-258"><a href="#PeakProfiles-258"><span class="linenos">258</span></a>
-</span><span id="PeakProfiles-259"><a href="#PeakProfiles-259"><span class="linenos">259</span></a>    <span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+</span><span id="PeakProfiles-259"><a href="#PeakProfiles-259"><span class="linenos">259</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="PeakProfiles-260"><a href="#PeakProfiles-260"><span class="linenos">260</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles-261"><a href="#PeakProfiles-261"><span class="linenos">261</span></a><span class="sd">        Gaussian function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles-262"><a href="#PeakProfiles-262"><span class="linenos">262</span></a><span class="sd">    </span>
@@ -1629,7 +1629,7 @@ This enables to override current rcParams, if necessary.</li>
 </span><span id="PeakProfiles-277"><a href="#PeakProfiles-277"><span class="linenos">277</span></a>        <span class="k">return</span><span class="p">(</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">X</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="p">)</span>
 </span><span id="PeakProfiles-278"><a href="#PeakProfiles-278"><span class="linenos">278</span></a>    
 </span><span id="PeakProfiles-279"><a href="#PeakProfiles-279"><span class="linenos">279</span></a>
-</span><span id="PeakProfiles-280"><a href="#PeakProfiles-280"><span class="linenos">280</span></a>    <span class="k">def</span> <span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+</span><span id="PeakProfiles-280"><a href="#PeakProfiles-280"><span class="linenos">280</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="PeakProfiles-281"><a href="#PeakProfiles-281"><span class="linenos">281</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles-282"><a href="#PeakProfiles-282"><span class="linenos">282</span></a><span class="sd">        Lorentzian function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles-283"><a href="#PeakProfiles-283"><span class="linenos">283</span></a><span class="sd">    </span>
@@ -1650,7 +1650,7 @@ This enables to override current rcParams, if necessary.</li>
 </span><span id="PeakProfiles-298"><a href="#PeakProfiles-298"><span class="linenos">298</span></a>        <span class="k">return</span><span class="p">(</span> <span class="mi">1</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">s</span><span class="o">/</span><span class="p">((</span><span class="n">X</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
 </span><span id="PeakProfiles-299"><a href="#PeakProfiles-299"><span class="linenos">299</span></a>    
 </span><span id="PeakProfiles-300"><a href="#PeakProfiles-300"><span class="linenos">300</span></a>
-</span><span id="PeakProfiles-301"><a href="#PeakProfiles-301"><span class="linenos">301</span></a>    <span class="k">def</span> <span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+</span><span id="PeakProfiles-301"><a href="#PeakProfiles-301"><span class="linenos">301</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
 </span><span id="PeakProfiles-302"><a href="#PeakProfiles-302"><span class="linenos">302</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles-303"><a href="#PeakProfiles-303"><span class="linenos">303</span></a><span class="sd">        Pseudo-Voigt function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles-304"><a href="#PeakProfiles-304"><span class="linenos">304</span></a><span class="sd">    </span>
@@ -1717,7 +1717,7 @@ This enables to override current rcParams, if necessary.</li>
 
     </div>
     <a class="headerlink" href="#PeakProfiles.gaussian"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.gaussian-259"><a href="#PeakProfiles.gaussian-259"><span class="linenos">259</span></a>    <span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.gaussian-259"><a href="#PeakProfiles.gaussian-259"><span class="linenos">259</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">gaussian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="PeakProfiles.gaussian-260"><a href="#PeakProfiles.gaussian-260"><span class="linenos">260</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles.gaussian-261"><a href="#PeakProfiles.gaussian-261"><span class="linenos">261</span></a><span class="sd">        Gaussian function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles.gaussian-262"><a href="#PeakProfiles.gaussian-262"><span class="linenos">262</span></a><span class="sd">    </span>
@@ -1772,7 +1772,7 @@ Standard deviation = the width of Gaussian function.</li>
 
     </div>
     <a class="headerlink" href="#PeakProfiles.lorentzian"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.lorentzian-280"><a href="#PeakProfiles.lorentzian-280"><span class="linenos">280</span></a>    <span class="k">def</span> <span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.lorentzian-280"><a href="#PeakProfiles.lorentzian-280"><span class="linenos">280</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">lorentzian</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">):</span>
 </span><span id="PeakProfiles.lorentzian-281"><a href="#PeakProfiles.lorentzian-281"><span class="linenos">281</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles.lorentzian-282"><a href="#PeakProfiles.lorentzian-282"><span class="linenos">282</span></a><span class="sd">        Lorentzian function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles.lorentzian-283"><a href="#PeakProfiles.lorentzian-283"><span class="linenos">283</span></a><span class="sd">    </span>
@@ -1827,7 +1827,7 @@ Standard deviation = the width of Lorentzian function.</li>
 
     </div>
     <a class="headerlink" href="#PeakProfiles.pseudo_voigt"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.pseudo_voigt-301"><a href="#PeakProfiles.pseudo_voigt-301"><span class="linenos">301</span></a>    <span class="k">def</span> <span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PeakProfiles.pseudo_voigt-301"><a href="#PeakProfiles.pseudo_voigt-301"><span class="linenos">301</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_voigt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
 </span><span id="PeakProfiles.pseudo_voigt-302"><a href="#PeakProfiles.pseudo_voigt-302"><span class="linenos">302</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PeakProfiles.pseudo_voigt-303"><a href="#PeakProfiles.pseudo_voigt-303"><span class="linenos">303</span></a><span class="sd">        Pseudo-Voigt function (~ profile for PXRD calculation).</span>
 </span><span id="PeakProfiles.pseudo_voigt-304"><a href="#PeakProfiles.pseudo_voigt-304"><span class="linenos">304</span></a><span class="sd">    </span>
@@ -1930,28 +1930,28 @@ defined so that sg and s yielded the same FWHM</li>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation-348"><a href="#PXRDcalculation-348"><span class="linenos">348</span></a><span class="k">class</span> <span class="nc">PXRDcalculation</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation-348"><a href="#PXRDcalculation-348"><span class="linenos">348</span></a><span class="k">class</span><span class="w"> </span><span class="nc">PXRDcalculation</span><span class="p">:</span>
 </span><span id="PXRDcalculation-349"><a href="#PXRDcalculation-349"><span class="linenos">349</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-350"><a href="#PXRDcalculation-350"><span class="linenos">350</span></a><span class="sd">    Define calculation of PXRD = powder X-ray diffraction pattern.</span>
 </span><span id="PXRDcalculation-351"><a href="#PXRDcalculation-351"><span class="linenos">351</span></a><span class="sd">    </span>
 </span><span id="PXRDcalculation-352"><a href="#PXRDcalculation-352"><span class="linenos">352</span></a><span class="sd">    Parameters</span>
 </span><span id="PXRDcalculation-353"><a href="#PXRDcalculation-353"><span class="linenos">353</span></a><span class="sd">    ----------</span>
-</span><span id="PXRDcalculation-354"><a href="#PXRDcalculation-354"><span class="linenos">354</span></a><span class="sd">    crystal : ediff.pxrd.Crystal object</span>
+</span><span id="PXRDcalculation-354"><a href="#PXRDcalculation-354"><span class="linenos">354</span></a><span class="sd">    crystal : ediff.pcryst.Crystal object</span>
 </span><span id="PXRDcalculation-355"><a href="#PXRDcalculation-355"><span class="linenos">355</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="PXRDcalculation-356"><a href="#PXRDcalculation-356"><span class="linenos">356</span></a><span class="sd">        as an instance of ediff.pxrd.Crystal class.</span>
-</span><span id="PXRDcalculation-357"><a href="#PXRDcalculation-357"><span class="linenos">357</span></a><span class="sd">    experiment : ediff.pxrd.Experiment object</span>
+</span><span id="PXRDcalculation-356"><a href="#PXRDcalculation-356"><span class="linenos">356</span></a><span class="sd">        as an instance of ediff.pcryst.Crystal class.</span>
+</span><span id="PXRDcalculation-357"><a href="#PXRDcalculation-357"><span class="linenos">357</span></a><span class="sd">    experiment : ediff.pcryst.Experiment object</span>
 </span><span id="PXRDcalculation-358"><a href="#PXRDcalculation-358"><span class="linenos">358</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="PXRDcalculation-359"><a href="#PXRDcalculation-359"><span class="linenos">359</span></a><span class="sd">        as an instance of ediff.pxrd.Experiment class.        </span>
-</span><span id="PXRDcalculation-360"><a href="#PXRDcalculation-360"><span class="linenos">360</span></a><span class="sd">    plot_parameters : ediff.pxrd.PlotParameters object</span>
+</span><span id="PXRDcalculation-359"><a href="#PXRDcalculation-359"><span class="linenos">359</span></a><span class="sd">        as an instance of ediff.pcryst.Experiment class.        </span>
+</span><span id="PXRDcalculation-360"><a href="#PXRDcalculation-360"><span class="linenos">360</span></a><span class="sd">    plot_parameters : ediff.pcryst.PlotParameters object</span>
 </span><span id="PXRDcalculation-361"><a href="#PXRDcalculation-361"><span class="linenos">361</span></a><span class="sd">        This object is usually prepared in advance</span>
-</span><span id="PXRDcalculation-362"><a href="#PXRDcalculation-362"><span class="linenos">362</span></a><span class="sd">        as an instance of ediff.pxrd.PlotParameters class.</span>
+</span><span id="PXRDcalculation-362"><a href="#PXRDcalculation-362"><span class="linenos">362</span></a><span class="sd">        as an instance of ediff.pcryst.PlotParameters class.</span>
 </span><span id="PXRDcalculation-363"><a href="#PXRDcalculation-363"><span class="linenos">363</span></a><span class="sd">    peak_profile_sigma : float, optional, the default is 0.03</span>
 </span><span id="PXRDcalculation-364"><a href="#PXRDcalculation-364"><span class="linenos">364</span></a><span class="sd">        Width of the calculated diffraction peaks.</span>
 </span><span id="PXRDcalculation-365"><a href="#PXRDcalculation-365"><span class="linenos">365</span></a><span class="sd">        The default = 0.03 is suitable for most of common calculations</span>
 </span><span id="PXRDcalculation-366"><a href="#PXRDcalculation-366"><span class="linenos">366</span></a><span class="sd">        and corresponds to the default in older PowderCell program (n*FWHM=7).</span>
 </span><span id="PXRDcalculation-367"><a href="#PXRDcalculation-367"><span class="linenos">367</span></a><span class="sd">        For overlapping peaks it may be slightly decreased,</span>
 </span><span id="PXRDcalculation-368"><a href="#PXRDcalculation-368"><span class="linenos">368</span></a><span class="sd">        while for more realistic diffractograms it may be slightly increased. </span>
-</span><span id="PXRDcalculation-369"><a href="#PXRDcalculation-369"><span class="linenos">369</span></a><span class="sd">    peak_profile_type : None or ediff.pxrd.PeakProfiles object, optional</span>
+</span><span id="PXRDcalculation-369"><a href="#PXRDcalculation-369"><span class="linenos">369</span></a><span class="sd">    peak_profile_type : None or ediff.cryst.PeakProfiles object, optional</span>
 </span><span id="PXRDcalculation-370"><a href="#PXRDcalculation-370"><span class="linenos">370</span></a><span class="sd">        Profile of the calculated diffraction peaks.</span>
 </span><span id="PXRDcalculation-371"><a href="#PXRDcalculation-371"><span class="linenos">371</span></a><span class="sd">        The default is PeakProfiles.pseudo_voigt.</span>
 </span><span id="PXRDcalculation-372"><a href="#PXRDcalculation-372"><span class="linenos">372</span></a><span class="sd">        This default is suitable for common calculations</span>
@@ -1959,7 +1959,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-374"><a href="#PXRDcalculation-374"><span class="linenos">374</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-375"><a href="#PXRDcalculation-375"><span class="linenos">375</span></a>
 </span><span id="PXRDcalculation-376"><a href="#PXRDcalculation-376"><span class="linenos">376</span></a>    
-</span><span id="PXRDcalculation-377"><a href="#PXRDcalculation-377"><span class="linenos">377</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
+</span><span id="PXRDcalculation-377"><a href="#PXRDcalculation-377"><span class="linenos">377</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
 </span><span id="PXRDcalculation-378"><a href="#PXRDcalculation-378"><span class="linenos">378</span></a>                 <span class="n">peak_profile_sigma</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span>
 </span><span id="PXRDcalculation-379"><a href="#PXRDcalculation-379"><span class="linenos">379</span></a>                 <span class="n">peak_profile_type</span> <span class="o">=</span> <span class="n">PeakProfiles</span><span class="o">.</span><span class="n">pseudo_voigt</span><span class="p">):</span>
 </span><span id="PXRDcalculation-380"><a href="#PXRDcalculation-380"><span class="linenos">380</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -1975,7 +1975,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-390"><a href="#PXRDcalculation-390"><span class="linenos">390</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">diffractogram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_diffractogram</span><span class="p">()</span>
 </span><span id="PXRDcalculation-391"><a href="#PXRDcalculation-391"><span class="linenos">391</span></a>
 </span><span id="PXRDcalculation-392"><a href="#PXRDcalculation-392"><span class="linenos">392</span></a>
-</span><span id="PXRDcalculation-393"><a href="#PXRDcalculation-393"><span class="linenos">393</span></a>    <span class="k">def</span> <span class="nf">calculate_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="PXRDcalculation-393"><a href="#PXRDcalculation-393"><span class="linenos">393</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="PXRDcalculation-394"><a href="#PXRDcalculation-394"><span class="linenos">394</span></a>        <span class="c1"># (1) Calculate intensities</span>
 </span><span id="PXRDcalculation-395"><a href="#PXRDcalculation-395"><span class="linenos">395</span></a>        <span class="n">calculation</span> <span class="o">=</span> <span class="n">pmXRDCalculator</span><span class="p">(</span>
 </span><span id="PXRDcalculation-396"><a href="#PXRDcalculation-396"><span class="linenos">396</span></a>            <span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">wavelength</span><span class="p">,</span>
@@ -1990,7 +1990,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-405"><a href="#PXRDcalculation-405"><span class="linenos">405</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">diffractions_df</span><span class="p">)</span>
 </span><span id="PXRDcalculation-406"><a href="#PXRDcalculation-406"><span class="linenos">406</span></a>        
 </span><span id="PXRDcalculation-407"><a href="#PXRDcalculation-407"><span class="linenos">407</span></a>
-</span><span id="PXRDcalculation-408"><a href="#PXRDcalculation-408"><span class="linenos">408</span></a>    <span class="k">def</span> <span class="nf">calculate_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="PXRDcalculation-408"><a href="#PXRDcalculation-408"><span class="linenos">408</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="PXRDcalculation-409"><a href="#PXRDcalculation-409"><span class="linenos">409</span></a>        <span class="c1"># (1) Base diffraction profile</span>
 </span><span id="PXRDcalculation-410"><a href="#PXRDcalculation-410"><span class="linenos">410</span></a>        <span class="c1"># = diffractogram with zero intensities</span>
 </span><span id="PXRDcalculation-411"><a href="#PXRDcalculation-411"><span class="linenos">411</span></a>        <span class="c1"># = interval theta_min to theta_max with step=0.001, zero intensities</span>
@@ -2040,7 +2040,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-455"><a href="#PXRDcalculation-455"><span class="linenos">455</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </span><span id="PXRDcalculation-456"><a href="#PXRDcalculation-456"><span class="linenos">456</span></a>        
 </span><span id="PXRDcalculation-457"><a href="#PXRDcalculation-457"><span class="linenos">457</span></a>
-</span><span id="PXRDcalculation-458"><a href="#PXRDcalculation-458"><span class="linenos">458</span></a>    <span class="k">def</span> <span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="PXRDcalculation-458"><a href="#PXRDcalculation-458"><span class="linenos">458</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="PXRDcalculation-459"><a href="#PXRDcalculation-459"><span class="linenos">459</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-460"><a href="#PXRDcalculation-460"><span class="linenos">460</span></a><span class="sd">        Print the calculated diffractions to stdout.</span>
 </span><span id="PXRDcalculation-461"><a href="#PXRDcalculation-461"><span class="linenos">461</span></a><span class="sd">        &#39;&#39;&#39;</span>
@@ -2048,7 +2048,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-463"><a href="#PXRDcalculation-463"><span class="linenos">463</span></a>        <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
 </span><span id="PXRDcalculation-464"><a href="#PXRDcalculation-464"><span class="linenos">464</span></a>            
 </span><span id="PXRDcalculation-465"><a href="#PXRDcalculation-465"><span class="linenos">465</span></a>
-</span><span id="PXRDcalculation-466"><a href="#PXRDcalculation-466"><span class="linenos">466</span></a>    <span class="k">def</span> <span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+</span><span id="PXRDcalculation-466"><a href="#PXRDcalculation-466"><span class="linenos">466</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
 </span><span id="PXRDcalculation-467"><a href="#PXRDcalculation-467"><span class="linenos">467</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-468"><a href="#PXRDcalculation-468"><span class="linenos">468</span></a><span class="sd">        Save the calculated diffractions to *output_file*.</span>
 </span><span id="PXRDcalculation-469"><a href="#PXRDcalculation-469"><span class="linenos">469</span></a><span class="sd">        </span>
@@ -2069,7 +2069,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-484"><a href="#PXRDcalculation-484"><span class="linenos">484</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error saving diffractions to </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s1">!&#39;</span><span class="p">)</span>
 </span><span id="PXRDcalculation-485"><a href="#PXRDcalculation-485"><span class="linenos">485</span></a>    
 </span><span id="PXRDcalculation-486"><a href="#PXRDcalculation-486"><span class="linenos">486</span></a>
-</span><span id="PXRDcalculation-487"><a href="#PXRDcalculation-487"><span class="linenos">487</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="PXRDcalculation-487"><a href="#PXRDcalculation-487"><span class="linenos">487</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="PXRDcalculation-488"><a href="#PXRDcalculation-488"><span class="linenos">488</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-489"><a href="#PXRDcalculation-489"><span class="linenos">489</span></a><span class="sd">        Plot the calculated diffractions.</span>
 </span><span id="PXRDcalculation-490"><a href="#PXRDcalculation-490"><span class="linenos">490</span></a><span class="sd">        </span>
@@ -2085,7 +2085,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-500"><a href="#PXRDcalculation-500"><span class="linenos">500</span></a><span class="sd">            The output is the plot on the screen (and outfile).</span>
 </span><span id="PXRDcalculation-501"><a href="#PXRDcalculation-501"><span class="linenos">501</span></a><span class="sd">            This function plots just diffraction intensities,</span>
 </span><span id="PXRDcalculation-502"><a href="#PXRDcalculation-502"><span class="linenos">502</span></a><span class="sd">            not profiles.</span>
-</span><span id="PXRDcalculation-503"><a href="#PXRDcalculation-503"><span class="linenos">503</span></a><span class="sd">            Use ediff.pxrd.plot_diffractions</span>
+</span><span id="PXRDcalculation-503"><a href="#PXRDcalculation-503"><span class="linenos">503</span></a><span class="sd">            Use ediff.pcryst.plot_diffractions</span>
 </span><span id="PXRDcalculation-504"><a href="#PXRDcalculation-504"><span class="linenos">504</span></a><span class="sd">            for diffractogram with intensity profiles.</span>
 </span><span id="PXRDcalculation-505"><a href="#PXRDcalculation-505"><span class="linenos">505</span></a><span class="sd">        &#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-506"><a href="#PXRDcalculation-506"><span class="linenos">506</span></a>        
@@ -2109,7 +2109,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-524"><a href="#PXRDcalculation-524"><span class="linenos">524</span></a>            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </span><span id="PXRDcalculation-525"><a href="#PXRDcalculation-525"><span class="linenos">525</span></a>        
 </span><span id="PXRDcalculation-526"><a href="#PXRDcalculation-526"><span class="linenos">526</span></a>
-</span><span id="PXRDcalculation-527"><a href="#PXRDcalculation-527"><span class="linenos">527</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="PXRDcalculation-527"><a href="#PXRDcalculation-527"><span class="linenos">527</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="PXRDcalculation-528"><a href="#PXRDcalculation-528"><span class="linenos">528</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation-529"><a href="#PXRDcalculation-529"><span class="linenos">529</span></a><span class="sd">        Plot indexed diffractions.</span>
 </span><span id="PXRDcalculation-530"><a href="#PXRDcalculation-530"><span class="linenos">530</span></a><span class="sd">        </span>
@@ -2129,7 +2129,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-544"><a href="#PXRDcalculation-544"><span class="linenos">544</span></a><span class="sd">            If the argument is not None, the plot uses the given two_theta</span>
 </span><span id="PXRDcalculation-545"><a href="#PXRDcalculation-545"><span class="linenos">545</span></a><span class="sd">            range.</span>
 </span><span id="PXRDcalculation-546"><a href="#PXRDcalculation-546"><span class="linenos">546</span></a><span class="sd">            If the argument is None, the plot takes the two_theta_range</span>
-</span><span id="PXRDcalculation-547"><a href="#PXRDcalculation-547"><span class="linenos">547</span></a><span class="sd">            from the (previously defined) ediff.pxrd.Experiment object.</span>
+</span><span id="PXRDcalculation-547"><a href="#PXRDcalculation-547"><span class="linenos">547</span></a><span class="sd">            from the (previously defined) ediff.pcryst.Experiment object.</span>
 </span><span id="PXRDcalculation-548"><a href="#PXRDcalculation-548"><span class="linenos">548</span></a><span class="sd">            </span>
 </span><span id="PXRDcalculation-549"><a href="#PXRDcalculation-549"><span class="linenos">549</span></a><span class="sd">        Returns</span>
 </span><span id="PXRDcalculation-550"><a href="#PXRDcalculation-550"><span class="linenos">550</span></a><span class="sd">        -------</span>
@@ -2183,7 +2183,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-598"><a href="#PXRDcalculation-598"><span class="linenos">598</span></a>        <span class="c1"># Trick #1: major ticks =&gt; higher MaxNLocator to get dense ticks</span>
 </span><span id="PXRDcalculation-599"><a href="#PXRDcalculation-599"><span class="linenos">599</span></a>        <span class="c1"># Trick #2: minor ticks =&gt; import special class for them</span>
 </span><span id="PXRDcalculation-600"><a href="#PXRDcalculation-600"><span class="linenos">600</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">MaxNLocator</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span> <span class="p">))</span>
-</span><span id="PXRDcalculation-601"><a href="#PXRDcalculation-601"><span class="linenos">601</span></a>        <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">AutoMinorLocator</span>
+</span><span id="PXRDcalculation-601"><a href="#PXRDcalculation-601"><span class="linenos">601</span></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoMinorLocator</span>
 </span><span id="PXRDcalculation-602"><a href="#PXRDcalculation-602"><span class="linenos">602</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </span><span id="PXRDcalculation-603"><a href="#PXRDcalculation-603"><span class="linenos">603</span></a>        <span class="c1"># (5) Final adjustments</span>
 </span><span id="PXRDcalculation-604"><a href="#PXRDcalculation-604"><span class="linenos">604</span></a>        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
@@ -2198,7 +2198,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-613"><a href="#PXRDcalculation-613"><span class="linenos">613</span></a>        <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">original_rcParams</span><span class="p">)</span>
 </span><span id="PXRDcalculation-614"><a href="#PXRDcalculation-614"><span class="linenos">614</span></a>        
 </span><span id="PXRDcalculation-615"><a href="#PXRDcalculation-615"><span class="linenos">615</span></a>
-</span><span id="PXRDcalculation-616"><a href="#PXRDcalculation-616"><span class="linenos">616</span></a>    <span class="k">def</span> <span class="nf">print_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="PXRDcalculation-616"><a href="#PXRDcalculation-616"><span class="linenos">616</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">print_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="PXRDcalculation-617"><a href="#PXRDcalculation-617"><span class="linenos">617</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">print_diffractions</span><span class="p">()</span>
 </span><span id="PXRDcalculation-618"><a href="#PXRDcalculation-618"><span class="linenos">618</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-----&#39;</span><span class="p">)</span>
 </span><span id="PXRDcalculation-619"><a href="#PXRDcalculation-619"><span class="linenos">619</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;* Just diffraction intensities, not the whole pattern.&#39;</span><span class="p">)</span>
@@ -2206,7 +2206,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-621"><a href="#PXRDcalculation-621"><span class="linenos">621</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;* Use save_diffractogram func save the pattern to a file.&#39;</span><span class="p">)</span>
 </span><span id="PXRDcalculation-622"><a href="#PXRDcalculation-622"><span class="linenos">622</span></a>    
 </span><span id="PXRDcalculation-623"><a href="#PXRDcalculation-623"><span class="linenos">623</span></a>
-</span><span id="PXRDcalculation-624"><a href="#PXRDcalculation-624"><span class="linenos">624</span></a>    <span class="k">def</span> <span class="nf">save_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+</span><span id="PXRDcalculation-624"><a href="#PXRDcalculation-624"><span class="linenos">624</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
 </span><span id="PXRDcalculation-625"><a href="#PXRDcalculation-625"><span class="linenos">625</span></a>        <span class="n">my_title</span> <span class="o">=</span> <span class="s1">&#39;Calculated PXRD diffractogram</span><span class="se">\n</span><span class="s1">&#39;</span>
 </span><span id="PXRDcalculation-626"><a href="#PXRDcalculation-626"><span class="linenos">626</span></a>        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span>
 </span><span id="PXRDcalculation-627"><a href="#PXRDcalculation-627"><span class="linenos">627</span></a>            <span class="n">outfile</span><span class="p">,</span>
@@ -2216,7 +2216,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-631"><a href="#PXRDcalculation-631"><span class="linenos">631</span></a>                <span class="s1">&#39;Columns: TwoTheta[deg], S[1/A], q[1/A], Intensity&#39;</span><span class="p">)</span>
 </span><span id="PXRDcalculation-632"><a href="#PXRDcalculation-632"><span class="linenos">632</span></a>    
 </span><span id="PXRDcalculation-633"><a href="#PXRDcalculation-633"><span class="linenos">633</span></a>
-</span><span id="PXRDcalculation-634"><a href="#PXRDcalculation-634"><span class="linenos">634</span></a>    <span class="k">def</span> <span class="nf">plot_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
+</span><span id="PXRDcalculation-634"><a href="#PXRDcalculation-634"><span class="linenos">634</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">x_axis</span><span class="o">=</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">):</span>
 </span><span id="PXRDcalculation-635"><a href="#PXRDcalculation-635"><span class="linenos">635</span></a>        
 </span><span id="PXRDcalculation-636"><a href="#PXRDcalculation-636"><span class="linenos">636</span></a>        <span class="c1"># (1) Make local copies of pre-defined parameters (just convenience)</span>
 </span><span id="PXRDcalculation-637"><a href="#PXRDcalculation-637"><span class="linenos">637</span></a>        <span class="n">df</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffractogram</span>
@@ -2239,7 +2239,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-654"><a href="#PXRDcalculation-654"><span class="linenos">654</span></a>
 </span><span id="PXRDcalculation-655"><a href="#PXRDcalculation-655"><span class="linenos">655</span></a>        
 </span><span id="PXRDcalculation-656"><a href="#PXRDcalculation-656"><span class="linenos">656</span></a>    <span class="nd">@staticmethod</span>    
-</span><span id="PXRDcalculation-657"><a href="#PXRDcalculation-657"><span class="linenos">657</span></a>    <span class="k">def</span> <span class="nf">diffractions_to_dframe</span><span class="p">(</span><span class="n">intensities</span><span class="p">):</span>
+</span><span id="PXRDcalculation-657"><a href="#PXRDcalculation-657"><span class="linenos">657</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">diffractions_to_dframe</span><span class="p">(</span><span class="n">intensities</span><span class="p">):</span>
 </span><span id="PXRDcalculation-658"><a href="#PXRDcalculation-658"><span class="linenos">658</span></a>        <span class="c1"># Prepare hkl indexes</span>
 </span><span id="PXRDcalculation-659"><a href="#PXRDcalculation-659"><span class="linenos">659</span></a>        <span class="n">h</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">k</span> <span class="o">=</span> <span class="p">[];</span> <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="PXRDcalculation-660"><a href="#PXRDcalculation-660"><span class="linenos">660</span></a>        <span class="c1"># Test if the structure is hexagonal</span>
@@ -2277,7 +2277,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-692"><a href="#PXRDcalculation-692"><span class="linenos">692</span></a>
 </span><span id="PXRDcalculation-693"><a href="#PXRDcalculation-693"><span class="linenos">693</span></a>    
 </span><span id="PXRDcalculation-694"><a href="#PXRDcalculation-694"><span class="linenos">694</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="PXRDcalculation-695"><a href="#PXRDcalculation-695"><span class="linenos">695</span></a>    <span class="k">def</span> <span class="nf">dframe_to_table</span><span class="p">(</span><span class="n">dframe</span><span class="p">):</span>
+</span><span id="PXRDcalculation-695"><a href="#PXRDcalculation-695"><span class="linenos">695</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dframe_to_table</span><span class="p">(</span><span class="n">dframe</span><span class="p">):</span>
 </span><span id="PXRDcalculation-696"><a href="#PXRDcalculation-696"><span class="linenos">696</span></a>        <span class="c1"># POZOR: parametr formatters je zaludny!</span>
 </span><span id="PXRDcalculation-697"><a href="#PXRDcalculation-697"><span class="linenos">697</span></a>        <span class="c1"># * musi to byt sada funkci, takze...</span>
 </span><span id="PXRDcalculation-698"><a href="#PXRDcalculation-698"><span class="linenos">698</span></a>        <span class="c1">#   NEfunguji string-formaty &#39;%.3f&#39; - nejsou to funkce</span>
@@ -2323,7 +2323,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-738"><a href="#PXRDcalculation-738"><span class="linenos">738</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
 </span><span id="PXRDcalculation-739"><a href="#PXRDcalculation-739"><span class="linenos">739</span></a>
 </span><span id="PXRDcalculation-740"><a href="#PXRDcalculation-740"><span class="linenos">740</span></a>
-</span><span id="PXRDcalculation-741"><a href="#PXRDcalculation-741"><span class="linenos">741</span></a>    <span class="k">def</span> <span class="nf">add_diffraction_vectors_to_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+</span><span id="PXRDcalculation-741"><a href="#PXRDcalculation-741"><span class="linenos">741</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_diffraction_vectors_to_diffractogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
 </span><span id="PXRDcalculation-742"><a href="#PXRDcalculation-742"><span class="linenos">742</span></a>        <span class="c1"># Prepare wavelenght (just shortcut for convenience)</span>
 </span><span id="PXRDcalculation-743"><a href="#PXRDcalculation-743"><span class="linenos">743</span></a>        <span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment</span><span class="o">.</span><span class="n">wavelength</span>
 </span><span id="PXRDcalculation-744"><a href="#PXRDcalculation-744"><span class="linenos">744</span></a>        <span class="c1"># Insert a column with the calculated values of diffration vector S</span>
@@ -2338,7 +2338,7 @@ defined so that sg and s yielded the same FWHM</li>
 </span><span id="PXRDcalculation-753"><a href="#PXRDcalculation-753"><span class="linenos">753</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 </span><span id="PXRDcalculation-754"><a href="#PXRDcalculation-754"><span class="linenos">754</span></a>
 </span><span id="PXRDcalculation-755"><a href="#PXRDcalculation-755"><span class="linenos">755</span></a>
-</span><span id="PXRDcalculation-756"><a href="#PXRDcalculation-756"><span class="linenos">756</span></a>    <span class="k">def</span> <span class="nf">set_plot_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_axis</span><span class="p">):</span>
+</span><span id="PXRDcalculation-756"><a href="#PXRDcalculation-756"><span class="linenos">756</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">set_plot_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_axis</span><span class="p">):</span>
 </span><span id="PXRDcalculation-757"><a href="#PXRDcalculation-757"><span class="linenos">757</span></a>        <span class="c1"># (1) Make local copies of pre-defined parameters (just convenience)</span>
 </span><span id="PXRDcalculation-758"><a href="#PXRDcalculation-758"><span class="linenos">758</span></a>        <span class="n">title</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_parameters</span><span class="o">.</span><span class="n">title</span>
 </span><span id="PXRDcalculation-759"><a href="#PXRDcalculation-759"><span class="linenos">759</span></a>        <span class="n">x_axis</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_parameters</span><span class="o">.</span><span class="n">x_axis</span>
@@ -2372,22 +2372,22 @@ defined so that sg and s yielded the same FWHM</li>
 <h6 id="parameters">Parameters</h6>
 
 <ul>
-<li><strong>crystal</strong> (<a href="#Crystal">ediff.pxrd.Crystal</a> object):
+<li><strong>crystal</strong> (<a href="#Crystal">ediff.pcryst.Crystal</a> object):
 This object is usually prepared in advance
-as an instance of <a href="#Crystal">ediff.pxrd.Crystal</a> class.</li>
-<li><strong>experiment</strong> (<a href="#Experiment">ediff.pxrd.Experiment</a> object):
+as an instance of <a href="#Crystal">ediff.pcryst.Crystal</a> class.</li>
+<li><strong>experiment</strong> (<a href="#Experiment">ediff.pcryst.Experiment</a> object):
 This object is usually prepared in advance
-as an instance of <a href="#Experiment">ediff.pxrd.Experiment</a> class.</li>
-<li><strong>plot_parameters</strong> (<a href="#PlotParameters">ediff.pxrd.PlotParameters</a> object):
+as an instance of <a href="#Experiment">ediff.pcryst.Experiment</a> class.</li>
+<li><strong>plot_parameters</strong> (<a href="#PlotParameters">ediff.pcryst.PlotParameters</a> object):
 This object is usually prepared in advance
-as an instance of <a href="#PlotParameters">ediff.pxrd.PlotParameters</a> class.</li>
+as an instance of <a href="#PlotParameters">ediff.pcryst.PlotParameters</a> class.</li>
 <li><strong>peak_profile_sigma</strong> (float, optional, the default is 0.03):
 Width of the calculated diffraction peaks.
 The default = 0.03 is suitable for most of common calculations
 and corresponds to the default in older PowderCell program (n*FWHM=7).
 For overlapping peaks it may be slightly decreased,
 while for more realistic diffractograms it may be slightly increased.</li>
-<li><strong>peak_profile_type</strong> (None or <a href="#PeakProfiles">ediff.pxrd.PeakProfiles</a> object, optional):
+<li><strong>peak_profile_type</strong> (None or <a href="#PeakProfiles">ediff.cryst.PeakProfiles</a> object, optional):
 Profile of the calculated diffraction peaks.
 The default is <a href="#PeakProfiles.pseudo_voigt">PeakProfiles.pseudo_voigt</a>.
 This default is suitable for common calculations
@@ -2406,7 +2406,7 @@ and does not have to be changed (in great majority of cases).</li>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.__init__-377"><a href="#PXRDcalculation.__init__-377"><span class="linenos">377</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.__init__-377"><a href="#PXRDcalculation.__init__-377"><span class="linenos">377</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">crystal</span><span class="p">,</span> <span class="n">experiment</span><span class="p">,</span> <span class="n">plot_parameters</span><span class="p">,</span>      
 </span><span id="PXRDcalculation.__init__-378"><a href="#PXRDcalculation.__init__-378"><span class="linenos">378</span></a>                 <span class="n">peak_profile_sigma</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span>
 </span><span id="PXRDcalculation.__init__-379"><a href="#PXRDcalculation.__init__-379"><span class="linenos">379</span></a>                 <span class="n">peak_profile_type</span> <span class="o">=</span> <span class="n">PeakProfiles</span><span class="o">.</span><span class="n">pseudo_voigt</span><span class="p">):</span>
 </span><span id="PXRDcalculation.__init__-380"><a href="#PXRDcalculation.__init__-380"><span class="linenos">380</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
@@ -2440,7 +2440,7 @@ The parameters are described above in class definition.</p>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation.print_diffractions"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.print_diffractions-458"><a href="#PXRDcalculation.print_diffractions-458"><span class="linenos">458</span></a>    <span class="k">def</span> <span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.print_diffractions-458"><a href="#PXRDcalculation.print_diffractions-458"><span class="linenos">458</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">print_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="PXRDcalculation.print_diffractions-459"><a href="#PXRDcalculation.print_diffractions-459"><span class="linenos">459</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation.print_diffractions-460"><a href="#PXRDcalculation.print_diffractions-460"><span class="linenos">460</span></a><span class="sd">        Print the calculated diffractions to stdout.</span>
 </span><span id="PXRDcalculation.print_diffractions-461"><a href="#PXRDcalculation.print_diffractions-461"><span class="linenos">461</span></a><span class="sd">        &#39;&#39;&#39;</span>
@@ -2465,7 +2465,7 @@ The parameters are described above in class definition.</p>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation.save_diffractions"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.save_diffractions-466"><a href="#PXRDcalculation.save_diffractions-466"><span class="linenos">466</span></a>    <span class="k">def</span> <span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.save_diffractions-466"><a href="#PXRDcalculation.save_diffractions-466"><span class="linenos">466</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
 </span><span id="PXRDcalculation.save_diffractions-467"><a href="#PXRDcalculation.save_diffractions-467"><span class="linenos">467</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation.save_diffractions-468"><a href="#PXRDcalculation.save_diffractions-468"><span class="linenos">468</span></a><span class="sd">        Save the calculated diffractions to *output_file*.</span>
 </span><span id="PXRDcalculation.save_diffractions-469"><a href="#PXRDcalculation.save_diffractions-469"><span class="linenos">469</span></a><span class="sd">        </span>
@@ -2516,7 +2516,7 @@ Name of the output file.</li>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation.plot_diffractions"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.plot_diffractions-487"><a href="#PXRDcalculation.plot_diffractions-487"><span class="linenos">487</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.plot_diffractions-487"><a href="#PXRDcalculation.plot_diffractions-487"><span class="linenos">487</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="PXRDcalculation.plot_diffractions-488"><a href="#PXRDcalculation.plot_diffractions-488"><span class="linenos">488</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation.plot_diffractions-489"><a href="#PXRDcalculation.plot_diffractions-489"><span class="linenos">489</span></a><span class="sd">        Plot the calculated diffractions.</span>
 </span><span id="PXRDcalculation.plot_diffractions-490"><a href="#PXRDcalculation.plot_diffractions-490"><span class="linenos">490</span></a><span class="sd">        </span>
@@ -2532,7 +2532,7 @@ Name of the output file.</li>
 </span><span id="PXRDcalculation.plot_diffractions-500"><a href="#PXRDcalculation.plot_diffractions-500"><span class="linenos">500</span></a><span class="sd">            The output is the plot on the screen (and outfile).</span>
 </span><span id="PXRDcalculation.plot_diffractions-501"><a href="#PXRDcalculation.plot_diffractions-501"><span class="linenos">501</span></a><span class="sd">            This function plots just diffraction intensities,</span>
 </span><span id="PXRDcalculation.plot_diffractions-502"><a href="#PXRDcalculation.plot_diffractions-502"><span class="linenos">502</span></a><span class="sd">            not profiles.</span>
-</span><span id="PXRDcalculation.plot_diffractions-503"><a href="#PXRDcalculation.plot_diffractions-503"><span class="linenos">503</span></a><span class="sd">            Use ediff.pxrd.plot_diffractions</span>
+</span><span id="PXRDcalculation.plot_diffractions-503"><a href="#PXRDcalculation.plot_diffractions-503"><span class="linenos">503</span></a><span class="sd">            Use ediff.pcryst.plot_diffractions</span>
 </span><span id="PXRDcalculation.plot_diffractions-504"><a href="#PXRDcalculation.plot_diffractions-504"><span class="linenos">504</span></a><span class="sd">            for diffractogram with intensity profiles.</span>
 </span><span id="PXRDcalculation.plot_diffractions-505"><a href="#PXRDcalculation.plot_diffractions-505"><span class="linenos">505</span></a><span class="sd">        &#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation.plot_diffractions-506"><a href="#PXRDcalculation.plot_diffractions-506"><span class="linenos">506</span></a>        
@@ -2573,7 +2573,7 @@ If not given, the plot is just shown, but not saved.</li>
 <li><strong>None</strong>: The output is the plot on the screen (and outfile).
 This function plots just diffraction intensities,
 not profiles.
-Use ediff.pxrd.plot_diffractions
+Use ediff.pcryst.plot_diffractions
 for diffractogram with intensity profiles.</li>
 </ul>
 </div>
@@ -2591,7 +2591,7 @@ for diffractogram with intensity profiles.</li>
 
     </div>
     <a class="headerlink" href="#PXRDcalculation.plot_diffractions_with_indexes"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.plot_diffractions_with_indexes-527"><a href="#PXRDcalculation.plot_diffractions_with_indexes-527"><span class="linenos">527</span></a>    <span class="k">def</span> <span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="PXRDcalculation.plot_diffractions_with_indexes-527"><a href="#PXRDcalculation.plot_diffractions_with_indexes-527"><span class="linenos">527</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plot_diffractions_with_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">two_theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-528"><a href="#PXRDcalculation.plot_diffractions_with_indexes-528"><span class="linenos">528</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-529"><a href="#PXRDcalculation.plot_diffractions_with_indexes-529"><span class="linenos">529</span></a><span class="sd">        Plot indexed diffractions.</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-530"><a href="#PXRDcalculation.plot_diffractions_with_indexes-530"><span class="linenos">530</span></a><span class="sd">        </span>
@@ -2611,7 +2611,7 @@ for diffractogram with intensity profiles.</li>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-544"><a href="#PXRDcalculation.plot_diffractions_with_indexes-544"><span class="linenos">544</span></a><span class="sd">            If the argument is not None, the plot uses the given two_theta</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-545"><a href="#PXRDcalculation.plot_diffractions_with_indexes-545"><span class="linenos">545</span></a><span class="sd">            range.</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-546"><a href="#PXRDcalculation.plot_diffractions_with_indexes-546"><span class="linenos">546</span></a><span class="sd">            If the argument is None, the plot takes the two_theta_range</span>
-</span><span id="PXRDcalculation.plot_diffractions_with_indexes-547"><a href="#PXRDcalculation.plot_diffractions_with_indexes-547"><span class="linenos">547</span></a><span class="sd">            from the (previously defined) ediff.pxrd.Experiment object.</span>
+</span><span id="PXRDcalculation.plot_diffractions_with_indexes-547"><a href="#PXRDcalculation.plot_diffractions_with_indexes-547"><span class="linenos">547</span></a><span class="sd">            from the (previously defined) ediff.pcryst.Experiment object.</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-548"><a href="#PXRDcalculation.plot_diffractions_with_indexes-548"><span class="linenos">548</span></a><span class="sd">            </span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-549"><a href="#PXRDcalculation.plot_diffractions_with_indexes-549"><span class="linenos">549</span></a><span class="sd">        Returns</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-550"><a href="#PXRDcalculation.plot_diffractions_with_indexes-550"><span class="linenos">550</span></a><span class="sd">        -------</span>
@@ -2665,7 +2665,7 @@ for diffractogram with intensity profiles.</li>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-598"><a href="#PXRDcalculation.plot_diffractions_with_indexes-598"><span class="linenos">598</span></a>        <span class="c1"># Trick #1: major ticks =&gt; higher MaxNLocator to get dense ticks</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-599"><a href="#PXRDcalculation.plot_diffractions_with_indexes-599"><span class="linenos">599</span></a>        <span class="c1"># Trick #2: minor ticks =&gt; import special class for them</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-600"><a href="#PXRDcalculation.plot_diffractions_with_indexes-600"><span class="linenos">600</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_major_locator</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">MaxNLocator</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span> <span class="p">))</span>
-</span><span id="PXRDcalculation.plot_diffractions_with_indexes-601"><a href="#PXRDcalculation.plot_diffractions_with_indexes-601"><span class="linenos">601</span></a>        <span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">AutoMinorLocator</span>
+</span><span id="PXRDcalculation.plot_diffractions_with_indexes-601"><a href="#PXRDcalculation.plot_diffractions_with_indexes-601"><span class="linenos">601</span></a>        <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoMinorLocator</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-602"><a href="#PXRDcalculation.plot_diffractions_with_indexes-602"><span class="linenos">602</span></a>        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_minor_locator</span><span class="p">(</span><span class="n">AutoMinorLocator</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-603"><a href="#PXRDcalculation.plot_diffractions_with_indexes-603"><span class="linenos">603</span></a>        <span class="c1"># (5) Final adjustments</span>
 </span><span id="PXRDcalculation.plot_diffractions_with_indexes-604"><a href="#PXRDcalculation.plot_diffractions_with_indexes-604"><span class="linenos">604</span></a>        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
@@ -2704,7 +2704,7 @@ If the argument is not None, the output is saved to {output_file}.</li>
 If the argument is not None, the plot uses the given two_theta
 range.
 If the argument is None, the plot takes the two_theta_range
-from the (previously defined) <a href="#Experiment">ediff.pxrd.Experiment</a> object.</li>
+from the (previously defined) <a href="#Experiment">ediff.pcryst.Experiment</a> object.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>

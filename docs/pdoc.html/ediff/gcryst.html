@@ -115,12 +115,12 @@
 </span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="sd">Collection of algorithms from general/geometric crystallography.</span>
 </span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="kn">from</span> <span class="nn">pymatgen.core</span> <span class="kn">import</span> <span class="n">Lattice</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">gcd</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">pymatgen.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">Lattice</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">gcd</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="k">class</span> <span class="nc">CrystalCell</span><span class="p">(</span><span class="n">Lattice</span><span class="p">):</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="k">class</span><span class="w"> </span><span class="nc">CrystalCell</span><span class="p">(</span><span class="n">Lattice</span><span class="p">):</span>
 </span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a><span class="sd">    Class defining CrystalCell object, which contains:</span>
 </span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">    </span>
@@ -157,7 +157,7 @@
 </span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">        - Several user-friendly function for Xtallographic calculations added</span>
 </span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>    <span class="k">def</span> <span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
 </span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a><span class="sd">        Compute interplanar distance for (hkl) plane.</span>
 </span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>
@@ -175,7 +175,7 @@
 </span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>
 </span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>    
 </span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>    <span class="k">def</span> <span class="nf">_integerize</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_integerize</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a><span class="sd">        Round a fractional vector to small integers for (hkl) or [uvw].</span>
 </span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>
@@ -205,7 +205,7 @@
 </span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>        <span class="k">return</span> <span class="n">int_vec</span>
 </span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>
 </span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>    <span class="k">def</span> <span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">        Compute the [uvw] direction, which is normal to a given (hkl) plane.</span>
 </span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>
@@ -231,7 +231,7 @@
 </span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integerize</span><span class="p">(</span><span class="n">uvw_frac</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
 </span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>
 </span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>
-</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>    <span class="k">def</span> <span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">        Compute the (hkl) plane, which is normal to a given [uvw] direction.</span>
 </span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>
@@ -257,7 +257,7 @@
 </span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integerize</span><span class="p">(</span><span class="n">hkl_frac</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
 </span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>
 </span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a>
-</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="k">class</span> <span class="nc">HexLattice</span><span class="p">:</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="k">class</span><span class="w"> </span><span class="nc">HexLattice</span><span class="p">:</span>
 </span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a><span class="sd">    Class with functions converting *Miller* - *Bravais* - *Weber* indices.</span>
 </span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="sd">    </span>
@@ -275,7 +275,7 @@
 </span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a><span class="sd">    &gt;&gt;&gt; print(f&#39;{uvw} &lt;-&gt; {uvtw}&#39;)  # (2, 1, 0) &lt;-&gt; (1, 0, -1, 0)</span>
 </span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>
-</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>    <span class="k">def</span> <span class="nf">_convert_to_smallest_integers</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_smallest_integers</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
 </span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>        <span class="c1"># Functional programming style</span>
 </span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a>        <span class="c1"># (why functional programming? =&gt; finding gcd of more numbers </span>
 </span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>        <span class="c1"># (source/inspiration: https://stackoverflow.com/q/16628088/</span>
@@ -289,7 +289,7 @@
 </span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">uvtw</span><span class="p">)</span>
 </span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>
 </span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>    
-</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>    <span class="k">def</span> <span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
 </span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a><span class="sd">        Convert hexagonal indices: Miller (hkl) to Bravais (hkil).</span>
 </span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a><span class="sd">    </span>
@@ -309,7 +309,7 @@
 </span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">l</span><span class="p">)</span>
 </span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a>    
 </span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a>    
-</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a>    <span class="k">def</span> <span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
+</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
 </span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a><span class="sd">        Convert hexagonal indices: Bravais (hkil) to Miller (hkl).</span>
 </span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a>
@@ -328,7 +328,7 @@
 </span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">l</span><span class="p">)</span>
 </span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a>    
 </span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a>    
-</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a>    <span class="k">def</span> <span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
+</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
 </span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a><span class="sd">        Convert hexagonal indices: Miller [uvw] to Weber [uvtw]</span>
 </span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a>
@@ -352,7 +352,7 @@
 </span><span id="L-242"><a href="#L-242"><span class="linenos">242</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">W</span><span class="p">)</span>
 </span><span id="L-243"><a href="#L-243"><span class="linenos">243</span></a>
 </span><span id="L-244"><a href="#L-244"><span class="linenos">244</span></a>    
-</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a>    <span class="k">def</span> <span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
+</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
 </span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a><span class="sd">        Convert hexagonal indices: Weber [uvtw] to Miller [uvw].</span>
 </span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a>
@@ -375,12 +375,12 @@
 </span><span id="L-265"><a href="#L-265"><span class="linenos">265</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">)</span>
 </span><span id="L-266"><a href="#L-266"><span class="linenos">266</span></a>        
 </span><span id="L-267"><a href="#L-267"><span class="linenos">267</span></a>
-</span><span id="L-268"><a href="#L-268"><span class="linenos">268</span></a><span class="k">class</span> <span class="nc">ZoneAxis</span><span class="p">:</span>
+</span><span id="L-268"><a href="#L-268"><span class="linenos">268</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ZoneAxis</span><span class="p">:</span>
 </span><span id="L-269"><a href="#L-269"><span class="linenos">269</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-270"><a href="#L-270"><span class="linenos">270</span></a><span class="sd">    Class with functions to determine *zone axis* of a 2D diffractogram.</span>
 </span><span id="L-271"><a href="#L-271"><span class="linenos">271</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="L-272"><a href="#L-272"><span class="linenos">272</span></a>
-</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+</span><span id="L-273"><a href="#L-273"><span class="linenos">273</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
 </span><span id="L-274"><a href="#L-274"><span class="linenos">274</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-275"><a href="#L-275"><span class="linenos">275</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
 </span><span id="L-276"><a href="#L-276"><span class="linenos">276</span></a>
@@ -411,7 +411,7 @@
 </span><span id="L-301"><a href="#L-301"><span class="linenos">301</span></a>        <span class="k">return</span><span class="p">(</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">)</span> <span class="p">)</span>
 </span><span id="L-302"><a href="#L-302"><span class="linenos">302</span></a>
 </span><span id="L-303"><a href="#L-303"><span class="linenos">303</span></a>
-</span><span id="L-304"><a href="#L-304"><span class="linenos">304</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="L-304"><a href="#L-304"><span class="linenos">304</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
 </span><span id="L-305"><a href="#L-305"><span class="linenos">305</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-306"><a href="#L-306"><span class="linenos">306</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
 </span><span id="L-307"><a href="#L-307"><span class="linenos">307</span></a>
@@ -437,7 +437,7 @@
 </span><span id="L-327"><a href="#L-327"><span class="linenos">327</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;d</span><span class="si">{</span><span class="n">index_d1</span><span class="si">}</span><span class="s1"> x d</span><span class="si">{</span><span class="n">index_d2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 </span><span id="L-328"><a href="#L-328"><span class="linenos">328</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </span><span id="L-329"><a href="#L-329"><span class="linenos">329</span></a>
-</span><span id="L-330"><a href="#L-330"><span class="linenos">330</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+</span><span id="L-330"><a href="#L-330"><span class="linenos">330</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
 </span><span id="L-331"><a href="#L-331"><span class="linenos">331</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="L-332"><a href="#L-332"><span class="linenos">332</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
 </span><span id="L-333"><a href="#L-333"><span class="linenos">333</span></a>
@@ -497,7 +497,7 @@
 
     </div>
     <a class="headerlink" href="#CrystalCell"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell-14"><a href="#CrystalCell-14"><span class="linenos"> 14</span></a><span class="k">class</span> <span class="nc">CrystalCell</span><span class="p">(</span><span class="n">Lattice</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell-14"><a href="#CrystalCell-14"><span class="linenos"> 14</span></a><span class="k">class</span><span class="w"> </span><span class="nc">CrystalCell</span><span class="p">(</span><span class="n">Lattice</span><span class="p">):</span>
 </span><span id="CrystalCell-15"><a href="#CrystalCell-15"><span class="linenos"> 15</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="CrystalCell-16"><a href="#CrystalCell-16"><span class="linenos"> 16</span></a><span class="sd">    Class defining CrystalCell object, which contains:</span>
 </span><span id="CrystalCell-17"><a href="#CrystalCell-17"><span class="linenos"> 17</span></a><span class="sd">    </span>
@@ -534,7 +534,7 @@
 </span><span id="CrystalCell-48"><a href="#CrystalCell-48"><span class="linenos"> 48</span></a><span class="sd">        - Several user-friendly function for Xtallographic calculations added</span>
 </span><span id="CrystalCell-49"><a href="#CrystalCell-49"><span class="linenos"> 49</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="CrystalCell-50"><a href="#CrystalCell-50"><span class="linenos"> 50</span></a>
-</span><span id="CrystalCell-51"><a href="#CrystalCell-51"><span class="linenos"> 51</span></a>    <span class="k">def</span> <span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
+</span><span id="CrystalCell-51"><a href="#CrystalCell-51"><span class="linenos"> 51</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
 </span><span id="CrystalCell-52"><a href="#CrystalCell-52"><span class="linenos"> 52</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="CrystalCell-53"><a href="#CrystalCell-53"><span class="linenos"> 53</span></a><span class="sd">        Compute interplanar distance for (hkl) plane.</span>
 </span><span id="CrystalCell-54"><a href="#CrystalCell-54"><span class="linenos"> 54</span></a>
@@ -552,7 +552,7 @@
 </span><span id="CrystalCell-66"><a href="#CrystalCell-66"><span class="linenos"> 66</span></a>
 </span><span id="CrystalCell-67"><a href="#CrystalCell-67"><span class="linenos"> 67</span></a>    
 </span><span id="CrystalCell-68"><a href="#CrystalCell-68"><span class="linenos"> 68</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="CrystalCell-69"><a href="#CrystalCell-69"><span class="linenos"> 69</span></a>    <span class="k">def</span> <span class="nf">_integerize</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="CrystalCell-69"><a href="#CrystalCell-69"><span class="linenos"> 69</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_integerize</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="CrystalCell-70"><a href="#CrystalCell-70"><span class="linenos"> 70</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="CrystalCell-71"><a href="#CrystalCell-71"><span class="linenos"> 71</span></a><span class="sd">        Round a fractional vector to small integers for (hkl) or [uvw].</span>
 </span><span id="CrystalCell-72"><a href="#CrystalCell-72"><span class="linenos"> 72</span></a>
@@ -582,7 +582,7 @@
 </span><span id="CrystalCell-96"><a href="#CrystalCell-96"><span class="linenos"> 96</span></a>        <span class="k">return</span> <span class="n">int_vec</span>
 </span><span id="CrystalCell-97"><a href="#CrystalCell-97"><span class="linenos"> 97</span></a>
 </span><span id="CrystalCell-98"><a href="#CrystalCell-98"><span class="linenos"> 98</span></a>
-</span><span id="CrystalCell-99"><a href="#CrystalCell-99"><span class="linenos"> 99</span></a>    <span class="k">def</span> <span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="CrystalCell-99"><a href="#CrystalCell-99"><span class="linenos"> 99</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="CrystalCell-100"><a href="#CrystalCell-100"><span class="linenos">100</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="CrystalCell-101"><a href="#CrystalCell-101"><span class="linenos">101</span></a><span class="sd">        Compute the [uvw] direction, which is normal to a given (hkl) plane.</span>
 </span><span id="CrystalCell-102"><a href="#CrystalCell-102"><span class="linenos">102</span></a>
@@ -608,7 +608,7 @@
 </span><span id="CrystalCell-122"><a href="#CrystalCell-122"><span class="linenos">122</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integerize</span><span class="p">(</span><span class="n">uvw_frac</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
 </span><span id="CrystalCell-123"><a href="#CrystalCell-123"><span class="linenos">123</span></a>
 </span><span id="CrystalCell-124"><a href="#CrystalCell-124"><span class="linenos">124</span></a>
-</span><span id="CrystalCell-125"><a href="#CrystalCell-125"><span class="linenos">125</span></a>    <span class="k">def</span> <span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+</span><span id="CrystalCell-125"><a href="#CrystalCell-125"><span class="linenos">125</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="CrystalCell-126"><a href="#CrystalCell-126"><span class="linenos">126</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="CrystalCell-127"><a href="#CrystalCell-127"><span class="linenos">127</span></a><span class="sd">        Compute the (hkl) plane, which is normal to a given [uvw] direction.</span>
 </span><span id="CrystalCell-128"><a href="#CrystalCell-128"><span class="linenos">128</span></a>
@@ -651,7 +651,7 @@
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># CrystalCell class :: simple usage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">ediff</span> <span class="k">as</span> <span class="nn">ed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ediff</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ed</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define cubic unit cell and calculate interplanar distance</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cell</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">gcryst</span><span class="o">.</span><span class="n">CrystalCell</span><span class="o">.</span><span class="n">cubic</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mf">4.08</span><span class="p">)</span>
@@ -695,7 +695,7 @@
 
     </div>
     <a class="headerlink" href="#CrystalCell.dhkl"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.dhkl-51"><a href="#CrystalCell.dhkl-51"><span class="linenos">51</span></a>    <span class="k">def</span> <span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.dhkl-51"><a href="#CrystalCell.dhkl-51"><span class="linenos">51</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">dhkl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">):</span>
 </span><span id="CrystalCell.dhkl-52"><a href="#CrystalCell.dhkl-52"><span class="linenos">52</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="CrystalCell.dhkl-53"><a href="#CrystalCell.dhkl-53"><span class="linenos">53</span></a><span class="sd">        Compute interplanar distance for (hkl) plane.</span>
 </span><span id="CrystalCell.dhkl-54"><a href="#CrystalCell.dhkl-54"><span class="linenos">54</span></a>
@@ -743,7 +743,7 @@ Interplanar distance for the (hkl) plane.</li>
 
     </div>
     <a class="headerlink" href="#CrystalCell.normal_of_plane"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.normal_of_plane-99"><a href="#CrystalCell.normal_of_plane-99"><span class="linenos"> 99</span></a>    <span class="k">def</span> <span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.normal_of_plane-99"><a href="#CrystalCell.normal_of_plane-99"><span class="linenos"> 99</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">normal_of_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hkl</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="CrystalCell.normal_of_plane-100"><a href="#CrystalCell.normal_of_plane-100"><span class="linenos">100</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="CrystalCell.normal_of_plane-101"><a href="#CrystalCell.normal_of_plane-101"><span class="linenos">101</span></a><span class="sd">        Compute the [uvw] direction, which is normal to a given (hkl) plane.</span>
 </span><span id="CrystalCell.normal_of_plane-102"><a href="#CrystalCell.normal_of_plane-102"><span class="linenos">102</span></a>
@@ -802,7 +802,7 @@ which normal to (hkl) plane.</li>
 
     </div>
     <a class="headerlink" href="#CrystalCell.plane_of_normal"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.plane_of_normal-125"><a href="#CrystalCell.plane_of_normal-125"><span class="linenos">125</span></a>    <span class="k">def</span> <span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="CrystalCell.plane_of_normal-125"><a href="#CrystalCell.plane_of_normal-125"><span class="linenos">125</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">plane_of_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uvw</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
 </span><span id="CrystalCell.plane_of_normal-126"><a href="#CrystalCell.plane_of_normal-126"><span class="linenos">126</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="CrystalCell.plane_of_normal-127"><a href="#CrystalCell.plane_of_normal-127"><span class="linenos">127</span></a><span class="sd">        Compute the (hkl) plane, which is normal to a given [uvw] direction.</span>
 </span><span id="CrystalCell.plane_of_normal-128"><a href="#CrystalCell.plane_of_normal-128"><span class="linenos">128</span></a>
@@ -862,7 +862,7 @@ which is normal to [uvw] direction.</li>
 
     </div>
     <a class="headerlink" href="#HexLattice"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice-151"><a href="#HexLattice-151"><span class="linenos">151</span></a><span class="k">class</span> <span class="nc">HexLattice</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice-151"><a href="#HexLattice-151"><span class="linenos">151</span></a><span class="k">class</span><span class="w"> </span><span class="nc">HexLattice</span><span class="p">:</span>
 </span><span id="HexLattice-152"><a href="#HexLattice-152"><span class="linenos">152</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice-153"><a href="#HexLattice-153"><span class="linenos">153</span></a><span class="sd">    Class with functions converting *Miller* - *Bravais* - *Weber* indices.</span>
 </span><span id="HexLattice-154"><a href="#HexLattice-154"><span class="linenos">154</span></a><span class="sd">    </span>
@@ -880,7 +880,7 @@ which is normal to [uvw] direction.</li>
 </span><span id="HexLattice-166"><a href="#HexLattice-166"><span class="linenos">166</span></a><span class="sd">    &gt;&gt;&gt; print(f&#39;{uvw} &lt;-&gt; {uvtw}&#39;)  # (2, 1, 0) &lt;-&gt; (1, 0, -1, 0)</span>
 </span><span id="HexLattice-167"><a href="#HexLattice-167"><span class="linenos">167</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="HexLattice-168"><a href="#HexLattice-168"><span class="linenos">168</span></a>
-</span><span id="HexLattice-169"><a href="#HexLattice-169"><span class="linenos">169</span></a>    <span class="k">def</span> <span class="nf">_convert_to_smallest_integers</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
+</span><span id="HexLattice-169"><a href="#HexLattice-169"><span class="linenos">169</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_to_smallest_integers</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
 </span><span id="HexLattice-170"><a href="#HexLattice-170"><span class="linenos">170</span></a>        <span class="c1"># Functional programming style</span>
 </span><span id="HexLattice-171"><a href="#HexLattice-171"><span class="linenos">171</span></a>        <span class="c1"># (why functional programming? =&gt; finding gcd of more numbers </span>
 </span><span id="HexLattice-172"><a href="#HexLattice-172"><span class="linenos">172</span></a>        <span class="c1"># (source/inspiration: https://stackoverflow.com/q/16628088/</span>
@@ -894,7 +894,7 @@ which is normal to [uvw] direction.</li>
 </span><span id="HexLattice-180"><a href="#HexLattice-180"><span class="linenos">180</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">uvtw</span><span class="p">)</span>
 </span><span id="HexLattice-181"><a href="#HexLattice-181"><span class="linenos">181</span></a>
 </span><span id="HexLattice-182"><a href="#HexLattice-182"><span class="linenos">182</span></a>    
-</span><span id="HexLattice-183"><a href="#HexLattice-183"><span class="linenos">183</span></a>    <span class="k">def</span> <span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
+</span><span id="HexLattice-183"><a href="#HexLattice-183"><span class="linenos">183</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
 </span><span id="HexLattice-184"><a href="#HexLattice-184"><span class="linenos">184</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice-185"><a href="#HexLattice-185"><span class="linenos">185</span></a><span class="sd">        Convert hexagonal indices: Miller (hkl) to Bravais (hkil).</span>
 </span><span id="HexLattice-186"><a href="#HexLattice-186"><span class="linenos">186</span></a><span class="sd">    </span>
@@ -914,7 +914,7 @@ which is normal to [uvw] direction.</li>
 </span><span id="HexLattice-200"><a href="#HexLattice-200"><span class="linenos">200</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">l</span><span class="p">)</span>
 </span><span id="HexLattice-201"><a href="#HexLattice-201"><span class="linenos">201</span></a>    
 </span><span id="HexLattice-202"><a href="#HexLattice-202"><span class="linenos">202</span></a>    
-</span><span id="HexLattice-203"><a href="#HexLattice-203"><span class="linenos">203</span></a>    <span class="k">def</span> <span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
+</span><span id="HexLattice-203"><a href="#HexLattice-203"><span class="linenos">203</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
 </span><span id="HexLattice-204"><a href="#HexLattice-204"><span class="linenos">204</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice-205"><a href="#HexLattice-205"><span class="linenos">205</span></a><span class="sd">        Convert hexagonal indices: Bravais (hkil) to Miller (hkl).</span>
 </span><span id="HexLattice-206"><a href="#HexLattice-206"><span class="linenos">206</span></a>
@@ -933,7 +933,7 @@ which is normal to [uvw] direction.</li>
 </span><span id="HexLattice-219"><a href="#HexLattice-219"><span class="linenos">219</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">l</span><span class="p">)</span>
 </span><span id="HexLattice-220"><a href="#HexLattice-220"><span class="linenos">220</span></a>    
 </span><span id="HexLattice-221"><a href="#HexLattice-221"><span class="linenos">221</span></a>    
-</span><span id="HexLattice-222"><a href="#HexLattice-222"><span class="linenos">222</span></a>    <span class="k">def</span> <span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
+</span><span id="HexLattice-222"><a href="#HexLattice-222"><span class="linenos">222</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
 </span><span id="HexLattice-223"><a href="#HexLattice-223"><span class="linenos">223</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice-224"><a href="#HexLattice-224"><span class="linenos">224</span></a><span class="sd">        Convert hexagonal indices: Miller [uvw] to Weber [uvtw]</span>
 </span><span id="HexLattice-225"><a href="#HexLattice-225"><span class="linenos">225</span></a>
@@ -957,7 +957,7 @@ which is normal to [uvw] direction.</li>
 </span><span id="HexLattice-243"><a href="#HexLattice-243"><span class="linenos">243</span></a>        <span class="k">return</span><span class="p">(</span><span class="n">U</span><span class="p">,</span><span class="n">V</span><span class="p">,</span><span class="n">T</span><span class="p">,</span><span class="n">W</span><span class="p">)</span>
 </span><span id="HexLattice-244"><a href="#HexLattice-244"><span class="linenos">244</span></a>
 </span><span id="HexLattice-245"><a href="#HexLattice-245"><span class="linenos">245</span></a>    
-</span><span id="HexLattice-246"><a href="#HexLattice-246"><span class="linenos">246</span></a>    <span class="k">def</span> <span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
+</span><span id="HexLattice-246"><a href="#HexLattice-246"><span class="linenos">246</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
 </span><span id="HexLattice-247"><a href="#HexLattice-247"><span class="linenos">247</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice-248"><a href="#HexLattice-248"><span class="linenos">248</span></a><span class="sd">        Convert hexagonal indices: Weber [uvtw] to Miller [uvw].</span>
 </span><span id="HexLattice-249"><a href="#HexLattice-249"><span class="linenos">249</span></a>
@@ -985,7 +985,7 @@ which is normal to [uvw] direction.</li>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># HexLattice class :: simple usage</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">ediff</span> <span class="k">as</span> <span class="nn">ed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ediff</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ed</span>
 <span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Conversions between Miller (hkl) and Bravais (hkil) indices</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hkil</span> <span class="o">=</span> <span class="n">ed</span><span class="o">.</span><span class="n">gcryst</span><span class="o">.</span><span class="n">HexLattice</span><span class="o">.</span><span class="n">hkl_to_hkil</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
@@ -1012,7 +1012,7 @@ which is normal to [uvw] direction.</li>
 
     </div>
     <a class="headerlink" href="#HexLattice.hkl_to_hkil"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.hkl_to_hkil-183"><a href="#HexLattice.hkl_to_hkil-183"><span class="linenos">183</span></a>    <span class="k">def</span> <span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.hkl_to_hkil-183"><a href="#HexLattice.hkl_to_hkil-183"><span class="linenos">183</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkl_to_hkil</span><span class="p">(</span><span class="n">hkl</span><span class="p">):</span>
 </span><span id="HexLattice.hkl_to_hkil-184"><a href="#HexLattice.hkl_to_hkil-184"><span class="linenos">184</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice.hkl_to_hkil-185"><a href="#HexLattice.hkl_to_hkil-185"><span class="linenos">185</span></a><span class="sd">        Convert hexagonal indices: Miller (hkl) to Bravais (hkil).</span>
 </span><span id="HexLattice.hkl_to_hkil-186"><a href="#HexLattice.hkl_to_hkil-186"><span class="linenos">186</span></a><span class="sd">    </span>
@@ -1064,7 +1064,7 @@ Bravais indices (hkil) of the crystallographic plane.</li>
 
     </div>
     <a class="headerlink" href="#HexLattice.hkil_to_hkl"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.hkil_to_hkl-203"><a href="#HexLattice.hkil_to_hkl-203"><span class="linenos">203</span></a>    <span class="k">def</span> <span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.hkil_to_hkl-203"><a href="#HexLattice.hkil_to_hkl-203"><span class="linenos">203</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">hkil_to_hkl</span><span class="p">(</span><span class="n">hkil</span><span class="p">):</span>
 </span><span id="HexLattice.hkil_to_hkl-204"><a href="#HexLattice.hkil_to_hkl-204"><span class="linenos">204</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice.hkil_to_hkl-205"><a href="#HexLattice.hkil_to_hkl-205"><span class="linenos">205</span></a><span class="sd">        Convert hexagonal indices: Bravais (hkil) to Miller (hkl).</span>
 </span><span id="HexLattice.hkil_to_hkl-206"><a href="#HexLattice.hkil_to_hkl-206"><span class="linenos">206</span></a>
@@ -1115,7 +1115,7 @@ Miller indices (hkl) of the crystallographic plane.</li>
 
     </div>
     <a class="headerlink" href="#HexLattice.uvw_to_uvtw"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.uvw_to_uvtw-222"><a href="#HexLattice.uvw_to_uvtw-222"><span class="linenos">222</span></a>    <span class="k">def</span> <span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.uvw_to_uvtw-222"><a href="#HexLattice.uvw_to_uvtw-222"><span class="linenos">222</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvw_to_uvtw</span><span class="p">(</span><span class="n">uvw</span><span class="p">):</span>
 </span><span id="HexLattice.uvw_to_uvtw-223"><a href="#HexLattice.uvw_to_uvtw-223"><span class="linenos">223</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice.uvw_to_uvtw-224"><a href="#HexLattice.uvw_to_uvtw-224"><span class="linenos">224</span></a><span class="sd">        Convert hexagonal indices: Miller [uvw] to Weber [uvtw]</span>
 </span><span id="HexLattice.uvw_to_uvtw-225"><a href="#HexLattice.uvw_to_uvtw-225"><span class="linenos">225</span></a>
@@ -1171,7 +1171,7 @@ Weber indices [uvtw] of the crystallographic direction.</li>
 
     </div>
     <a class="headerlink" href="#HexLattice.uvtw_to_uvw"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.uvtw_to_uvw-246"><a href="#HexLattice.uvtw_to_uvw-246"><span class="linenos">246</span></a>    <span class="k">def</span> <span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="HexLattice.uvtw_to_uvw-246"><a href="#HexLattice.uvtw_to_uvw-246"><span class="linenos">246</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">uvtw_to_uvw</span><span class="p">(</span><span class="n">uvtw</span><span class="p">):</span>
 </span><span id="HexLattice.uvtw_to_uvw-247"><a href="#HexLattice.uvtw_to_uvw-247"><span class="linenos">247</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="HexLattice.uvtw_to_uvw-248"><a href="#HexLattice.uvtw_to_uvw-248"><span class="linenos">248</span></a><span class="sd">        Convert hexagonal indices: Weber [uvtw] to Miller [uvw].</span>
 </span><span id="HexLattice.uvtw_to_uvw-249"><a href="#HexLattice.uvtw_to_uvw-249"><span class="linenos">249</span></a>
@@ -1227,12 +1227,12 @@ Miller indices [uvw] of the crystallographic direction.</li>
 
     </div>
     <a class="headerlink" href="#ZoneAxis"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis-269"><a href="#ZoneAxis-269"><span class="linenos">269</span></a><span class="k">class</span> <span class="nc">ZoneAxis</span><span class="p">:</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis-269"><a href="#ZoneAxis-269"><span class="linenos">269</span></a><span class="k">class</span><span class="w"> </span><span class="nc">ZoneAxis</span><span class="p">:</span>
 </span><span id="ZoneAxis-270"><a href="#ZoneAxis-270"><span class="linenos">270</span></a><span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-271"><a href="#ZoneAxis-271"><span class="linenos">271</span></a><span class="sd">    Class with functions to determine *zone axis* of a 2D diffractogram.</span>
 </span><span id="ZoneAxis-272"><a href="#ZoneAxis-272"><span class="linenos">272</span></a><span class="sd">    &#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-273"><a href="#ZoneAxis-273"><span class="linenos">273</span></a>
-</span><span id="ZoneAxis-274"><a href="#ZoneAxis-274"><span class="linenos">274</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+</span><span id="ZoneAxis-274"><a href="#ZoneAxis-274"><span class="linenos">274</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
 </span><span id="ZoneAxis-275"><a href="#ZoneAxis-275"><span class="linenos">275</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-276"><a href="#ZoneAxis-276"><span class="linenos">276</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
 </span><span id="ZoneAxis-277"><a href="#ZoneAxis-277"><span class="linenos">277</span></a>
@@ -1263,7 +1263,7 @@ Miller indices [uvw] of the crystallographic direction.</li>
 </span><span id="ZoneAxis-302"><a href="#ZoneAxis-302"><span class="linenos">302</span></a>        <span class="k">return</span><span class="p">(</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">)</span> <span class="p">)</span>
 </span><span id="ZoneAxis-303"><a href="#ZoneAxis-303"><span class="linenos">303</span></a>
 </span><span id="ZoneAxis-304"><a href="#ZoneAxis-304"><span class="linenos">304</span></a>
-</span><span id="ZoneAxis-305"><a href="#ZoneAxis-305"><span class="linenos">305</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+</span><span id="ZoneAxis-305"><a href="#ZoneAxis-305"><span class="linenos">305</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
 </span><span id="ZoneAxis-306"><a href="#ZoneAxis-306"><span class="linenos">306</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-307"><a href="#ZoneAxis-307"><span class="linenos">307</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
 </span><span id="ZoneAxis-308"><a href="#ZoneAxis-308"><span class="linenos">308</span></a>
@@ -1289,7 +1289,7 @@ Miller indices [uvw] of the crystallographic direction.</li>
 </span><span id="ZoneAxis-328"><a href="#ZoneAxis-328"><span class="linenos">328</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;d</span><span class="si">{</span><span class="n">index_d1</span><span class="si">}</span><span class="s1"> x d</span><span class="si">{</span><span class="n">index_d2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 </span><span id="ZoneAxis-329"><a href="#ZoneAxis-329"><span class="linenos">329</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </span><span id="ZoneAxis-330"><a href="#ZoneAxis-330"><span class="linenos">330</span></a>
-</span><span id="ZoneAxis-331"><a href="#ZoneAxis-331"><span class="linenos">331</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+</span><span id="ZoneAxis-331"><a href="#ZoneAxis-331"><span class="linenos">331</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
 </span><span id="ZoneAxis-332"><a href="#ZoneAxis-332"><span class="linenos">332</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis-333"><a href="#ZoneAxis-333"><span class="linenos">333</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
 </span><span id="ZoneAxis-334"><a href="#ZoneAxis-334"><span class="linenos">334</span></a>
@@ -1350,7 +1350,7 @@ Miller indices [uvw] of the crystallographic direction.</li>
 
     </div>
     <a class="headerlink" href="#ZoneAxis.from_two_diffs"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_two_diffs-274"><a href="#ZoneAxis.from_two_diffs-274"><span class="linenos">274</span></a>    <span class="k">def</span> <span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_two_diffs-274"><a href="#ZoneAxis.from_two_diffs-274"><span class="linenos">274</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_two_diffs</span><span class="p">(</span><span class="n">diff1</span><span class="p">,</span> <span class="n">diff2</span><span class="p">):</span>
 </span><span id="ZoneAxis.from_two_diffs-275"><a href="#ZoneAxis.from_two_diffs-275"><span class="linenos">275</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis.from_two_diffs-276"><a href="#ZoneAxis.from_two_diffs-276"><span class="linenos">276</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of 2 diffractions in diff.pattern.</span>
 </span><span id="ZoneAxis.from_two_diffs-277"><a href="#ZoneAxis.from_two_diffs-277"><span class="linenos">277</span></a>
@@ -1427,7 +1427,7 @@ as all other functions in this module return vectors as tuples.</li>
 
     </div>
     <a class="headerlink" href="#ZoneAxis.from_multiple_diffs"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_multiple_diffs-305"><a href="#ZoneAxis.from_multiple_diffs-305"><span class="linenos">305</span></a>    <span class="k">def</span> <span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.from_multiple_diffs-305"><a href="#ZoneAxis.from_multiple_diffs-305"><span class="linenos">305</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_multiple_diffs</span><span class="p">(</span><span class="n">diffs</span><span class="p">):</span>
 </span><span id="ZoneAxis.from_multiple_diffs-306"><a href="#ZoneAxis.from_multiple_diffs-306"><span class="linenos">306</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis.from_multiple_diffs-307"><a href="#ZoneAxis.from_multiple_diffs-307"><span class="linenos">307</span></a><span class="sd">        Calculate zone axis [uvw] from (hkl) of N diffractions in diff.pattern.</span>
 </span><span id="ZoneAxis.from_multiple_diffs-308"><a href="#ZoneAxis.from_multiple_diffs-308"><span class="linenos">308</span></a>
@@ -1488,7 +1488,7 @@ in the observed diffraction pattern.</li>
 
     </div>
     <a class="headerlink" href="#ZoneAxis.weiss_zone_law"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.weiss_zone_law-331"><a href="#ZoneAxis.weiss_zone_law-331"><span class="linenos">331</span></a>    <span class="k">def</span> <span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ZoneAxis.weiss_zone_law-331"><a href="#ZoneAxis.weiss_zone_law-331"><span class="linenos">331</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">weiss_zone_law</span><span class="p">(</span><span class="n">zone_axis</span><span class="p">):</span>
 </span><span id="ZoneAxis.weiss_zone_law-332"><a href="#ZoneAxis.weiss_zone_law-332"><span class="linenos">332</span></a><span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 </span><span id="ZoneAxis.weiss_zone_law-333"><a href="#ZoneAxis.weiss_zone_law-333"><span class="linenos">333</span></a><span class="sd">        Using Wess Zone Law, calculate diffractions (hkl) for zone axis [uvw]. </span>
 </span><span id="ZoneAxis.weiss_zone_law-334"><a href="#ZoneAxis.weiss_zone_law-334"><span class="linenos">334</span></a>

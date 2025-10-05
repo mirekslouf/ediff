@@ -1,28 +1,28 @@
 '''
-Module: ediff.pxrd
-------------------
+Module: ediff.pcryst
+--------------------
 
-Calculation of powder X-ray diffraction patterns.
+Process polycrystalline/powder diffractin patterns.
 
->>> # EDIFF/PXRD module ::calculate diffraction pattern of NaCl
+>>> # EDIFF/PCRYST module ::calculate diffraction pattern of NaCl
 >>> 
->>> import ediff.pxrd
+>>> import ediff.pcryst
 >>>
 >>> # [0] Crystal structure is defined
 >>> # by means of CIF = Crystallographic Information File.
 >>> # CIFs can be downloaded from: https://www.crystallography.net
->>> CIF_FILE = r'./nacl_1000041.cif.cif'
+>>> CIF_FILE = r'./nacl_1000041.cif'
 >>> 
 >>> # [1] Crystal, experimental and plot parameters
 >>> # are defined as objects XTAL, EPAR, PPAR and CALC, respectively.
->>> XTAL = ediff.pxrd.Crystal(structure=CIF_FILE, temp_factors=0.8)
->>> EPAR = ediff.pxrd.Experiment(wavelength=0.71, two_theta_range=(5,120))
->>> PPAR = ediff.pxrd.PlotParameters(x_axis='q', xlim=(1,10))
+>>> XTAL = ediff.pcryst.Crystal(structure=CIF_FILE, temp_factors=0.8)
+>>> EPAR = ediff.pcryst.Experiment(wavelength=0.71, two_theta_range=(5,120))
+>>> PPAR = ediff.pcryst.PlotParameters(x_axis='q', xlim=(1,10))
 >>> 
 >>> # [2] PXRDcalculation object
 >>> # calculates PXRD during initialization
 >>> # and contains the results for further processing.
->>> CALC = ediff.pxrd.PXRDcalculation(XTAL, EPAR, PPAR, peak_profile_sigma=0.1)
+>>> CALC = ediff.pcryst.PXRDcalculation(XTAL,EPAR,PPAR, peak_profile_sigma=0.1)
 >>> 
 >>> # [3] Show/save CALCulation results.
 >>> # (it is quite ok to use default settings
@@ -350,22 +350,22 @@ class PXRDcalculation:
     
     Parameters
     ----------
-    crystal : ediff.pxrd.Crystal object
+    crystal : ediff.pcryst.Crystal object
         This object is usually prepared in advance
-        as an instance of ediff.pxrd.Crystal class.
-    experiment : ediff.pxrd.Experiment object
+        as an instance of ediff.pcryst.Crystal class.
+    experiment : ediff.pcryst.Experiment object
         This object is usually prepared in advance
-        as an instance of ediff.pxrd.Experiment class.        
-    plot_parameters : ediff.pxrd.PlotParameters object
+        as an instance of ediff.pcryst.Experiment class.        
+    plot_parameters : ediff.pcryst.PlotParameters object
         This object is usually prepared in advance
-        as an instance of ediff.pxrd.PlotParameters class.
+        as an instance of ediff.pcryst.PlotParameters class.
     peak_profile_sigma : float, optional, the default is 0.03
         Width of the calculated diffraction peaks.
         The default = 0.03 is suitable for most of common calculations
         and corresponds to the default in older PowderCell program (n*FWHM=7).
         For overlapping peaks it may be slightly decreased,
         while for more realistic diffractograms it may be slightly increased. 
-    peak_profile_type : None or ediff.pxrd.PeakProfiles object, optional
+    peak_profile_type : None or ediff.cryst.PeakProfiles object, optional
         Profile of the calculated diffraction peaks.
         The default is PeakProfiles.pseudo_voigt.
         This default is suitable for common calculations
@@ -499,7 +499,7 @@ class PXRDcalculation:
             The output is the plot on the screen (and outfile).
             This function plots just diffraction intensities,
             not profiles.
-            Use ediff.pxrd.plot_diffractions
+            Use ediff.pcryst.plot_diffractions
             for diffractogram with intensity profiles.
         '''
         
@@ -543,7 +543,7 @@ class PXRDcalculation:
             If the argument is not None, the plot uses the given two_theta
             range.
             If the argument is None, the plot takes the two_theta_range
-            from the (previously defined) ediff.pxrd.Experiment object.
+            from the (previously defined) ediff.pcryst.Experiment object.
             
         Returns
         -------
