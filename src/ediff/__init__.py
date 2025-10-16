@@ -28,7 +28,7 @@ EDIFF modules:
 * ediff.calibration = calibration of SAED diffractograms (pixels -> q-vectors)
 * ediff.center = find the center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
-* ediff.gcryst = selected useful functions from geometric crystallography
+* ediff.gcryst = functions from geometric/general crystallography
 * ediff.mcryst = process monocrystal diffraction patterns
 * ediff.pcryst = process polycrystal/powder diffraction patterns
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
@@ -39,7 +39,7 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 
 # Import of modules so that we could use the package as follows:

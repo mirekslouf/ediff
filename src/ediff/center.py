@@ -254,7 +254,7 @@ class CenterLocator:
         if isinstance(input_image, np.ndarray):
             self.image = input_image
         else:
-            self.image = ediff.io.read_image(self.input_image)
+            self.image = ediff.io.Diffractogram.read(self.input_image)
         
         ## (2) Correct ellipse ------------------------------------------------
         if self.ellipse:
@@ -368,7 +368,6 @@ class CenterLocator:
         #      This step is important, as center detection/refinement methods
         #      have various coordinate system origins. The conversion is 
         #      necessary for some combinations of methods
-        
         if (self.determination == "intensity"):
             self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
@@ -397,7 +396,6 @@ class CenterLocator:
                 print(self.rText.format(float(self.x2),float(self.y2)))
                         
         ## (9) Save results to a .txt file if specified -----------------------
-        
         if out_file is not None:
             self.save_results()
             if self.verbose==3:

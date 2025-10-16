@@ -191,8 +191,8 @@ class Calculate:
         # * In any case, the filenames or arrays should be in EDIFF format:
         #   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity
         #   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity
-        eld = ediff.io.read_profile(eld_profile)
-        xrd = ediff.io.read_profile(xrd_profile)
+        eld = ediff.io.Profile.read(eld_profile)
+        xrd = ediff.io.Profile.read(xrd_profile)
             
         # (2) Determine ranges, in which we search for peaks.
         # (We search peaks either in the whole x-ranges

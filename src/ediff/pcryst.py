@@ -2,30 +2,30 @@
 Module: ediff.pcryst
 --------------------
 
-Process polycrystalline/powder diffractin patterns.
+Process polycrystalline/powder diffraction patterns.
 
 >>> # EDIFF/PCRYST module ::calculate diffraction pattern of NaCl
 >>> 
 >>> import ediff.pcryst
 >>>
->>> # [0] Crystal structure is defined
+>>> # [0] Crystal structure is usually defined
 >>> # by means of CIF = Crystallographic Information File.
 >>> # CIFs can be downloaded from: https://www.crystallography.net
 >>> CIF_FILE = r'./nacl_1000041.cif'
 >>> 
 >>> # [1] Crystal, experimental and plot parameters
->>> # are defined as objects XTAL, EPAR, PPAR and CALC, respectively.
+>>> # are defined as objects XTAL, EPAR, and PPAR, respectively.
 >>> XTAL = ediff.pcryst.Crystal(structure=CIF_FILE, temp_factors=0.8)
 >>> EPAR = ediff.pcryst.Experiment(wavelength=0.71, two_theta_range=(5,120))
 >>> PPAR = ediff.pcryst.PlotParameters(x_axis='q', xlim=(1,10))
 >>> 
 >>> # [2] PXRDcalculation object
->>> # calculates PXRD during initialization
+>>> # calculates PXRD when called/initialized
 >>> # and contains the results for further processing.
 >>> CALC = ediff.pcryst.PXRDcalculation(XTAL,EPAR,PPAR, peak_profile_sigma=0.1)
 >>> 
 >>> # [3] Show/save CALCulation results.
->>> # (it is quite ok to use default settings
+>>> # (it is quite Ok to use the default settings of EDIFF package
 >>> # (for more advanced plotting you can use the saved results + arbitrary SW
 >>> CALC.print_diffractions()
 >>> CALC.save_diffractions('nacl_pxrd.py.diff')
@@ -58,6 +58,8 @@ class Crystal:
                 pymatgen package (which works behind the sceenes).
               * This also means that the structure can be created by any
                 other way available in pymatgen https://pymatgen.org/
+              * It is also possible to define structure in ediff.io,
+                using ediff.io.Lattice and ediff.io.Structure objects.
               * Nevertheless, for common usage it is enough to
                 read the structure from CIF, ignoring technical details.
     temp_factors : float or dictionary, optional, the default is 0.8
@@ -224,7 +226,10 @@ class PlotParameters:
     title : str
         Title of the plot.
     x_axis : str, 'TwoTheta','S','q' or 'dhkl', optional, default is 'q'
-        Quantity for X-axis.
+        What should be shown on X-axis (diff.angle, diff.vector ...).
+        During the processing, the data are adjusted according this argument.
+    xlim : tuple of two numbers
+        Range of X-axis = xlim parameter from matplotlib.pyplot.
     rcParams : dict; optional, the default is empty dictionary {}
         The dictionary should have the format of mathplotlib.pyplot.rcParams.
         The argmument is passed to matplotlib.pyplot.rcParams.update.

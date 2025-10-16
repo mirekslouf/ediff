@@ -350,8 +350,8 @@ but we need at least one of the following:
 </span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a>        <span class="c1"># * In any case, the filenames or arrays should be in EDIFF format:</span>
 </span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a>        <span class="c1">#   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity</span>
 </span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>        <span class="c1">#   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity</span>
-</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
-</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
+</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
+</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
 </span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a>            
 </span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a>        <span class="c1"># (2) Determine ranges, in which we search for peaks.</span>
 </span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a>        <span class="c1"># (We search peaks either in the whole x-ranges</span>
@@ -1013,8 +1013,8 @@ but we need at least one of the following:
 </span><span id="Calculate-192"><a href="#Calculate-192"><span class="linenos">192</span></a>        <span class="c1"># * In any case, the filenames or arrays should be in EDIFF format:</span>
 </span><span id="Calculate-193"><a href="#Calculate-193"><span class="linenos">193</span></a>        <span class="c1">#   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity</span>
 </span><span id="Calculate-194"><a href="#Calculate-194"><span class="linenos">194</span></a>        <span class="c1">#   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity</span>
-</span><span id="Calculate-195"><a href="#Calculate-195"><span class="linenos">195</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
-</span><span id="Calculate-196"><a href="#Calculate-196"><span class="linenos">196</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
+</span><span id="Calculate-195"><a href="#Calculate-195"><span class="linenos">195</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
+</span><span id="Calculate-196"><a href="#Calculate-196"><span class="linenos">196</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
 </span><span id="Calculate-197"><a href="#Calculate-197"><span class="linenos">197</span></a>            
 </span><span id="Calculate-198"><a href="#Calculate-198"><span class="linenos">198</span></a>        <span class="c1"># (2) Determine ranges, in which we search for peaks.</span>
 </span><span id="Calculate-199"><a href="#Calculate-199"><span class="linenos">199</span></a>        <span class="c1"># (We search peaks either in the whole x-ranges</span>
@@ -1248,7 +1248,7 @@ the calibration constant for <em>an arbitrary microscope</em>.</p>
 <ul>
 <li>ELD/XRD profiles represent 1D electron/X-ray diffraction patterns.</li>
 <li>More info about ELD/XRD profiles in EDIFF
-=&gt; see the docs of <a href="io.html#read_profile">ediff.io.read_profile</a> function.</li>
+=&gt; see the docs of ediff.io.read_profile function.</li>
 </ul>
 
 <h6 id="parameters">Parameters</h6>
@@ -1361,8 +1361,8 @@ to X-coordinate-in-q-vectors [1/A].</li>
 </span><span id="Calculate.from_max_peaks_in_range-192"><a href="#Calculate.from_max_peaks_in_range-192"><span class="linenos">192</span></a>        <span class="c1"># * In any case, the filenames or arrays should be in EDIFF format:</span>
 </span><span id="Calculate.from_max_peaks_in_range-193"><a href="#Calculate.from_max_peaks_in_range-193"><span class="linenos">193</span></a>        <span class="c1">#   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity</span>
 </span><span id="Calculate.from_max_peaks_in_range-194"><a href="#Calculate.from_max_peaks_in_range-194"><span class="linenos">194</span></a>        <span class="c1">#   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity</span>
-</span><span id="Calculate.from_max_peaks_in_range-195"><a href="#Calculate.from_max_peaks_in_range-195"><span class="linenos">195</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
-</span><span id="Calculate.from_max_peaks_in_range-196"><a href="#Calculate.from_max_peaks_in_range-196"><span class="linenos">196</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_profile</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
+</span><span id="Calculate.from_max_peaks_in_range-195"><a href="#Calculate.from_max_peaks_in_range-195"><span class="linenos">195</span></a>        <span class="n">eld</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">eld_profile</span><span class="p">)</span>
+</span><span id="Calculate.from_max_peaks_in_range-196"><a href="#Calculate.from_max_peaks_in_range-196"><span class="linenos">196</span></a>        <span class="n">xrd</span> <span class="o">=</span> <span class="n">ediff</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">Profile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">xrd_profile</span><span class="p">)</span>
 </span><span id="Calculate.from_max_peaks_in_range-197"><a href="#Calculate.from_max_peaks_in_range-197"><span class="linenos">197</span></a>            
 </span><span id="Calculate.from_max_peaks_in_range-198"><a href="#Calculate.from_max_peaks_in_range-198"><span class="linenos">198</span></a>        <span class="c1"># (2) Determine ranges, in which we search for peaks.</span>
 </span><span id="Calculate.from_max_peaks_in_range-199"><a href="#Calculate.from_max_peaks_in_range-199"><span class="linenos">199</span></a>        <span class="c1"># (We search peaks either in the whole x-ranges</span>
@@ -1401,7 +1401,7 @@ to X-coordinate-in-q-vectors [1/A].</li>
 <ul>
 <li>ELD/XRD profiles represent 1D electron/X-ray diffraction patterns.</li>
 <li>More info about ELD/XRD profiles in EDIFF
-=&gt; see the docs of <a href="io.html#read_profile">ediff.io.read_profile</a> function.</li>
+=&gt; see the docs of ediff.io.read_profile function.</li>
 <li>The peaks are selected using arguments <em>eld_range</em> and <em>xrd_range</em>.
 <ul>
 <li>Both arguments are tuples of two floats = x-ranges.</li>

@@ -5,12 +5,13 @@ Module: ediff.gcryst
 Collection of algorithms from general/geometric crystallography.
 '''
 
+from pymatgen.core import Lattice as pmLattice
+
 import numpy as np
-from pymatgen.core import Lattice
 from math import gcd
 from functools import reduce
 
-class CrystalCell(Lattice):
+class CrystalCell(pmLattice):
     '''
     Class defining CrystalCell object, which contains:
     
@@ -316,7 +317,8 @@ class ZoneAxis:
         None
             The list of vector cross-products is printed on the screen.
             If all cross-products are the same (up to scale/sign),
-            then the zone axis [uvw] explains the presense of all *diffs*
+            then the zone axis [uvw] is correct, which means that
+            it explains the presence of all *diffs*
             in the observed diffraction pattern.
         '''
         for d1 in (diffs):

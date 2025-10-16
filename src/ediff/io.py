@@ -9,78 +9,261 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ediff.radial
 
+from pymatgen.core import Lattice as pmLattice
+from pymatgen.core import Structure as pmStructure
 
 
-def read_image(image_name, itype=None):
+class Lattice(pmLattice):
     '''
-    Read grayscale image into 2D numpy array.
-    
-    Parameters
-    ----------
-    image_name : string or pathlib object
-        Name of image that should read into numpy 2D array.
-    itype : string ('8bit'  or '16bit')
-        Type of the image: 8 or 16 bit grayscale    
+    Lattice object = crystal lattice.
+
+    * Lattice object is identical to pymatgen.core.Lattice: <br>
+      https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.lattice
+    * In EDIFF:
+        - Lattice can be defined by all methods of the original object.
+        - Lattice can help to define a crystal structure = ediff.io.Structure.
         
-    Returns
-    -------
-    arr : 2D numpy array
-        The *arr* is the input image read to an array by means of numpy.
+    >>> # How to define Lattice = crystall lattice using ediff.io
+    >>> import ediff as ed
+    >>> lattice1 = ed.io.Lattice.cubic(a=5.47)
+    >>> lattice2 = ed.io.Lattice.hexagonal(a=5.91, c=3.50)
+    >>> lattice3 = ed.io.Lattice.from_parameters(3, 4, 5, 90, 110, 90) 
     '''
-    img = Image.open(image_name)
-    if itype=='8bit':
-        arr = np.asarray(img, dtype=np.uint8)
-    else:
-        arr = np.asarray(img, dtype=np.uint16)
-    return(arr)
+    pass
 
 
-def read_profile(profile):
+class Structure(pmStructure):
     '''
-    Read the ELD or XRD profile in EDIFF format.
+    Structure object = crystal structure.
 
-    * More info about ELD/XRD profiles in EDIFF
-      => see the section *Technical notes* below.
-
-    Parameters
-    ----------
-    profile : str or numpy.array
-        
-        * If profile = str,
-          we assume a filename
-          of the file with ELD or XRD profile in EDIFF format.
-        * If profile = numpy.array,
-          we assume a 2D-array
-          containing ELD or XRD profile in EDIFF format.
-
-    Returns
-    -------
-    profile : 2D numpy.array
-        The array representing ELD or XRD profile in EDIFF format.
-        See section *Technical notes* below
-        for explanation of the EDIFF format of the ELD and XRD profiles.
+    * Structure object is identical to pymatgen.core.Structure: <br>
+      https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.structure
+    * In EDIFF:
+        - Structure can be defined by all methods of the original object.
+        - Structure is employed in calculation of theoretical diffractograms.
     
-    Technical notes
-    ---------------
-    * ELD profile = 1D radially averaged
-      powder electron diffraction pattern
-        - in EDIFF, it is obtained from an experimental 2D difractogram
-    * XRD profile = 1D powder X-ray diffraction pattern
-        - in EDIFF, it is calculated from a standard CIF file
-          = Crystallographic Information File
-    * EDIFF format of ELD and XRD profiles employed in EDIFF package
-        - ELD and XRD profiles can come in the form of files or np.arrays
-        - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
-        - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
-        - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
-    * EDIFF calculation of ELD and XRD profiles is best seen from examples:
-        - https://mirekslouf.github.io/ediff/docs -> worked example
+    >>> # How to define Structure = crystal structure using ediff.io
+    >>>
+    >>> # (0) Standard import of ediff
+    >>> import ediff as ed
+    >>>
+    >>> # (1) Structure from the very beginning
+    >>> sg = 'Fm-3m'
+    >>> lat = ed.io.Lattice.cubic(a=4.08) 
+    >>> atoms = ['Au']
+    >>> coords = [[0,0,0]]
+    >>> structure1 = ed.io.Structure.from_spacegroup(sg, lat, atoms, coords)
+    >>>
+    >>> # (2) Structure from CIF-file
+    >>> struct2 = ed.io.Structure.from_file('au.cif')
     '''
-    if type(profile)==np.ndarray:
-        return(profile)
-    else:
-        profile = np.loadtxt(profile, unpack=True)
-        return(profile)
+    pass
+
+
+class Diffractogram:
+    '''
+    Read and show 2D diffractograms in a simple and reproducible way.
+    
+    * A class with two funcs (read, show); show func can be used for saving.
+    * Assumption: the diffractogram is a 2D numpy array or grayscale image.
+    '''
+    
+    
+    def read(diffractogram, itype=None):
+        '''
+        Read 2D diffraction pattern (=grayscale image) into 2D numpy array.
+        
+        Parameters
+        ----------
+        diffractogram : string or path-like object or numpy array
+            Name of image that should read into numpy 2D array
+            or directly the 2D numpy array representing the diffractogram.
+        itype : string ('8bit'  or '16bit')
+            Type of the image: 8 or 16 bit grayscale    
+            
+        Returns
+        -------
+        arr : 2D numpy array
+            The *arr* is the input image read to an array by means of numpy.
+        '''
+        
+        # Test the input type
+        if type(diffractogram) == np.ndarray:
+            # Diffractogram is an array - just assign to arr variable.
+            arr = diffractogram
+        else:
+            # Diffractogram is not an array - we expect a grayscale image.
+            img = Image.open(diffractogram)
+            if itype=='8bit':
+                arr = np.asarray(img, dtype=np.uint8)
+            else:
+                arr = np.asarray(img, dtype=np.uint16)
+        # Return the diffractogram in the form of 2D array.
+        return(arr)
+
+
+    def show(diffractogram, icut=None, 
+             title=None, output_file=None, output_file_dpi=300):
+        '''
+        Show/plot 2D diffraction pattern.
+
+        Parameters
+        ----------
+        diffractogram : numpy.array
+            A numpy.array object representing a 2D diffractogram image.
+            In EDIFF,
+            this array is usually obtained by ediff.ioi.read_image function.
+        icut : integer, optional, default is None
+            Upper limit of intensity shown in the diffractogram.
+            The argument *icut* is used as *vmax* in plt.imshow function.
+            Example: If *icut*=300, then all intensities >300 are set to 300.
+        title : str, optional, default is None
+            If given, then it is the title of the plot.
+        output_file : str, optional, default is None
+            Name of the output file.
+            If the argument is not None, the plot is saved to *output_file*.
+        output_file_dpi : int, optional, default is 300
+            Resolution of the output file.
+
+        Returns
+        -------
+        None
+            The plot is shown in the stdout
+            and saved to *output_file* if requested.
+
+
+        Returns
+        -------
+        None
+            The 2D diffractogram is just shown in the stdout.
+        '''
+        
+        # Plot the 2D-diffractogram
+        # (quite simple, we employ plt.imshow function with a few arguments
+        # (the function is defined in order to simplify user's input even more
+        
+        # (1) Plot title if requested
+        if title is not None: plt.title(title)
+        
+        # (2) The plot itself
+        plt.imshow(diffractogram, vmax=icut)
+        plt.tight_layout()
+        
+        # (3) Save the plot if requested
+        if output_file is not None:
+            plt.savefig(output_file, dpi=output_file_dpi)
+        
+        # (4) Show the plot
+        plt.show()
+
+    
+class Profile:
+    '''
+    Read and show 1D diffraction profiles in a simple and reproducible way.
+    
+    * A class with two funcs (read, show); show func can be used for saving.
+    * Assumption: the profile is a numpy array or text file in EDIFF format. 
+    '''
+    
+    def read(profile):
+        '''
+        Read the ELD or XRD profile in EDIFF format.
+    
+        * More info about ELD/XRD profiles in EDIFF
+          => see the section *Technical notes* below.
+    
+        Parameters
+        ----------
+        profile : str or numpy.array
+            
+            * If profile = str,
+              we assume a filename
+              of the file with ELD or XRD profile in EDIFF format.
+            * If profile = numpy.array,
+              we assume a 2D-array
+              containing ELD or XRD profile in EDIFF format.
+    
+        Returns
+        -------
+        profile : 2D numpy.array
+            The array representing ELD or XRD profile in EDIFF format.
+            See section *Technical notes* below
+            for explanation of the EDIFF format of the ELD and XRD profiles.
+        
+        Technical notes
+        ---------------
+        * ELD profile = 1D radially averaged
+          powder electron diffraction pattern
+            - in EDIFF, it is obtained from an experimental 2D difractogram
+        * XRD profile = 1D powder X-ray diffraction pattern
+            - in EDIFF, it is calculated from a standard CIF file
+              = Crystallographic Information File
+        * EDIFF format of ELD and XRD profiles employed in EDIFF package
+            - ELD and XRD profiles can come in the form of files or np.arrays
+            - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
+            - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
+            - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
+        * EDIFF calculation of ELD and XRD profiles is best seen from examples:
+            - https://mirekslouf.github.io/ediff/docs -> worked example
+        '''
+        if type(profile)==np.ndarray:
+            return(profile)
+        else:
+            profile = np.loadtxt(profile, unpack=True)
+            return(profile)
+
+    def show(Xvalues, Yvalues, Xlabel, Ylabel, Xrange, Yrange,
+        title=None, output_file=None, output_file_dpi=300):
+        '''
+        Plot a 1D profile in a simple and stadnard way.
+
+        Parameters
+        ----------
+        Xvalues : array or list-like object
+            X values for plotting.
+        Yvalues : array or list-like object
+            Y values for plotting.
+        Xlabel : str
+            Label of the X-axis.
+        Ylabel : str
+            Label of the Y-axis.
+        Xrange : list/tuple of two floats
+            X range = minimum and maximu for Xvalues to plot.
+        Yrange : list/tuple of two floats
+            Y range = minimum and maximu for Yvalues to plot.
+        title : str, optional, default is None
+            The title of the plot.
+        output_file : str, optional, default is None
+            Name of the output file.
+            If the argument is not None, the plot is saved to *output_file*.
+        output_file_dpi : int, optional, default is 300
+            Resolution of the output file.
+
+        Returns
+        -------
+        None
+            The plot is shown in the stdout
+            and saved to *output_file* if requested.
+       '''
+        
+        # (1) Plot title if requested
+        if title is not None: plt.title(title)
+        
+        # (2) The plot itself
+        plt.plot(Xvalues, Yvalues)
+        plt.xlabel(Xlabel)
+        plt.ylabel(Ylabel)
+        plt.xlim(Xrange)
+        plt.ylim(Yrange)
+        plt.grid()
+        plt.tight_layout()
+        
+        # (3) Save the plot if requested
+        if output_file is not None:
+            plt.savefig(output_file, dpi=output_file_dpi)
+        
+        # (4) Show the plot
+        plt.show()
 
 
 def set_plot_parameters(
@@ -129,90 +312,6 @@ def set_plot_parameters(
     # (3) Further user-defined parameter in rcParams format -------------------
     if my_rcParams:  # Other possible rcParams in the form of dictionary
         plt.rcParams.update(my_rcParams)
-
-
-def plot_1d_profile(Xvalues, Yvalues, Xlabel, Ylabel, Xrange, Yrange,
-    title=None, output_file=None, output_file_dpi=300):
-    '''
-    Plot a 1D profile in a simple and stadnard way.
-
-    Parameters
-    ----------
-    Xvalues : array or list-like object
-        X values for plotting.
-    Yvalues : array or list-like object
-        Y values for plotting.
-    Xlabel : str
-        Label of the X-axis.
-    Ylabel : str
-        Label of the Y-axis.
-    Xrange : list/tuple of two floats
-        X range = minimum and maximu for Xvalues to plot.
-    Yrange : list/tuple of two floats
-        Y range = minimum and maximu for Yvalues to plot.
-    title : str, optional, default is None
-        The title of the plot.
-    output_file : str, optional, default is None
-        Name of the output file.
-        If the argument is not None, the plot is saved to *output_file*.
-    output_file_dpi : int, optional, default is 300
-        Resolution of the output file.
-
-    Returns
-    -------
-    None
-        The plot is shown in the stdout
-        and saved to *output_file* if requested.
-   '''
-    
-    # (1) Plot title if requested
-    if title is not None: plt.title(title)
-    
-    # (2) The plot itself
-    plt.plot(Xvalues, Yvalues)
-    plt.xlabel(Xlabel)
-    plt.ylabel(Ylabel)
-    plt.xlim(Xrange)
-    plt.ylim(Yrange)
-    plt.grid()
-    plt.tight_layout()
-    
-    # (3) Save the plot if requested
-    if output_file is not None: plt.savefig(output_file, dpi=output_file_dpi)
-    
-    # (4) Show the plot
-    plt.show()
-    
-
-def plot_2d_diffractogram(diffractogram, icut=None, title=None):
-    '''
-    Plot 2D diffraction pattern.
-
-    Parameters
-    ----------
-    diffractogram : numpy.array
-        A numpy.array object representing a 2D diffractogram image.
-        In EDIFF,
-        this array is usually obtained by ediff.ioi.read_image function.
-    icut : integer, optional, default is None
-        Upper limit of intensity shown in the diffractogram.
-        The argument *icut* is used as *vmax* in plt.imshow function.
-        Example: If *icut*=300, then all intensities >300 are set to 300.
-    title : str, optional, default is None
-        If given, then it is the title of the plot.
-
-    Returns
-    -------
-    None
-        The 2D diffractogram is just shown in the stdout.
-    '''
-    # Plot the 2D-diffractogram
-    # (quite simple, we employ plt.imshow function with a few arguments
-    # (the function is defined in order to simplify user's input even more
-    if title is not None: plt.title(title)
-    plt.imshow(diffractogram, vmax=icut)
-    plt.tight_layout()
-    plt.show()
 
     
 def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
@@ -290,8 +389,8 @@ def plot_final_eld_and_xrd(eld_profile, xrd_profile, fine_tuning, x_range,
     # * In any case, the filenames or arrays should be in EDIFF format:
     #   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity
     #   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity
-    eld = read_profile(eld_profile)
-    xrd = read_profile(xrd_profile)
+    eld = Profile.read(eld_profile)
+    xrd = Profile.read(xrd_profile)
 
     # Plot the data
     plt.plot(xrd[2], xrd[3], label=xrd_data_label)
@@ -393,7 +492,7 @@ def plot_radial_distributions(
         data = rdist[i][0]
         if type(data) == str:  # Datafile
             if data.lower().endswith('.png'):  # ....PNG file, 2D-diffractogram
-                arr = read_image(data)
+                arr = Diffractogram.read(data)
                 profile = ediff.radial.calc_radial_distribution(arr)
             else:  # ......................................TXT file, 1D-profile
                 profile = ediff.radial.read_radial_distribution(data)
