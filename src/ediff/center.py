@@ -789,7 +789,7 @@ class CenterLocator:
     
         # (4) Final plot: show the diffractogram + refinement results ---------
         fig, ax = plt.subplots(layout='constrained')
-        ax.imshow(im, cmap=self.cmap)
+        ax.imshow(im, cmap=self.cmap, origin="lower")
     
         ax.set_title(f'Center :: {self.determination}/{self.refinement}')
     

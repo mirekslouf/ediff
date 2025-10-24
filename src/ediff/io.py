@@ -146,7 +146,7 @@ class Diffractogram:
         if title is not None: plt.title(title)
         
         # (2) The plot itself
-        plt.imshow(diffractogram, vmax=icut)
+        plt.imshow(diffractogram, vmax=icut, origin="lower")
         plt.tight_layout()
         
         # (3) Save the plot if requested
