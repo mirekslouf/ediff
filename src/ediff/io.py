@@ -102,7 +102,7 @@ class Diffractogram:
         return(arr)
 
 
-    def show(diffractogram, icut=None, 
+    def show(diffractogram, origin='lower', icut=None, 
              title=None, output_file=None, output_file_dpi=300):
         '''
         Show/plot 2D diffraction pattern.
@@ -113,6 +113,10 @@ class Diffractogram:
             A numpy.array object representing a 2D diffractogram image.
             In EDIFF,
             this array is usually obtained by ediff.ioi.read_image function.
+        origin : str, optional, default is 'lower'
+            Orientation of the image during final rendering.
+            Matplotlib default: origin='upper' - [0,0] is in upper left corner.
+            EDIFF default: origin='lower' - [0,0] is in the lower left corner.
         icut : integer, optional, default is None
             Upper limit of intensity shown in the diffractogram.
             The argument *icut* is used as *vmax* in plt.imshow function.
@@ -130,12 +134,6 @@ class Diffractogram:
         None
             The plot is shown in the stdout
             and saved to *output_file* if requested.
-
-
-        Returns
-        -------
-        None
-            The 2D diffractogram is just shown in the stdout.
         '''
         
         # Plot the 2D-diffractogram
@@ -146,7 +144,7 @@ class Diffractogram:
         if title is not None: plt.title(title)
         
         # (2) The plot itself
-        plt.imshow(diffractogram, vmax=icut, origin="lower")
+        plt.imshow(diffractogram, origin=origin, vmax=icut)
         plt.tight_layout()
         
         # (3) Save the plot if requested
