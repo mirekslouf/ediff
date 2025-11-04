@@ -24,7 +24,7 @@ Technical notes:
 
 EDIFF modules:
 
-* ediff.background = background correction (employs sub-package BGROUND)    
+* ediff.bkg = background subtraction (employs external package BGROUND)    
 * ediff.calibration = calibration of SAED diffractograms (pixels -> q-vectors)
 * ediff.center = find the center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
@@ -39,12 +39,12 @@ Auxiliary package BGROUND:
 * It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.8.1"
+__version__ = "0.8.3"
 
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
-# >>> ed.io.read_image ...
+# >>> ed.io.Diffractogram.read...
 import ediff.calibration
 import ediff.center
 import ediff.gcryst
@@ -54,14 +54,14 @@ import ediff.radial
 
 
 # This is a slightly special import:
-# * ediff (1) imports ediff.background, which (2) imports bground package
-# * see additional imports in ediff.background module to see what is done 
+# * ediff (1) imports ediff.bkg, which (2) imports external bground package
+# * see additional imports in ediff.bkg module to see how it is performed 
 # * this "two-step import" enables us to use the ediff module as follows:
 # >>> import ediff as ed
-# >>> DATA  = ed.background.InputData ...
-# >>> PPAR  = ed.background.PlotParams ...
-# >>> IPLOT = ed.background.InteractivePlot ...
-import ediff.background
+# >>> DATA  = ed.bkg.InputData ...
+# >>> PPAR  = ed.bkg.PlotParams ...
+# >>> IPLOT = ed.bkg.InteractivePlot ...
+import ediff.bkg
 
 
 # Obligatory acknowledgement -- the development was co-funded by TACR.
