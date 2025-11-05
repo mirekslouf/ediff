@@ -827,7 +827,10 @@ class CenterLocator:
         # Plot only the central square region if requested
         if csquare is not None:
             ax.set_xlim(xmin, xmax)
-            ax.set_ylim(ymin, ymax)
+            ax.set_ylim(ymax, ymin)  # TRICK! 
+            # Note: images have [0,0] in upper left corner
+            # ...therefore, we have to set ylim from MAX to MIN
+            # ...because the coordinates go from MAX to zero in y-axis!
         
         # Save the result to output file if requested
         if out_file is not None:
