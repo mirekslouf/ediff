@@ -789,7 +789,7 @@ class CenterLocator:
     
         # (4) Final plot: show the diffractogram + refinement results ---------
         fig, ax = plt.subplots(layout='constrained')
-        ax.imshow(im, cmap=self.cmap, origin="lower")
+        ax.imshow(im, cmap=self.cmap, origin="upper")
     
         ax.set_title(f'Center :: {self.determination}/{self.refinement}')
     
@@ -925,7 +925,7 @@ class CenterLocator:
     
         if method == 'manual':
             # Manual point selection
-            plt.imshow(img, cmap=self.cmap, origin="lower")
+            plt.imshow(img, cmap=self.cmap, origin="upper")
             plt.title("Click 4 distorted points (in circular order)")
             raw_pts = np.array(plt.ginput(4, timeout=-1), dtype=np.float32)
             plt.close()
@@ -979,12 +979,12 @@ class CenterLocator:
             plt.figure(figsize=(12, 5))
             plt.subplot(1, 2, 1)
             plt.title("Original with refined points")
-            plt.imshow(img, cmap=self.cmap, origin="lower")
+            plt.imshow(img, cmap=self.cmap, origin="upper")
             plt.scatter(*distorted_pts.T, color='cyan', s=40)
     
             plt.subplot(1, 2, 2)
             plt.title("Corrected image")
-            plt.imshow(corrected, cmap=self.cmap, origin="lower")
+            plt.imshow(corrected, cmap=self.cmap, origin="upper")
             plt.show()
     
         return corrected
@@ -1385,13 +1385,13 @@ class CenterDetermination:
             # Display results
             plt.figure(figsize=(12, 4))
             plt.subplot(1, 3, 1), 
-            plt.imshow(sobel_x, cmap='gray', origin="lower"), 
+            plt.imshow(sobel_x, cmap='gray', origin="upper"), 
             plt.title('Sobel X')
             plt.subplot(1, 3, 2),
-            plt.imshow(sobel_y, cmap='gray', origin="lower"),
+            plt.imshow(sobel_y, cmap='gray', origin="upper"),
             plt.title('Sobel Y')
             plt.subplot(1, 3, 3), 
-            plt.imshow(sobel_magnitude, cmap='gray', origin="lower"), 
+            plt.imshow(sobel_magnitude, cmap='gray', origin="upper"), 
             plt.title('Gradient Magnitude')
             plt.show()
         
@@ -1624,7 +1624,7 @@ class CenterDetermination:
         
         if disp: 
             plt.figure()
-            plt.imshow(result, cmap="inferno", origin="lower")
+            plt.imshow(result, cmap="inferno", origin="upper")
             plt.title("Correlation matrix")
             plt.show()
             plt.axis("off")
@@ -1655,7 +1655,7 @@ class CenterDetermination:
                 center_y - center_size // 2:center_y + center_size // 2,
                 center_x - center_size // 2:center_x + center_size // 2]
             
-            plt.imshow(orig, cmap="gray", origin="lower")
+            plt.imshow(orig, cmap="gray", origin="upper")
             plt.scatter(corrected_c-center_x//2, corrected_r-center_y//2, 
                         color="white", marker="x", s=100,
                         label = "center")
@@ -1830,7 +1830,7 @@ class CenterDetermination:
                 
             fig, ax = plt.subplots()
             plt.axis("off")
-            ax.imshow(image, cmap=self.parent.cmap, origin="lower")
+            ax.imshow(image, cmap=self.parent.cmap, origin="upper")
             plt.title("Live Hough Circle Detection")
             plt.ion()  # Turn on interactive mode
     
@@ -1848,7 +1848,7 @@ class CenterDetermination:
             # Live animation (if enabled)
             if live_plot:
                 ax.clear()
-                ax.imshow(image, cmap=self.parent.cmap, origin="lower")
+                ax.imshow(image, cmap=self.parent.cmap, origin="upper")
                 plt.title(f"Detecting Circles: Radius {r}px")
                 for x, y, rad in detected_circles:
                     plt.axis("off")
@@ -1881,7 +1881,7 @@ class CenterDetermination:
         
         
             fig_final, ax_final = plt.subplots()
-            ax_final.imshow(image, cmap=self.parent.cmap, origin="lower")
+            ax_final.imshow(image, cmap=self.parent.cmap, origin="upper")
             plt.title("Hough Transform Preliminary Detection")
         
             for x, y, rad in detected_circles:
@@ -2124,7 +2124,7 @@ class CenterDetermination:
  
         plt.title("Select 3 points defining one of diffraction circles", 
                   fontsize = 20)
-        ax.imshow(im, cmap = self.parent.cmap, origin="lower")
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
 
         # (3) User information ------------------------------------------------
@@ -2191,7 +2191,7 @@ class CenterDetermination:
     
                     ## Redraw the image without the deleted point
                     ax.clear()
-                    ax.imshow(im, cmap = self.parent.cmap, origin="lower")
+                    ax.imshow(im, cmap = self.parent.cmap, origin="upper")
                     for x, y in self.coords:
                         ax.scatter(x, y, 
                                    c='r', marker='x', 
@@ -2222,7 +2222,7 @@ class CenterDetermination:
     
                         # Redraw the image without the deleted point
                         ax.clear()
-                        ax.imshow(im, cmap=self.parent.cmap, origin="lower")
+                        ax.imshow(im, cmap=self.parent.cmap, origin="upper")
                         for x, y in self.coords:
                             ax.scatter(x, y,
                                        c='r', marker='x', 
@@ -2319,7 +2319,7 @@ class CenterDetermination:
                 self.calculate_circle(plot_results=0)
             
             ax.clear()
-            ax.imshow(im, cmap = self.parent.cmap, origin="lower")
+            ax.imshow(im, cmap = self.parent.cmap, origin="upper")
             # Retore the previous zoom level
             ax.set_xlim(current_xlim)
             ax.set_ylim(current_ylim)
@@ -2634,7 +2634,7 @@ class CenterDetermination:
             manager = plt.get_current_fig_manager()
             manager.window.showMaximized()
             ax.imshow(self.parent.image, cmap = self.parent.cmap,
-                      origin="lower")
+                      origin="upper")
             
             # Plot center and points
             center, = plt.plot(self.x, self.y, 
@@ -2896,7 +2896,7 @@ class CenterDetermination:
     
             if disp:
                 fig, axs = plt.subplots(1, 2, figsize=(8, 3))
-                axs[0].imshow(im, cmap=self.parent.cmap, origin="lower")
+                axs[0].imshow(im, cmap=self.parent.cmap, origin="upper")
                 axs[0].add_patch(
                     Circle(
                         (y, x), rx, 
@@ -3002,7 +3002,7 @@ class CenterDetermination:
         
         if show_mask:
             plt.figure()
-            plt.imshow(mask, origin="lower")
+            plt.imshow(mask, origin="upper")
             plt.title("Beam Stopper Masking")
             plt.tight_layout()
             plt.axis("off")
@@ -3068,7 +3068,7 @@ class CenterDetermination:
         plt.legend(loc='upper right')
         
         # Display the image
-        ax.imshow(im, cmap = self.parent.cmap, origin="lower")
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         plt.axis('off')
         plt.tight_layout()
         plt.show(block=False)
@@ -3316,7 +3316,7 @@ class CenterRefinement:
         plt.title('Manually adjust the center position.', 
                   fontsize=20)
 
-        ax.imshow(im, cmap = self.parent.cmap, origin="lower")
+        ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
         
         # (4) Enable interactive mode -----------------------------------------
@@ -3687,7 +3687,7 @@ class CenterRefinement:
         if live_plot:
             plt.ion()
             fig, ax = plt.subplots()
-            ax.imshow(image, cmap='gray', origin="lower")
+            ax.imshow(image, cmap='gray', origin="upper")
             circ_artist = Circle(best_center, best_radius, 
                                  fill=False, color='red', lw=1.5)
             ax.add_patch(circ_artist)
@@ -3882,7 +3882,7 @@ class CenterRefinement:
         plt.figure(figsize=(4, 4))
         plt.imshow(
             score_grid, 
-            origin='lower', 
+            origin='upper', 
             extent=[x_range[0], x_range[-1], y_range[0], y_range[-1]]
             )
         plt.colorbar(label=f"Metric Score ('{metric}')")
