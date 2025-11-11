@@ -5,20 +5,17 @@ Processing of electron diffraction patterns.
 
 * Input:
     - Image file = an experimental 2D electron diffraction pattern.
-    - CIF file = a text file describing the expected crystal structure.
-* Processing:
-    - Experimental diffractogram is the adjusted/calibrated image file.
-    - Theoretical diffractogram is calculated from the CIF file.
+    - CIF file = a description the expected/theoretical crystal structure.
 * Output:
     - Comparison of the *experimental* and *theoretical* diffractogram.
-    - If the two difractograms are equivalent, the sample is identified.
-
-Technical notes:
+    - If the two difractograms are equivalent, the sample has been identified.
+ 
+Technical note - calculation of theoretical diffractograms from CIF files:
 
 * CIF files can be downloaded from open-acces databases:
     - Good source of CIF's: https://www.crystallography.net/cod
     - Alternativelly, CIF's can be created within EDIFF or found in www.
-* EDIFF provides algorithms for calculation of theoretical diffractograms:
+* EDIFF can calculate theoretical diffractograms from CIF files:
     - Polycrystal/powder diffractograms - finalized, fully working.
     - Monocrystal/spotty diffractograms - under development. 
 
