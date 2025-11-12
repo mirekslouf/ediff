@@ -2,7 +2,7 @@
 Module: ediff.mcryst
 --------------------
 
-Process monocrystalline diffraction patterns.
+Calculate monocrystalline diffraction patterns.
 '''
 
 pass

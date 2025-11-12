@@ -2,7 +2,11 @@
 Module: ediff.pcryst
 --------------------
 
-Process polycrystalline/powder diffraction patterns.
+Calculate polycrystalline/powder diffraction patterns.
+
+* Theoretical powder diffractograms are usually calculated from CIF files.
+* The short demo how to perform the calculation with ediff is shown below.
+* More details and examples at GitHub: https://mirekslouf.github.io/ediff/docs
 
 >>> # EDIFF/PCRYST module ::calculate diffraction pattern of NaCl
 >>> 

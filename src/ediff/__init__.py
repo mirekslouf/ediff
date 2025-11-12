@@ -9,19 +9,11 @@ Processing of electron diffraction patterns.
 * Output:
     - Comparison of the *experimental* and *theoretical* diffractogram.
     - If the two difractograms are equivalent, the sample has been identified.
- 
-Technical note - calculation of theoretical diffractograms from CIF files:
-
-* CIF files can be downloaded from open-acces databases:
-    - Good source of CIF's: https://www.crystallography.net/cod
-    - Alternativelly, CIF's can be created within EDIFF or found in www.
-* EDIFF can calculate theoretical diffractograms from CIF files:
-    - Polycrystal/powder diffractograms - finalized, fully working.
-    - Monocrystal/spotty diffractograms - under development. 
 
 EDIFF modules:
 
-* ediff.bkg = background subtraction (employs external package BGROUND)    
+* ediff.bkg = background subtraction for 1D diffraction profiles
+* ediff.bkg2d = background subtraction for 2D diffraction patterns  
 * ediff.calibration = calibration of SAED diffractograms (pixels -> q-vectors)
 * ediff.center = find the center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
@@ -29,14 +21,9 @@ EDIFF modules:
 * ediff.mcryst = process monocrystal diffraction patterns
 * ediff.pcryst = process polycrystal/powder diffraction patterns
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
-
-Auxiliary package BGROUND:
-
-* BGROUND is an external package, which enables a 1D background correction.
-* It is imported during initialization to be accesible as ediff.background.
 '''
 
-__version__ = "0.8.4"
+__version__ = "0.8.5"
 
 
 # Import of modules so that we could use the package as follows:
