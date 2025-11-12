@@ -48,8 +48,7 @@ Other resources
   the stable version to install.
 * [GitHub](https://github.com/mirekslouf/ediff) repository - 
   the current version under development.
-* [GitHub Pages](https://mirekslouf.github.io/ediff/)
-  with 
+* [GitHub Pages](https://mirekslouf.github.io/ediff/) -
   the more user-friendly version of GitHub website.
 
   
