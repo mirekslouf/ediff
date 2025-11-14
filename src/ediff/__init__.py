@@ -9,6 +9,9 @@ Processing of electron diffraction patterns.
 * Output:
     - Comparison of the *experimental* and *theoretical* diffractogram.
     - If the two difractograms are equivalent, the sample has been identified.
+* Technical notes + additional help:
+    - CIF files can be obtained from www - see ediff.pcryst for details.
+    - Quick start examples/demos - https://mirekslouf.github.io/ediff/docs
 
 EDIFF modules:
 
@@ -18,12 +21,12 @@ EDIFF modules:
 * ediff.center = find the center of an arbitrary 2D-diffraction pattern
 * ediff.io = input/output operations (read diffractogram, set plot params...)
 * ediff.gcryst = functions from geometric/general crystallography
-* ediff.mcryst = process monocrystal diffraction patterns
-* ediff.pcryst = process polycrystal/powder diffraction patterns
+* ediff.mcryst = calculate monocrystal diffraction patterns
+* ediff.pcryst = calculate polycrystal/powder diffraction patterns
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
 '''
 
-__version__ = "0.8.5"
+__version__ = "0.9"
 
 
 # Import of modules so that we could use the package as follows:

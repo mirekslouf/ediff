@@ -200,10 +200,12 @@ class Profile:
         * EDIFF format of ELD and XRD profiles employed in EDIFF package
             - ELD and XRD profiles can come in the form of files or np.arrays
             - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
-            - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
             - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
+            - ELD profile = 3 cols = distance, intensity, bkgr-corrected-intsty
+                - ELD {distance} = {distance-from-the-diffractogram center}
+                - The {distance} in pixels or q-vect (before/after calibration)
         * EDIFF calculation of ELD and XRD profiles is best seen from examples:
-            - https://mirekslouf.github.io/ediff/docs -> worked example
+            - https://mirekslouf.github.io/ediff/docs -> worked examples
         '''
         if type(profile)==np.ndarray:
             return(profile)

@@ -1,6 +1,9 @@
 EDIFF :: documentation and examples
 -----------------------------------
 
+* [Back](https://mirekslouf.github.io/ediff)
+  to main page.
+
 ### HTML documentation
 
 * Complete

@@ -63,8 +63,9 @@ Versions of EDIFF
 * Version 0.5 = consolidation of code and documentation - all stable and working
 * Version 0.6 = finalization of {center} module
 * Version 0.7 = {gcryst} module: geometrical crystallography, zone axes ...
-* Version 0.8 = rewrite of modules: {gcryst}, {pxrd &rArr; pcryst}, {mcryst}
-* Version 1.0 = TODO: complete processing of powder diffractograms
+* Version 0.8 = rewrite: {gcryst}, {pxrd &rArr; pcryst} + new: {mcryst}
+* Version 0.9 = new: {bkg2d} + improved: {calibration} + better documentation
+* Version 1.0 = complete processing of powder diffractograms
 * Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
 
 

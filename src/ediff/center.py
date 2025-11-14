@@ -14,7 +14,7 @@ Find the center of a 2D diffraction pattern.
 >>>    input_image='some_diffractogram.png',
 >>>    determination='intensity',
 >>>    refinement='sum',
->>>    verbose=False, final_replot=True)
+>>>    verbose=2, final_replot=True)
 >>>
 >>> print('Determined center coordinates:', center.x1, center.y1)
 >>> print('Refined center coordinates   :', center.x2, center.y2)
