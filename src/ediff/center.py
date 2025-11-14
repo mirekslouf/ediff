@@ -12,20 +12,13 @@ Find the center of a 2D diffraction pattern.
 >>>
 >>> center = ed.center.CenterLocator(
 >>>    input_image='some_diffractogram.png',
->>>    determination='intensity',
+>>>    detection='intensity',
 >>>    refinement='sum',
->>>    verbose=2, final_replot=True)
+>>>    verbose=2)
 >>>
->>> print('Determined center coordinates:', center.x1, center.y1)
->>> print('Refined center coordinates   :', center.x2, center.y2)
+>>> print('Detected center coordinates :', center.x1, center.y1)
+>>> print('Refined center coordinates  :', center.x2, center.y2)
 '''
-
-# CenterDet, major update and improvements by MS->PS
-# PS 2023-10-06: CentDet update, methods compatibility
-# MS 2023-11-26: Improved code formatting and docs + TODO notes for PS
-# MS 2024-23-09: Re-desing/draft of CenterLocator => CenterLocator_new
-# PS 2025-XX-XX: Updates + imporovements in branch {center_determination}
-# MS 2025-08-01: Import of {center_determination} branch to {main) 
     
 
 import numpy as np
@@ -74,8 +67,8 @@ class CenterLocator:
     input_image : str, path, or numpy.ndarray
         The input 2D diffraction image, either a file path or a NumPy array.
 
-    determination : str or None, optional, default=None
-        Method used for the initial center determination.
+    detection : str or None, optional, default=None
+        Method used for the initial center detection.
         Options include:
         - *'manual'* : Manual detection = interactive plot where the user
           selects 3 points defining a diffraction ring with a mouse.
@@ -89,7 +82,7 @@ class CenterLocator:
           to find the symmetry center.
         - *'ccorr'* : Automatic detection using cross-correlation
           to find the symmetry center.
-        - *None* : Skip the center determination;
+        - *None* : Skip the center detection;
           it is supposed that the center coordinates
           will be read from *in_file* argument - see below.
           
@@ -169,7 +162,7 @@ class CenterLocator:
     Technical notes
     ---------------
     * The class automatically initializes and uses two internal components:
-      `CenterDetermination` and `CenterRefinement`.
+      `CenterDetection` and `CenterRefinement`.
     * These internal processes are hidden from the user but can be accessed 
       directly if needed.                             
     '''
@@ -177,7 +170,7 @@ class CenterLocator:
     
     def __init__(self,
                  input_image, 
-                 determination = None, 
+                 detection = None, 
                  refinement = None,
                  rtype = 1,
                  in_file = None,
@@ -207,14 +200,14 @@ class CenterLocator:
         # (it can be either image file or numpy array)
         self.input_image = input_image
         
-        # Methods of center determination, refinement, and radius estimation
-        self.determination = determination
+        # Methods of center detection, refinement, and radius estimation
+        self.detection = detection
         self.refinement = refinement
         self.rtype = rtype
         
         # For reproducibility, convert the method names to lowercase
-        if determination is not None:
-            self.determination = determination.lower()
+        if detection is not None:
+            self.detection = detection.lower()
         if refinement is not None:
             self.refinement = refinement.lower()
         
@@ -271,7 +264,7 @@ class CenterLocator:
         # of the program and saved to a text file.
         # We can Load coordinates from an input file if specified
         # and this is done by the following command.
-        # As the saved coordinates can be used INSTEAD of CenterDetermination,
+        # As the saved coordinates can be used INSTEAD of CenterDetection,
         # we will read them here.
         if self.in_file is not None: 
             if self.verbose==3:
@@ -279,26 +272,26 @@ class CenterLocator:
 
             self.load_results()  
             
-            self.center1 = CenterDetermination(
+            self.center1 = CenterDetection(
                 self,
                 self.input_image
                 )
             self.center1.x = self.x1
             self.center1.y = self.y1
             if (self.verbose or self.final_print):
-                self.dText = \
-                    "Center Determination (fromInFile)     : ({:.3f}, {:.3f})"
+                self.dText = (
+                    "Center detection (fromInFile)        : ({:.3f}, {:.3f})")
 
              
         else:
-            ## (4) Run CenterDetermination ----------------------------------------
+            ## (4) Run CenterDetection ----------------------------------------
             if self.verbose == 3:
                 print("[INFO] Detecting center... ", end="", flush=True)
                 
-            #  (4a) Initialize/run CenterDetermination
-            self.center1 = CenterDetermination(self,
+            #  (4a) Initialize/run Centerdetection
+            self.center1 = CenterDetection(self,
                     self.input_image,
-                    self.determination,
+                    self.detection,
                     self.heq,
                     self.icut,
                     self.cmap,
@@ -316,7 +309,7 @@ class CenterLocator:
             print("[INFO] Estimating radius of a diffraction ring...",
                   end="", flush=True)
     
-        if self.determination != "manual":
+        if self.detection != "manual":
             self.center1.r = self.center1.get_radius(
                 self.rtype,
                 self.image, 
@@ -368,20 +361,20 @@ class CenterLocator:
         #      This step is important, as center detection/refinement methods
         #      have various coordinate system origins. The conversion is 
         #      necessary for some combinations of methods
-        if (self.determination == "intensity"):
+        if (self.detection == "intensity"):
             self.x1, self.y1 = self.convert_coords(self.x1, self.y1)
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
         
-        if (self.determination =="hough" and self.refinement == "manual"):
+        if (self.detection =="hough" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
 
-        if (self.determination =="phase" and self.refinement == "manual"):
+        if (self.detection =="phase" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2)  
             
-        if (self.determination =="ccorr" and self.refinement == "manual"):
+        if (self.detection =="ccorr" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
                         
-        if (self.determination == "curvefit" and self.refinement == "manual"):
+        if (self.detection == "curvefit" and self.refinement == "manual"):
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
                             
         ## (8) Print the coordinates if required ------------------------------
@@ -404,17 +397,17 @@ class CenterLocator:
     
     def output(self):
         """
-        Return the final results of center determination and refinement. 
+        Return the final results of center detection and refinement. 
         
         Returns
         -------
         x1 : float
             x-coordinate of the center determined
-            by the *determination* method.
+            by the *detection* method.
             
         y1 : float
             y-coordinate of the center determined
-            by the *determination* method.
+            by the *detection* method.
         
         x2 : float
             x-coordinate of the center after *refinement*, or same as x1 if no 
@@ -462,7 +455,7 @@ class CenterLocator:
         '''
         Save the determined and refined center coordinates to a file.
     
-        This method writes the coordinates (x1, y1) from the *determination*
+        This method writes the coordinates (x1, y1) from the *detection*
         step and (x2, y2) from the *refinement* step to a file specified
         by the `out_file` attribute.
     
@@ -509,7 +502,7 @@ class CenterLocator:
     
         This method reads a text file (defaulting to `self.in_file` or
         a provided `path`) containing previously saved center coordinates.
-        It extracts coordinate pairs (x1, y1) from the determination step and
+        It extracts coordinate pairs (x1, y1) from the detection step and
         (x2, y2) from the refinement step. All sets of values are stored
         internally, with the most recent values assigned to instance variables 
         `self.x1`, `self.y1`, `self.x2`, and `self.y2`.
@@ -727,7 +720,7 @@ class CenterLocator:
     def visualize_results(self, csquare=None, out_file=None, out_dpi=200):
         '''
         Visualize diffractogram and its center after
-        center determination + refinement.
+        center detection + refinement.
     
         Parameters
         ----------
@@ -791,7 +784,7 @@ class CenterLocator:
         fig, ax = plt.subplots(layout='constrained')
         ax.imshow(im, cmap=self.cmap, origin="upper")
     
-        ax.set_title(f'Center :: {self.determination}/{self.refinement}')
+        ax.set_title(f'Center :: {self.detection}/{self.refinement}')
     
         ax.scatter(x1, y1, 
                    label=labeld, 
@@ -993,9 +986,9 @@ class CenterLocator:
         return corrected
 
 
-class CenterDetermination:
+class CenterDetection:
     '''
-    CenterDetermination object - initial detection of a diffractogram center.
+    CenterDetection object - initial detection of a diffractogram center.
 
     This class is responsible for identifying the center coordinates of 
     a 2D diffraction pattern image using various detection methods specified 
@@ -1012,8 +1005,8 @@ class CenterDetermination:
         The input image representing a 2D diffraction pattern, provided as 
         a file path or a NumPy array.
         
-    determination : str or None, optional, default=None
-        Method used for the initial center determination.
+    detection : str or None, optional, default=None
+        Method used for the initial center detection.
         Options include:
         - 'manual'   : Manual selection of 3 points on a diffraction ring.
         - 'hough'    : Automatic detection using Hough transform.
@@ -1074,7 +1067,7 @@ class CenterDetermination:
     
     def __init__(self, parent,
                  input_image,
-                 determination = None, 
+                 detection = None, 
                  in_file = None,
                  out_file = None,
                  heq = False, 
@@ -1102,42 +1095,44 @@ class CenterDetermination:
         self.preprocess(preInit=1)
         
         #  (2b) Center detection methods
-        if determination == "manual":
+        if detection == "manual":
             self.x, self.y, self.r = self.detection_3points()
             
-        elif determination == "hough":
+        elif detection == "hough":
             self.x, self.y, self.r = self.detection_Hough(
                 sobel=self.parent.sobel,
                 live_plot=self.parent.live_plot)
             
-        elif determination== "intensity":
+        elif detection== "intensity":
             self.x, self.y, self.r = self.detection_intensity(
                 self.parent.csquare, 
                 self.parent.cintensity,
                 sobel=self.parent.sobel)
             
-        elif determination == "phase":
+        elif detection == "phase":
             self.y, self.x, self.r = self.detection_phase(
                 sobel=self.parent.sobel,
                 masking=self.parent.masking)
          
-        elif determination == "ccorr":
+        elif detection == "ccorr":
             self.y, self.x, self.r = self.detection_crosscorr(
                 sobel=self.parent.sobel,
                 disp=False)
         
-        elif determination == "curvefit":
+        elif detection == "curvefit":
             self.x, self.y, self.r = self.detection_curvefit()
         
-        elif determination is None:
+        elif detection is None:
             if self.parent.in_file is not None:
                 pass
             else:
-                print("\n[ERROR] No determination method specified and no input file provided. Process aborted.")
+                print("\n[ERROR] No detection method specified ", end="") 
+                print("and no input file provided. Process aborted.")
                 sys.exit()
         
         else:
-            print(f"[ERROR] Determination method '{determination}' is not recognized. Process aborted.")
+            print(f"[ERROR] Detection method '{detection}'", end="")
+            print("is not recognized. Process aborted.")
             sys.exit()
 
 
@@ -1522,7 +1517,7 @@ class CenterDetermination:
         # (6) User information (if required) ----------------------------------
         if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = \
-                "Center Determination (PhaseCorrCenter): ({:.3f}, {:.3f})"
+                "Center detection (PhaseCorrCenter)    : ({:.3f}, {:.3f})"
         
         # Ensure correction is a tuple or list before extracting elements
         correction_r, correction_c = correction \
@@ -1673,7 +1668,7 @@ class CenterDetermination:
         # (5) User information (if required) ----------------------------------
         if self.parent.verbose or self.parent.final_print:
             self.parent.dText = \
-                "Center Determination (CrossCorrCenter): ({:.3f}, {:.3f})"
+                "Center Detection (CrossCorrCenter)    : ({:.3f}, {:.3f})"
 
         return float(corrected_r), float(corrected_c), None
 
@@ -1752,7 +1747,7 @@ class CenterDetermination:
         # (6) User information (if required) ----------------------------------
         if (self.parent.verbose or self.parent.final_print):
             self.parent.dText =\
-                "Center Determination (IntensityCenter): ({:.3f}, {:.3f})"
+                "Center detection (IntensityCenter)    : ({:.3f}, {:.3f})"
 
         # (7) Plot results (if required) --------------------------------------
         if plot_results == 1:
@@ -1874,7 +1869,7 @@ class CenterDetermination:
         ## (4) User information -----------------------------------------------
         if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = \
-                "Center Determination (HoughTransform) : ({:.3f}, {:.3f})".\
+                "Center Detection (HoughTransform)     : ({:.3f}, {:.3f})".\
                     format(self.x, self.y)
     
         ## (5) Final plot with all detected circles (if enabled) --------------
@@ -2058,7 +2053,8 @@ class CenterDetermination:
         # Print the result if verbose are enabled
         if self.parent.verbose or self.parent.final_print:
             self.parent.dText = (
-                f"Center Determination (CurveFitting) :   ({self.x:.3f}, {self.y:.3f})"
+                "Center detection (CurveFitting)       :"
+                + f" ({self.x:.3f}, {self.y:.3f})"
                 + (" [fallback]" if used_fallback else "")
             )
             
@@ -2133,7 +2129,7 @@ class CenterDetermination:
         # (3) User information ------------------------------------------------
         instructions = dedent(
             """
-            CenterDetermination :: ThreePoints (semi-automated method)
+            CenterDetection :: ThreePoints (semi-automated method)
             Select 3 points to define a diffraction circle using keys:
               - '1' : define a point at current cursor position
               - '2' : delete the last point
@@ -2428,7 +2424,7 @@ class CenterDetermination:
         if (self.parent.verbose==1 or self.parent.verbose==2):
             instructions = dedent(
             """
-            CenterDetermination :: ThreePoints (interactive adjustment)
+            Centerdetection :: ThreePoints (interactive adjustment)
             Use these keys:
               - '←' : move left
               - '→' : move right
@@ -2556,7 +2552,8 @@ class CenterDetermination:
 
         # User information:
         if (self.parent.verbose or self.parent.final_print):
-            self.parent.dText = "Center Determination (ThreePoints)    : ({:.3f}, {:.3f})"
+            self.parent.dText = (
+                "Center Detection (ThreePoints)        : ({:.3f}, {:.3f})")
         
     
         return xy[0], xy[1], r
@@ -2570,8 +2567,8 @@ class CenterDetermination:
 
         Given three user-defined points (typically on a diffraction ring), this 
         method computes the center and radius of the circle that passes through 
-        them. Optionally, it visualizes the result including the circle, center, 
-        and selected points overlaid on the image.
+        them. Optionally, it visualizes the result including the circle,
+        center, and selected points overlaid on the image.
 
         Parameters
         ----------
@@ -3172,7 +3169,7 @@ class CenterRefinement:
         
             if refinement == "manual":
                 # Manual refinement method
-                if parent.determination == 'manual':
+                if parent.detection == 'manual':
                     self.xx, self.yy, self.rr = \
                         par_short.x, par_short.y, par_short.r
                     par_short.x, par_short.y = \
@@ -3180,7 +3177,7 @@ class CenterRefinement:
                     if (self.parent.verbose or self.parent.final_print):
                         self.parent.rText = \
                             "Center Refinement (Interactive)       : ({:.3f}, {:.3f})"
-                elif parent.determination == 'intensity':
+                elif parent.detection == 'intensity':
                     self.yy, self.xx, self.rr = self.ref_interactive(
                         par_short.y, par_short.x, par_short.r)
                 else:
@@ -3234,11 +3231,11 @@ class CenterRefinement:
             
         circle : matplotlib.patches.Circle
             The circle object known from
-            the previous step = from the center determination.
+            the previous step = from the center detection.
             
         center : tuple
             The initial (x, y) center coordinates from
-            the previous step = from the center determination.
+            the previous step = from the center detection.
             
         plot_results : bool, optional, default=False
             If True, the results of the adjustment are visualized.
@@ -4019,7 +4016,7 @@ class PocketFFTBackend:
         
 class IntensityCenter: 
     '''
-    Simple center determination for a symmetric diffractogram.
+    Simple center detection for a symmetric diffractogram.
     
     * The center is determined as a center of intensity.
     * This works well for simple, symmetric diffraction patters, which are:
@@ -4031,18 +4028,18 @@ class IntensityCenter:
       The functions in this class can be (and should be)
       replaced by a simple call of ediff.center.CenterLocator object.
       
-    >>> # Center determination in a simple symmetric diffraction pattern
+    >>> # Center detection in a simple symmetric diffraction pattern
     >>> # (center = just center_of_intensity, no refinement
     >>>
     >>> # (1) Old way = this IntensityCenter class:
-    >>> # (old, legacy method; just center determination, no refinement
+    >>> # (old, legacy method; just center detection, no refinement
     >>> xc,yc = ediff.center.IntensityCenter.center_of_intensity(
     >>>     arr, csquare=30, cintensity=0.8)
     >>>
     >>> # (2) New way = CenterLocator class:
     >>> # (newer, more universal, with center refinement and other options
     >>> xc,yc = ediff.center.CenterLocator(arr,
-    >>>     determination='intensity',
+    >>>     detection='intensity',
     >>>     refinement='sum', 
     >>>     csquare=30, cintensity=0.8)
     '''
