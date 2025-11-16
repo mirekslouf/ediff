@@ -309,7 +309,7 @@ class Calculate:
         else:
             sys.exit('Microscope params - camera length is missing!')
         if (camera_pixel_size_um is None) and (microscope is not None):
-            camera_pixel_size_um = microscope.camera_pixel_size
+            camera_pixel_size_um = microscope.camera_pixel_size_um
         else:
             sys.exit('Microscope params - camera pixel size is missing!')
         if (binning is None) and (microscope is not None):
