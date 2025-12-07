@@ -36,7 +36,7 @@ Quick start
   shows the EDIFF package in action.
 * [Help on GitHub](https://mirekslouf.github.io/ediff/docs/)
   with complete
-  [online documentation](https://mirekslouf.github.io/ediff/docs/pdoc.html/ediff.html)
+  [package documentation](https://mirekslouf.github.io/ediff/docs/pdoc.html/ediff.html)
   and
   [additional examples](https://drive.google.com/drive/folders/1QXs6KyLu9JkMq7UQ-q2TDFPcPIICgoHE?usp=sharing).
 
