@@ -4,8 +4,9 @@ Module: ediff.io
 Input/output functions for package EDIFF.    
 '''
 
-from PIL import Image
 import numpy as np
+import pandas as pd
+import skimage as ski
 import matplotlib.pyplot as plt
 import ediff.radial
 
@@ -69,13 +70,13 @@ class Diffractogram:
     '''
     
     
-    def read(diffractogram, itype=None):
+    def read(image, itype=None):
         '''
         Read 2D diffraction pattern (=grayscale image) into 2D numpy array.
         
         Parameters
         ----------
-        diffractogram : string or path-like object or numpy array
+        image : string or path-like object or numpy array
             Name of image that should read into numpy 2D array
             or directly the 2D numpy array representing the diffractogram.
         itype : string ('8bit'  or '16bit')
@@ -88,12 +89,12 @@ class Diffractogram:
         '''
         
         # Test the input type
-        if type(diffractogram) == np.ndarray:
+        if isinstance(image, np.ndarray):
             # Diffractogram is an array - just assign to arr variable.
-            arr = diffractogram
+            arr = image
         else:
             # Diffractogram is not an array - we expect a grayscale image.
-            img = Image.open(diffractogram)
+            img = ski.io.imread(image)
             if itype=='8bit':
                 arr = np.asarray(img, dtype=np.uint8)
             else:
@@ -102,8 +103,8 @@ class Diffractogram:
         return(arr)
 
 
-    def show(diffractogram, icut=None, origin=None, 
-             title=None, output_file=None, output_file_dpi=300):
+    def show(diffractogram, title=None, icut=None, 
+             origin=None, out_file=None, out_dpi=300):
         '''
         Show/plot 2D diffraction pattern.
 
@@ -113,6 +114,8 @@ class Diffractogram:
             A numpy.array object representing a 2D diffractogram image.
             In EDIFF,
             this array is usually obtained by ediff.ioi.read_image function.
+        title : str, optional, default is None
+            If given, then it is the title of the plot.
         icut : integer, optional, default is None
             Upper limit of intensity shown in the diffractogram.
             The argument *icut* is used as *vmax* in plt.imshow function.
@@ -122,12 +125,10 @@ class Diffractogram:
             If the argument is None, we follow the Matplotlib default,
             which is *origin*='upper' = [0,0] in the upper left corner.
             Alternative: *origin*='lower' = [0,0] is in the lower left corner.
-        title : str, optional, default is None
-            If given, then it is the title of the plot.
-        output_file : str, optional, default is None
+        out_file : str, optional, default is None
             Name of the output file.
             If the argument is not None, the plot is saved to *output_file*.
-        output_file_dpi : int, optional, default is 300
+        out_dpi : int, optional, default is 300
             Resolution of the output file.
 
         Returns
@@ -149,8 +150,8 @@ class Diffractogram:
         plt.tight_layout()
         
         # (3) Save the plot if requested
-        if output_file is not None:
-            plt.savefig(output_file, dpi=output_file_dpi)
+        if out_file is not None:
+            plt.savefig(out_file, dpi=out_dpi)
         
         # (4) Show the plot
         plt.show()
@@ -163,24 +164,23 @@ class Profile:
     * A class with two funcs (read, show); show func can be used for saving.
     * Assumption: the profile is a numpy array or text file in EDIFF format. 
     '''
+
     
-    def read(profile):
+    def read(profile, pformat='numpy'):
         '''
         Read the ELD or XRD profile in EDIFF format.
     
-        * More info about ELD/XRD profiles in EDIFF
-          => see the section *Technical notes* below.
-    
         Parameters
         ----------
-        profile : str or numpy.array
+        profile : str or numpy.array or pandas.DataFrame
             
             * If profile = str,
-              we assume a filename
-              of the file with ELD or XRD profile in EDIFF format.
-            * If profile = numpy.array,
-              we assume a 2D-array
-              containing ELD or XRD profile in EDIFF format.
+              we assume that it is a filename
+              of the file with ELD or XRD profile in EDIFF format,
+              depending on pformat argument (older 'numpy' or newer 'pandas').
+            * In other cases,
+              we assume that it is an object
+              in the format given by *pformat* ('numpy' or 'pandas').
     
         Returns
         -------
@@ -191,27 +191,27 @@ class Profile:
         
         Technical notes
         ---------------
-        * ELD profile = 1D radially averaged
-          powder electron diffraction pattern
-            - in EDIFF, it is obtained from an experimental 2D difractogram
-        * XRD profile = 1D powder X-ray diffraction pattern
-            - in EDIFF, it is calculated from a standard CIF file
-              = Crystallographic Information File
-        * EDIFF format of ELD and XRD profiles employed in EDIFF package
-            - ELD and XRD profiles can come in the form of files or np.arrays
-            - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
-            - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
-            - ELD profile = 3 cols = distance, intensity, bkgr-corrected-intsty
-                - ELD {distance} = {distance-from-the-diffractogram center}
-                - The {distance} in pixels or q-vect (before/after calibration)
-        * EDIFF calculation of ELD and XRD profiles is best seen from examples:
-            - https://mirekslouf.github.io/ediff/docs -> worked examples
+        TODO :: this function is in a provisional state.
+        
+        * Later the whole program should be adjusted
+          to read/save profiles as pandas.DataFrames reproducibly.
         '''
-        if type(profile)==np.ndarray:
+        
+        if isinstance(profile, str):
+            # The profile is str => filename => read acc.to pformat argument
+            if pformat == 'numpy':
+                arr = np.loadtxt(profile, unpack=True)
+                return(arr)
+            else:
+                df = pd.read_csv(profile, sep=r'\s+')
+                return(df)
+        elif isinstance(profile, np.ndarray):
+            # The profile is array => return the array
             return(profile)
-        else:
-            profile = np.loadtxt(profile, unpack=True)
+        elif isinstance(profile, pd.DataFrame):
+            # The profile is DataFrame => return the DataFrame
             return(profile)
+
 
     def show(Xvalues, Yvalues, Xlabel, Ylabel, Xrange, Yrange,
         title=None, output_file=None, output_file_dpi=300):

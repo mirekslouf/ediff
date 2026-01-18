@@ -2,40 +2,35 @@
 Module: ediff.pcryst
 --------------------
 
-Calculate polycrystalline/powder diffraction patterns.
+Process polycrystalline/powder diffraction patterns.
 
-* Theoretical powder diffractograms are usually calculated from CIF files.
-* The short demo how to perform the calculation with ediff is shown below.
-* More details and examples at GitHub: https://mirekslouf.github.io/ediff/docs
+* XRD powder diffractograms are *calculated* from a structure or CIF-file.
+* ELD powder diffractograms are *converted* from 2D images to 1D profiles.
+* Note: XRD/PXRD = (powder) X-ray diffraction; ELD = electron diffraction.
 
->>> # EDIFF/PCRYST module ::calculate diffraction pattern of NaCl
->>> 
->>> import ediff.pcryst
->>>
->>> # [0] Crystal structure is usually defined
->>> # by means of CIF = Crystallographic Information File.
->>> # CIFs can be downloaded from: https://www.crystallography.net
->>> CIF_FILE = r'./nacl_1000041.cif'
->>> 
->>> # [1] Crystal, experimental and plot parameters
->>> # are defined as objects XTAL, EPAR, and PPAR, respectively.
->>> XTAL = ediff.pcryst.Crystal(structure=CIF_FILE, temp_factors=0.8)
->>> EPAR = ediff.pcryst.Experiment(wavelength=0.71, two_theta_range=(5,120))
->>> PPAR = ediff.pcryst.PlotParameters(x_axis='q', xlim=(1,10))
->>> 
->>> # [2] PXRDcalculation object
->>> # calculates PXRD when called/initialized
->>> # and contains the results for further processing.
->>> CALC = ediff.pcryst.PXRDcalculation(XTAL,EPAR,PPAR, peak_profile_sigma=0.1)
->>> 
->>> # [3] Show/save CALCulation results.
->>> # (it is quite Ok to use the default settings of EDIFF package
->>> # (for more advanced plotting you can use the saved results + arbitrary SW
->>> CALC.print_diffractions()
->>> CALC.save_diffractions('nacl_pxrd.py.diff')
->>> CALC.plot_diffractogram('nacl_pxrd.py.png')
->>> CALC.save_diffractogram('nacl_pxrd.py.txt') 
+Key classes in this module:
+    
+* ediff.pcryst.XRD_polycrystal =
+  calculation of a *theoretical* powder X-ray diffraction pattern.
+* ediff.pcryst.ELD_polycrystal =
+  processing of an *experimental* 2D powder electron diffration pattern.
+* ediff.pcryst.Comparison =
+  comparison of the XRD and ELD profiles from the previous two steps/classes.
+
+List of all classes in this module:
+
+* Crystal, SimuParams, PlotParams, PeakProfile
+  = classes that define parameters for PXRDcalculation
+* PXRDcalculation
+  = basic calculation of theoretical XRD difractogram (basic API)
+* PXD_polycrystal
+  = complete calculation of theoretical XRD diffratogram (object API)
+* ELD_polycrystal
+  = complete processing of experimental ELD pattern (object-oriented API)
+* Comparison
+  = final comparison of the processed XRD and ELD profiles.
 '''
+
 
 import sys
 import numpy as np
@@ -44,6 +39,10 @@ import matplotlib.pyplot as plt
 from scipy.signal import convolve as spConvolve
 from pymatgen.core.structure import Structure as pmStructure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator as pmXRDCalculator
+
+import ediff.io
+import ediff.center
+import ediff.pcryst
 
 
 class Crystal:
@@ -195,10 +194,9 @@ class Crystal:
         return(elements_with_temp_factors)
 
 
-
-class Experiment:
+class SimuParams:
     '''
-    Define experimental parameters.
+    Define simulation parameters = params for theoretical PXRD calculations.
     
     Parameters
     ----------
@@ -208,22 +206,51 @@ class Experiment:
     two_theta_range: list/tuple of two floats
         Minimal and maximal diffraction angle;
         both values are TwoTheta angle in [deg] (for given *wavelength*).
+    peak_profile : ediff.pcryst.PeakProfiles object, optional
+        Profile of the calculated diffraction peaks.
+        The default is ediff.pcryst.PeakProfiles.pseudo_voigt.
+        This default is suitable for common calculations
+        and does not have to be changed (in great majority of cases).
+    peak_profile_sigma : float, optional, the default is 0.03
+        Width of the calculated diffraction peaks.
+        The default = 0.03 is suitable for most of common calculations
+        and corresponds to the default in older PowderCell program.
+        For overlapping peaks it may be slightly decreased,
+        while for more realistic diffractograms it may be slightly increased.  
     '''
 
-
-    def __init__(self, wavelength, two_theta_range):
+    def __init__(self, wavelength, two_theta_range, 
+                 peak_profile = None, peak_profile_sigma = 0.03):
         '''
         * Initialize Experimental object.
         * The parameters are described above in class definition.
         '''
+        
+        # Initialize the first two parameters
         self.wavelength = wavelength
         self.two_theta_range = two_theta_range
 
+        # Initialize the third parameters
+        # ! TRICK: default should be PeakProfiles.pseudo_voigt
+        #   BUT at the time of importint this is not fully known
+        #   SOLUTION (recommended by AI): we use None as default value
+        #   ...and decide later (=after import) if we replace it with default
+        if peak_profile is not None:
+            self.peak_profile = peak_profile
+        else:
+            self.peak_profile = PeakProfiles.pseudo_voigt
+        
+        # Initialize the last/remaining parameter
+        self.peak_profile_sigma = peak_profile_sigma
+                    
 
-
-class PlotParameters:
+class PlotParams:
     '''
-    Define local+global parameters for plotting.
+    Define parameters for plotting within PXRDcalculation class.
+    
+    * This is a very simple class.
+    * It is employed when initializing PXRDcalculation object.
+    * It is kept for convenience, old scripts and backward compatibility.
     
     Parameters
     ----------
@@ -234,14 +261,10 @@ class PlotParameters:
         During the processing, the data are adjusted according this argument.
     xlim : tuple of two numbers
         Range of X-axis = xlim parameter from matplotlib.pyplot.
-    rcParams : dict; optional, the default is empty dictionary {}
-        The dictionary should have the format of mathplotlib.pyplot.rcParams.
-        The argmument is passed to matplotlib.pyplot.rcParams.update.
-        This enables to override current rcParams, if necessary.
     '''
     
 
-    def __init__(self, title=None, x_axis='q', xlim=None, rcParams={}):
+    def __init__(self, title=None, x_axis='q', xlim=None):
         '''
         * Initialize PlotParameters object.
         * The parameters are described above in class definition.
@@ -251,8 +274,6 @@ class PlotParameters:
         self.title = title
         self.x_axis = x_axis
         self.xlim = xlim
-        if rcParams: plt.rcParams.update(rcParams)
-       
 
 
 class PeakProfiles:
@@ -355,75 +376,144 @@ class PeakProfiles:
 
 class PXRDcalculation:
     '''
-    Define calculation of PXRD = powder X-ray diffraction pattern.
+    Class yielding PXRDcalculation object.
     
-    Parameters
-    ----------
-    crystal : ediff.pcryst.Crystal object
-        This object is usually prepared in advance
-        as an instance of ediff.pcryst.Crystal class.
-    experiment : ediff.pcryst.Experiment object
-        This object is usually prepared in advance
-        as an instance of ediff.pcryst.Experiment class.        
-    plot_parameters : ediff.pcryst.PlotParameters object
-        This object is usually prepared in advance
-        as an instance of ediff.pcryst.PlotParameters class.
-    peak_profile_sigma : float, optional, the default is 0.03
-        Width of the calculated diffraction peaks.
-        The default = 0.03 is suitable for most of common calculations
-        and corresponds to the default in older PowderCell program (n*FWHM=7).
-        For overlapping peaks it may be slightly decreased,
-        while for more realistic diffractograms it may be slightly increased. 
-    peak_profile_type : None or ediff.cryst.PeakProfiles object, optional
-        Profile of the calculated diffraction peaks.
-        The default is PeakProfiles.pseudo_voigt.
-        This default is suitable for common calculations
-        and does not have to be changed (in great majority of cases).
+    * PXRDcalculation object = calculated powder X-ray difractogram/profile.
+    * Based on: https://pymatgen.org/pymatgen.analysis.diffraction.html
+    * Adjusted to provide simple, user-friendly API, as shown below.
+    * Even simpler API: see ediff.pcryst.XRD_polycrystal class.
     '''
-
-    
-    def __init__(self, crystal, experiment, plot_parameters,      
-                 peak_profile_sigma = 0.03,
-                 peak_profile_type = PeakProfiles.pseudo_voigt):
+   
+    def __init__(self, crystal, 
+                 simu_parameters, plot_parameters, peak_profile_sigma = None):
         '''
-        Initialize PXRDcalcualtion object.
-        The parameters are described above in class definition.
+        Initialize PXRDcalculatin object.
+        
+        Parameters
+        ----------
+        crystal : ediff.pcryst.Crystal object
+            This object is usually prepared in advance
+            as an instance of ediff.pcryst.Crystal class.
+        simu_parameters : ediff.pcryst.Simu_params object
+            This object is usually prepared in advance
+            as an instance of ediff.pcryst.Simu_params class.        
+        plot_parameters : ediff.pcryst.PlotParameters object
+            This object is usually prepared in advance
+            as an instance of ediff.pcryst.PlotParameters class.
+        peak_profile_sigma : float, optional, the default is None
+            Width of the calculated diffraction peaks.
+            If the parameter is not given,
+            the default from the simu parameters is used.
+            See ediff.pcryst.SimuParams class for details. 
+        
+        Returns
+        -------
+        PXRDcalulation object
+            The object can be used to show/save diffraction
+            or the whole diffraction pattern, as shown below.
+            Even easier API is provided by ediff.pcryst.XRD_polycrystal class.
+        
+        Example
+        -------
+        >>> # EDIFF :: calculate diffraction pattern of NaCl
+        >>>
+        >>> import ediff.pcryst as pcryst
+        >>>
+        >>> # [0] Crystal structure is usually defined
+        >>> # by means of CIF = Crystallographic Information File.
+        >>> # CIFs can be downloaded from: https://www.crystallography.net
+        >>> CIF_FILE = r'./nacl_1000041.cif'
+        >>> 
+        >>> # [1] Crystal, experimental and plot parameters
+        >>> # are defined as objects XTAL, EPAR, and PPAR, respectively.
+        >>> XTAL = pcryst.Crystal(structure=CIF_FILE, temp_factors=0.8)
+        >>> SPAR = pcryst.SimuParams(wavelength=0.71, two_theta_range=(5,120))
+        >>> PPAR = pcryst.PlotParams(x_axis='q', xlim=(1,10))
+        >>> 
+        >>> # [2] PXRDcalculation object
+        >>> # calculates PXRD when called/initialized
+        >>> # and contains the results for further processing.
+        >>> CALC = pcryst.PXRDcalculation(
+        >>>     XTAL,SPAR,PPAR, peak_profile_sigma=0.1)
+        >>> 
+        >>> # [3] Show/save CALCulation results.
+        >>> # (it is quite Ok to use the default settings of EDIFF package
+        >>> # (more advanced plotting => use saved results + arbitrary SW
+        >>> CALC.print_diffractions()
+        >>> CALC.save_diffractions('nacl_pxrd.py.diff')
+        >>> CALC.plot_diffractogram('nacl_pxrd.py.png')
+        >>> CALC.save_diffractogram('nacl_pxrd.py.txt') 
         '''
+        
+        # Key parameters
         self.crystal = crystal
-        self.experiment = experiment
+        self.simu_parameters = simu_parameters
         self.plot_parameters = plot_parameters
-        self.peak_profile_sigma = peak_profile_sigma
-        self.peak_profile_type = peak_profile_type 
-        self.diffractions = self.calculate_diffractions()
-        self.diffractogram = self.calculate_diffractogram()
+        
+        # 
+        if peak_profile_sigma is not None:
+            self.peak_profile_sigma = peak_profile_sigma
+            self.simu_parameters.peak_profile_sigma = peak_profile_sigma
+        else:
+            self.peak_profile_sigma = self.simu_parameters.peak_profile_sigma
+        
+        # Calculate diffractions
+        # (PyMatGen calculation = call adjusted external function
+        self.diffractions = self._calculate_diffractions()
+        
+        # Calclate whole diffraction profile
+        # (our own calculation = diffractions convoluted with peak_profile
+        # (peak_profile parameters are defined within sumu_parameters
+        self.profile = self._calculate_diffraction_profile()
 
-
-    def calculate_diffractions(self):
+    def _calculate_diffractions(self):
+        # Private method.
+        # During the initialization,
+        #  this method calculates diffractions by means of PyMatGen.
+        # The calculated diffractions
+        #  are saved in self.diffractions
+        #  and used in the next step of the initialization
+        #  to calculate diffraction profile, which is saved in self.profile.
+        # -----
+        
         # (1) Calculate intensities
         calculation = pmXRDCalculator(
-            wavelength = self.experiment.wavelength,
+            wavelength = self.simu_parameters.wavelength,
             debye_waller_factors=(self.crystal.temp_factors))
         diffractions = calculation.get_pattern(
             self.crystal.structure,
-            two_theta_range = self.experiment.two_theta_range)
+            two_theta_range = self.simu_parameters.two_theta_range)
+        
         # (2) Transform diffractions: PyMatGen structure => pd.DataFrame
-        diffractions_df = self.diffractions_to_dframe(diffractions)
+        diffractions_df = self._diffractions_to_dframe(diffractions)
+        
         # (3) Return calculated diffractions
         # (pandas.DataFrame with cols: TwoTheta, h,k,l, dhkl, S, q, Intensity
         return(diffractions_df)
         
 
-    def calculate_diffractogram(self):
+    def _calculate_diffraction_profile(self):
+        # Private method.
+        # During the initialization,
+        #  this method calculates diffraction profile from self.diffractions.
+        # The calculation does not need PyMatGen any more:
+        #  - PyMatGen is employed only in calculation of self.diffractions
+        #  - the self.profile is calculated by *convolution*
+        #    of self.diffractions and self.peak.profile_type
+        # -----
+        
+        # The method calculates 
         # (1) Base diffraction profile
         # = diffractogram with zero intensities
         # = interval theta_min to theta_max with step=0.001, zero intensities
-        th1,th2 = th1,th2 = self.experiment.two_theta_range
+        th1,th2 = th1,th2 = self.simu_parameters.two_theta_range
         numpoints = (th2-th1) * 100 + 1
         diffractogram_2theta = np.linspace(th1, th2, numpoints, endpoint=True)
         diffractogram_intensity = np.zeros(len(diffractogram_2theta))
         df = pd.DataFrame(
             np.transpose([diffractogram_2theta, diffractogram_intensity]),
             columns=['TwoTheta','Intensity'])
+        
         # (2) Line diffraction pattern
         # = diffractogram with line intensities
         # (2a) read diffractions, rounded to 3 dec.places ~ step 0.001
@@ -435,18 +525,20 @@ class PXRDcalculation:
             index = int(round((two_theta - th1) * 100))
             # insert the diffraction intensity at calculated position
             df.Intensity[index] = intensity
+        
         # (3) Simulated diffraction profile
         # = diffractogram with intensity profiles
         # (3a) Is peak_profile_type defined?
         # (Argument {peak_profile_type} has default value - pseudo_voight
         # (Therefore, it should be defined unless user specifies None value
-        if self.peak_profile_type == None:
+        if self.simu_parameters.peak_profile == None:
             print('Error: peak_profile_type is not defined!')
             sys.exit()
         # (3b) The peak_peak_profile_type is defined => calculate difractogram
         # Precalculate peak profile
         X = np.linspace(-10,10,2001,endpoint=True)
-        peak_profile = self.peak_profile_type(X,0,self.peak_profile_sigma)    
+        peak_profile = self.simu_parameters.peak_profile(
+            X, 0, self.simu_parameters.peak_profile_sigma)    
         peak_profile = peak_profile/np.max(peak_profile)
         # Convolve Intensities with PeakProfile
         df.Intensity = spConvolve(df.Intensity,peak_profile, mode='same')
@@ -455,220 +547,39 @@ class PXRDcalculation:
         # (as spConvolve defined above keeps the original normalization,
         # (but the normalization to 1 is convenient for further processing.
         df.Intensity = df.Intensity/np.max(df.Intensity)
-        # (4) Final diffraction profile
-        # = diffraction profile with additional columns (S,q)
-        # = original cols (TwoTheta, Intensity) => (TwoTheta,S,q,Intensity)
-        df = self.add_diffraction_vectors_to_diffractogram(df)
-        # (5) Return diffractogram
+        
+        # (4) Add columns with diffraction vectors (S, q)
+        # (the calculated profile has two columns: TwoTheta, Intensity
+        # (now we insert two additional cols to get: TwoTheta, S, q, Intensity
+        # ---
+        # Prepare wavelenght (just shortcut for convenience)
+        wavelength = self.simu_parameters.wavelength
+        # Insert a column with the calculated values of diffration vector S
+        df.insert(loc = 1, column = 'S',
+            value = 2*np.sin(df.TwoTheta/2*np.pi/180) / wavelength)
+        # Insert a column with the calculated values of difraction vector q
+        df.insert(loc = 2, column = 'q', 
+            value = 2*np.pi * df.S)
+
+        # (5) Return diffractogram = the whole diffraction profile
         return(df)
         
-
-    def print_diffractions(self):
-        '''
-        Print the calculated diffractions to stdout.
-        '''
-        table = PXRDcalculation.dframe_to_table(self.diffractions)
-        print(table)
-            
-
-    def save_diffractions(self, output_file):
-        '''
-        Save the calculated diffractions to *output_file*.
-        
-        Parameters
-        ----------
-        output_file : str
-            Name of the output file.
-
-        Returns
-        -------
-        None; the output is the list of diffractions in the *output_file*.
-        '''
-        try:
-            with open(output_file, 'w') as fh:
-                table = PXRDcalculation.dframe_to_table(self.diffractions)
-                print(table, file=fh)
-        except:
-            print(f'Error saving diffractions to {output_file}!')
     
-
-    def plot_diffractions(self, outfile=None):
-        '''
-        Plot the calculated diffractions.
+    @staticmethod
+    def _diffractions_to_dframe(intensities):
+        # Private method.
+        #  Converts the calculated PyMatGen structure (intensities)
+        #  to standard DataFrame (which is then saved in self.diffractions).
+        # -----
         
-        Parameters
-        ----------
-        outfile : str, optional, the default is none
-            Name of the output file.
-            If not given, the plot is just shown, but not saved.
-
-        Returns
-        -------
-        None
-            The output is the plot on the screen (and outfile).
-            This function plots just diffraction intensities,
-            not profiles.
-            Use ediff.pcryst.plot_diffractions
-            for diffractogram with intensity profiles.
-        '''
-        
-        # (1) Make local copies of pre-defined parameters (just convenience)
-        df      = self.diffractions
-        x_axis  = self.plot_parameters.x_axis
-        
-        # (2) Prepare the plot
-        plt.vlines(df[x_axis],0,df.Ihkl, lw=2)
-        
-        # (3) Set plot details
-        # (external function, common to diffractions and diffractogram plots
-        self.set_plot_details(x_axis)
-        
-        # (4) Save/show the plot...
-        # In Spyder: plot is always shown
-        # In CLI: plot is saved (if outfile is defined) or it is just shown
-        if outfile != None: 
-            plt.savefig(outfile) 
-        else:
-            plt.show()
-        
-
-    def plot_diffractions_with_indexes(self, output_file=None, two_theta=None):
-        '''
-        Plot indexed diffractions.
-        
-        * This function (usually) creates an interactive plot.
-        * **In CLI** (command line) - the plot is interactive automatically.
-        * **In Spyder or Jupyter** - type the following *magic commands*:
-            * BEFORE running (switch on the interactive mode): %matplotlib qt
-            * AFTER running (back to non-interactive mode): %matplotlib inline
-            * In Spyder, the commands are typed in the Console window.
-            * In Jupyter, the commands are usually typed in separate cells.
-        
-        Parameters
-        ----------
-        output_file: str, optional, default is None
-            If the argument is not None, the output is saved to {output_file}.
-        two_theta: tuple of two floats, optional, default is None
-            If the argument is not None, the plot uses the given two_theta
-            range.
-            If the argument is None, the plot takes the two_theta_range
-            from the (previously defined) ediff.pcryst.Experiment object.
-            
-        Returns
-        -------
-        None
-            The output is the plot in the screen or in the {output_file}.
-            In a typical case, the plot is interactive
-            so that the indexed diffractions could be inspected in detail.
-        
-        Technical note
-        --------------
-        * This function is usually called as a PXRDcalculation object method.
-            - Additional parameters are usually not needed.
-            - {output_file} and {theta_range} can modify default plot params.
-        * The code below uses (sligthly modified) PyMatGen functions.
-            - Reason: PyMatGen plots with diffraction indexes are quite good.
-            - Re-programing would be quite difficult, boring, and useless.
-        '''
-        # (0) Redefine plot parameters
-        # (so that they were optimized for the interactive plot
-        original_rcParams = plt.rcParams
-        plt.rcParams.update({
-            'figure.figsize'  : (12/2.54,4/2.54),
-            'figure.dpi'      : 200,
-            'font.size'       : 6})
-        # (1) Calculate diffractions
-        # (re-calculation in order to get the original PyMatGen xrd object
-        # (the xrd object can be employed to plot diffractions with indexes
-        xrd = pmXRDCalculator(
-            wavelength = self.experiment.wavelength,
-            debye_waller_factors=(self.crystal.temp_factors))
-        # (2) Create plot with indexes
-        # (trick: we create figure and axes (fig,ax)
-        # (and instruct PyMatGen to plot in pre-defined axes
-        # (a) prepare fig,ax
-        fig,ax = plt.subplots()
-        # (b) prepare two_theta range 
-        if two_theta is None: two_theta = self.experiment.two_theta_range
-        # (c) create the plot using the parameters from (a,b) 
-        xrd.get_plot(
-            structure = self.crystal.structure,
-            two_theta_range=two_theta,
-            annotate_peaks='compact', ax=ax, fontsize=6)
-        # (3) Ex-post changing line properties in plt.plot
-        # https://stackoverflow.com/q/41709257
-        for line in ax.get_lines():
-            line.set_color('orange')
-        ax.set_xlabel('2theta [deg]')
-        ax.set_ylabel('Intensity')
-        ax.grid()
-        # (4) Set higher number of ticks on X-axis
-        # Trick #1: major ticks => higher MaxNLocator to get dense ticks
-        # Trick #2: minor ticks => import special class for them
-        ax.xaxis.set_major_locator(plt.MaxNLocator(15, steps=[1,2,5,10] ))
-        from matplotlib.ticker import AutoMinorLocator
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        # (5) Final adjustments
-        fig.tight_layout()
-        # (6) Show  or save the plot, depending on output_file argument
-        # (note: default is output_file=None => plot is shown, not saved
-        # (reason: this func is usually used for interactive plots
-        if output_file is None:
-            plt.show()
-        else:
-            plt.savefig(output_file, dpi=300)
-        # (7) Revert to original rcParams.
-        plt.rcParams.update(original_rcParams)
-        
-
-    def print_diffractogram(self):
-        self.print_diffractions()
-        print('-----')
-        print('* Just diffraction intensities, not the whole pattern.')
-        print('* Reason: the whole diffraction pattern is too long.')
-        print('* Use save_diffractogram func save the pattern to a file.')
-    
-
-    def save_diffractogram(self, outfile):
-        my_title = 'Calculated PXRD diffractogram\n'
-        np.savetxt(
-            outfile,
-            np.array(self.diffractogram),
-            fmt = ['%6.2f','%8.4f','%8.4f','%8.4f'],
-            header = my_title + 
-                'Columns: TwoTheta[deg], S[1/A], q[1/A], Intensity')
-    
-
-    def plot_diffractogram(self, outfile, x_axis='q', dpi=300):
-        
-        # (1) Make local copies of pre-defined parameters (just convenience)
-        df     = self.diffractogram
-        x_axis = self.plot_parameters.x_axis
-        
-        # (2) Prepare the plot
-        plt.plot(df[x_axis],df.Intensity)
-        
-        # (3) Set plot details
-        # (external function, common to diffractions and diffractogram plots
-        self.set_plot_details(x_axis)
-        
-        # (4) Save/show the plot...
-        # In Spyder: plot is always shown
-        # In CLI: plot is saved (if outfile is defined) or it is just shown
-        if outfile != None: 
-            plt.savefig(outfile, dpi=dpi) 
-        else:
-            plt.show()
-
-        
-    @staticmethod    
-    def diffractions_to_dframe(intensities):
         # Prepare hkl indexes
         h = []; k = []; l = []
+        
         # Test if the structure is hexagonal
         hexagonal = (len(intensities.hkls[0][0]['hkl']) == 4)
         # ...and if the structure is hexagonal, prepare i-index (hkl) -> (hkil)
         if hexagonal: i = []
+        
         # Fill in hkl (or hkil) indexes
         for ints in intensities.hkls:
             h.append(ints[0]['hkl'][0])
@@ -678,6 +589,7 @@ class PXRDcalculation:
             else:    
                 i.append(ints[0]['hkl'][2])
                 l.append(ints[0]['hkl'][3])
+        
         # Create DataFrame from all values
         # (again, we have to consider hexagonal structures => hkil indexes
         if not(hexagonal):
@@ -696,11 +608,18 @@ class PXRDcalculation:
                 columns=['TwoTheta','h','k','i', 'l','dhkl','Ihkl'])
             df.insert(loc=6, column='S', value=1/df.dhkl)
             df.insert(loc=7, column='q', value=2*np.pi*df.S)
+        
+        # Return the final dataframe
         return(df)
 
     
     @staticmethod
-    def dframe_to_table(dframe):
+    def _diffractions_to_table(dframe):
+        # Private method.
+        #  Converts DataFrame with diffractions (saved in self.diffractions)
+        #  to table that suitable for printing (stdout) or saving (to a file).
+        # -----
+        
         # POZOR: parametr formatters je zaludny!
         # * musi to byt sada funkci, takze...
         #   NEfunguji string-formaty '%.3f' - nejsou to funkce
@@ -716,12 +635,17 @@ class PXRDcalculation:
         #   trik #2: NElze naformatovat obecny typ jako integer
         #     takze: pro obecne cislo misto NEfunkcniho {:3d} nutno {:3.0f}
         # ------
+        
         # Test if the structure is hexagonal
         hexagonal = (len(dframe.columns) == 9)
+        
+        # Different formatting for non-hexagonal and hexagonal structures.
+        # (reason: in PyMatGen, hexagonal structures use four-index notation
         if not(hexagonal):
             # (a) Non-hexagonal structure => hkl indexes (standard)
             table = dframe.to_string(
-                formatters={
+                index = False,
+                formatters = {
                     'TwoTheta' : '{:8.3f}'.format,
                     'h'        : '{:3.0f}'.format,
                     'k'        : '{:3.0f}'.format,
@@ -733,7 +657,8 @@ class PXRDcalculation:
         else:
             # (b) Hexagonal structure => hkil indexes (four, non-standard)
             table = dframe.to_string(
-                formatters={
+                index = False,
+                formatters = {
                     'TwoTheta' : '{:8.3f}'.format,
                     'h'        : '{:3.0f}'.format,
                     'k'        : '{:3.0f}'.format,
@@ -743,34 +668,46 @@ class PXRDcalculation:
                     'S'        : '{:7.3f}'.format,
                     'q'        : '{:7.3f}'.format,
                     'Ihkl'     : '{:9.3f}'.format})
+        
+        # Return the formated table
+        return(table)
+    
+    
+    @staticmethod
+    def _diffractogram_to_table(dframe):
+        # Private method.
+        #  Converts DataFrame with diffraction profile (saved in self.profile)
+        #  to table that suitable for saving (to a file).
+        # ------
+        
+        # Format the dataframe containing diffraction profile as table.
+        table = dframe.to_string(
+            index = False,
+            formatters = {
+                'TwoTheta'  : '{:7.2f}'.format,
+                'S'         : '{:9.5f}'.format,
+                'q'         : '{:9.5f}'.format,
+                'Intensity' : '{:7.4f}'.format})
+        
+        # Return the formated table
         return(table)
 
-
-    def add_diffraction_vectors_to_diffractogram(self, df):
-        # Prepare wavelenght (just shortcut for convenience)
-        wavelength = self.experiment.wavelength
-        # Insert a column with the calculated values of diffration vector S
-        df.insert(loc = 1,
-                  column = 'S',
-                  value = 2*np.sin(df.TwoTheta/2*np.pi/180) / wavelength)
-        # Insert a column with the calculated values of difraction vector q
-        df.insert(loc = 2,
-                  column = 'q',
-                  value = 2*np.pi * df.S)
-        # Return the modified/extended DataFrame
-        return(df)
-
-
-    def set_plot_details(self, x_axis):
-        # (1) Make local copies of pre-defined parameters (just convenience)
-        title   = self.plot_parameters.title
-        x_axis  = self.plot_parameters.x_axis
-        my_xlim = self.plot_parameters.xlim
-        # (2) Set plot title (only if it is defined)
+    
+    @staticmethod
+    def _set_plot_details(title, x_axis, xlim):
+        # Private method.
+        # ------
+        
+        # (1) Set plot title
+        # (only if it is defined
         if title != None: plt.title(title)
-        # (3) Set xlimits = xlim (only if they are defined)
-        if my_xlim != None: plt.xlim(my_xlim)
-        # (4) Determine label of x-axis = xlabel; it depends on x_axis argument
+        
+        # (2) Set xlimits = xlim
+        # (only if they are defined
+        if xlim != None: plt.xlim(xlim)
+        
+        # (3) Determine label of x-axis = xlabel.
+        # (this is always defined, as its default value is 'q'
         if (x_axis == 'q') or (x_axis == 'S'):
             xlabel_str = f'${x_axis}$' + r' [1/$\mathrm{\AA}$]'
         elif x_axis == 'TwoTheta':
@@ -779,6 +716,7 @@ class PXRDcalculation:
             xlabel_str = r'$d(hkl)$' + r' [$\mathrm{\AA}$]'
         else:
             print('X-axis - unknown quantity and units...')
+        
         # (4) Set the remaining plot details
         # (change Jupyter default transparent color to white
         plt.gcf().patch.set_facecolor('white')
@@ -787,3 +725,628 @@ class PXRDcalculation:
         plt.ylabel('Intensity')
         plt.grid()
         plt.tight_layout()
+
+
+    def print_diffractions(self):
+        '''
+        Print the calculated diffractions to stdout.
+        
+        Parameters
+        ----------
+        None
+            It just prints the (formatted) content of self.diffractions.
+        
+        Returns
+        -------
+        None
+            The output is printed on the screen/stdout.
+        '''
+        table = PXRDcalculation._diffractions_to_table(self.diffractions)
+        print(table)
+            
+
+    def plot_diffractions(self, outfile=None, dpi=300, 
+                          title=None, x_axis=None, xlim=None):
+        '''
+        Plot the calculated diffractions.
+        
+        Parameters
+        ----------
+        outfile : str, optional, the default is none
+            Name of the output file.
+            If not given, the plot is just shown, but not saved.
+        dpi : int, optional, default is 300
+            DPI of the output file.
+            Taken into account only if *output_file* is not None.
+        title : str, optional, default is None
+            Title of the plot.
+        x_axis : 'q' or 'S' or 'TwoTheta' or 'dhkl' or None
+            Optional parameter, default is None,
+            but the default used during initialization is 'q'.
+            If the default value is not changed here,
+            the initialization default will be employed and x_axis will be 'q'.
+        xlim : tuple of two floats or None, default is None
+            Optional parameter, default is None.
+            If given, it limits the x-range = x-limits of the plot.
+        
+        Returns
+        -------
+        None
+            The output is the plot on the screen (and outfile).
+            This function plots just diffraction intensities
+            at correct positions, not the whole diffraction profile.
+            To plot the whole diffraction profile,
+            i.e the difraction intensities convoluted with peak profiles,
+            use ediff.pcryst.plot_diffractions method.
+        '''
+        
+        # (0) Data to plot
+        df = self.diffractions
+        
+        # (1) Plot parameters
+        # (some might have been predefined during initialization => in self
+        # (some might have been re-defined during the call of this function
+        my_title  = title  or self.plot_parameters.title
+        my_x_axis = x_axis or self.plot_parameters.x_axis
+        my_xlim   = xlim   or self.plot_parameters.xlim
+        
+        # (2) Prepare the plot
+        plt.vlines(df[my_x_axis], 0, df['Ihkl'], lw=2)
+        
+        # (3) Set plot details
+        # (external function, common to diffractions and diffractogram plots
+        self._set_plot_details(my_title, my_x_axis, my_xlim)
+        
+        # (4) Save/show the plot...
+        # In Spyder: plot is always shown
+        # In CLI: plot is saved (if outfile is defined) or it is just shown
+        if outfile != None: 
+            plt.savefig(outfile, dpi=dpi) 
+        else:
+            plt.show()
+        
+
+    def save_diffractions(self, outfile):
+        '''
+        Save the calculated diffractions to *outfile*.
+        
+        Parameters
+        ----------
+        output_file : str
+            Name of the output file.
+
+        Returns
+        -------
+        None
+            The output is the list of diffractions in the *outfile*.
+        '''
+        try:
+            with open(outfile, 'w') as fh:
+                table = \
+                    PXRDcalculation._diffractions_to_table(self.diffractions)
+                print(table, file=fh)
+        except:
+            print(f'Error saving diffractions to {outfile}!')
+            
+
+    def plot_diffractogram(self, outfile=None, dpi=300,
+                           title=None, x_axis=None, xlim=None):
+        '''
+        Plot the calculated diffractogram = the comlete diffraction profile.        
+
+        Parameters
+        ----------
+        outfile : str, optional, the default is none
+            Name of the output file.
+            If not given, the plot is just shown, but not saved.
+        dpi : int, optional, default is 300
+            DPI of the output file.
+            Taken into account only if *output_file* is not None.
+        title : str, optional, default is None
+            Title of the plot.
+        x_axis : 'q' or 'S' or 'TwoTheta' or 'dhkl' or None
+            Optional parameter, default is None,
+            but the default used during initialization is 'q'.
+            If the default value is not changed here,
+            the initialization default will be employed and x_axis will be 'q'.
+        xlim : tuple of two floats or None, default is None
+            Optional parameter, default is None.
+            If given, it limits the x-range = x-limits of the plot.
+        
+        Returns
+        -------
+        None
+            The output is the plot on the screen (and outfile).
+        '''
+        
+        # (0) Data to plot
+        df = self.profile
+        
+        # (1) Plot parameters
+        # (some might have been predefined during initialization => in self
+        # (some might have been re-defined during the call of this function
+        my_title  = title  or self.plot_parameters.title
+        my_x_axis = x_axis or self.plot_parameters.x_axis
+        my_xlim   = xlim   or self.plot_parameters.xlim
+        
+        
+        # (2) Prepare the plot
+        plt.plot(df[my_x_axis], df['Intensity'])
+        
+        # (3) Set plot details
+        # (external function, common to diffractions and diffractogram plots
+        PXRDcalculation._set_plot_details(my_title, my_x_axis, my_xlim)
+        
+        # (4) Save/show the plot...
+        # In Spyder: plot is always shown
+        # In CLI: plot is saved (if outfile is defined) or it is just shown
+        if outfile != None: 
+            plt.savefig(outfile, dpi=dpi) 
+        else:
+            plt.show()
+
+
+    def save_diffractogram(self, outfile):
+        '''
+        Save the calculated diffarctogram = whole diff.profile to *outfile*.
+
+        Parameters
+        ----------
+        outfile : str
+            Name of the output file.
+
+        Returns
+        -------
+        None
+            The output is the complete diffraction profile saved in *outfile*.
+        '''
+        try:
+            with open(outfile, 'w') as fh:
+                table = \
+                    PXRDcalculation._diffractogram_to_table(self.profile)
+                print(table, file=fh)
+        except:
+            print(f'Error saving diffraction profile to {outfile}!')    
+
+
+    def plot_indexed_diffractions(self, output_file=None, two_theta=None):
+        '''
+        Plot diffractions with their dffraction indices.
+        
+        * This function (usually) creates an interactive plot.
+        * **In CLI** (command line) - the plot is interactive automatically.
+        * **In Spyder or Jupyter** - type the following *magic commands*:
+            * BEFORE running (switch on the interactive mode): %matplotlib qt
+            * AFTER running (back to non-interactive mode): %matplotlib inline
+            * In Spyder, the commands are typed in the Console window.
+            * In Jupyter, the commands are usually typed in separate cells.
+        
+        Parameters
+        ----------
+        output_file: str, optional, default is None
+            If the argument is not None, the output is saved to {output_file}.
+            This argument is usually not needed, as the interactive plot
+            is rather for inspecting the diffraction indices than for saving.
+        two_theta: tuple of two floats, optional, default is None
+            If the argument is None, the plot uses the default two_theta
+            range (saved in self.experiment.two_theta).
+            IF the parameter is not None, it determines the two theta range
+            for the plot.
+            
+        Returns
+        -------
+        None
+            The output is the plot in the screen or in the {output_file}.
+            In a typical case, the plot is interactive
+            so that the indexed diffractions could be inspected in detail.
+        
+        Technical notes
+        ---------------
+        * The code below uses (sligthly modified) PyMatGen functions.
+            - Reason: PyMatGen plots with diffraction indexes are quite good.
+            - Re-programing would be quite difficult, boring, and useless.
+        * The direct usage of PyMatGen function is a kind of exception.
+            - PyMatGen function is used during the initialization.
+            - Then we rely on our own functions as much as possible.
+            - Reason: PyMatGen functions may change, we want an independence.
+            - Here: As noted above - PyMatGen function saves a lot of work.
+        * The function is usually called without args to get interactive plot.
+            - Additional arguments are not necessary.
+            - {output_file} and {theta_range} can modify default plot params
+        '''
+        
+        # (0) Redefine plot parameters
+        # (so that they were optimized for the interactive plot
+        original_rcParams = plt.rcParams
+        plt.rcParams.update({
+            'figure.figsize'  : (12/2.54,4/2.54),
+            'figure.dpi'      : 200,
+            'font.size'       : 6})
+        
+        # (1) Calculate diffractions
+        # (re-calculation in order to get the original PyMatGen xrd object
+        # (the xrd object can be employed to plot diffractions with indexes
+        xrd = pmXRDCalculator(
+            wavelength = self.simu_parameters.wavelength,
+            debye_waller_factors=(self.crystal.temp_factors))
+        
+        # (2) Create plot with indexes
+        # (trick: we create figure and axes (fig,ax)
+        # (and instruct PyMatGen to plot in pre-defined axes
+        # (a) prepare fig,ax
+        fig,ax = plt.subplots()
+        # (b) prepare two_theta range 
+        if two_theta is None: two_theta = self.simu_parameters.two_theta_range
+        # (c) create the plot using the parameters from (a,b) 
+        xrd.get_plot(
+            structure = self.crystal.structure,
+            two_theta_range=two_theta,
+            annotate_peaks='compact', ax=ax, fontsize=6)
+        
+        # (3) Ex-post changing line properties in plt.plot
+        # https://stackoverflow.com/q/41709257
+        for line in ax.get_lines():
+            line.set_color('orange')
+        ax.set_xlabel('2theta [deg]')
+        ax.set_ylabel('Intensity')
+        ax.grid()
+        
+        # (4) Set higher number of ticks on X-axis
+        # Trick #1: major ticks => higher MaxNLocator to get dense ticks
+        # Trick #2: minor ticks => import special class for them
+        ax.xaxis.set_major_locator(plt.MaxNLocator(15, steps=[1,2,5,10] ))
+        from matplotlib.ticker import AutoMinorLocator
+        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
+        
+        # (5) Final adjustments
+        fig.tight_layout()
+        
+        # (6) Show  or save the plot, depending on output_file argument
+        # (note: default is output_file=None => plot is shown, not saved
+        # (reason: this func is usually used for interactive plots
+        if output_file is None:
+            plt.show()
+        else:
+            plt.savefig(output_file, dpi=300)
+        
+        # (7) Revert to original rcParams.
+        plt.rcParams.update(original_rcParams)
+
+
+class XRD_polycrystal(PXRDcalculation):
+    '''
+    Class yielding *XRD_polycrystal* objects.
+    
+    * *XRD_polycrystal* object is a wrapper of *PXRDcalculation* class.
+    * It runs PXRDcalculation in one step and returns PXRDcalculation object.
+    * In fact, the PXRDcalculation and PXRD_polycrystal objects are indentical.
+    * Main advantage of XRD_polycrystal - simpler API than PXRDcalculation.
+    '''
+    
+    def __init__(self, structure, temp_factors=0.8, description=None, 
+                 wavelength = 0.71, two_theta_range = (5,100),
+                 peak_profile = PeakProfiles.pseudo_voigt,
+                 peak_profile_sigma = 0.03,
+                 plot_params = {'title':None, 'x_axis':'q', 'xlim':None}):
+        '''         
+        Initialize *XRD_polycrystal* object  
+
+        Parameters
+        ----------
+        structure : TYPE
+            DESCRIPTION.
+        temp_factors : TYPE, optional
+            DESCRIPTION. The default is 0.8.
+        description : TYPE, optional
+            DESCRIPTION. The default is None.
+        wavelength : TYPE, optional
+            DESCRIPTION. The default is 0.71.
+        two_theta_range : TYPE, optional
+            DESCRIPTION. The default is (5,100).
+        peak_profile : TYPE, optional
+            DESCRIPTION. The default is PeakProfiles.pseudo_voigt.
+        peak_profile_sigma : float, optional, default is 0.03
+            Width of the calculated diffraction peaks.
+            It can be slightly increased in case of non-overlapping peaks.
+            See ediff.pcryst.SimuParams class for details.
+        plot_params : dict, optional
+            The dictionoary collecting ediff.pcryst.Plot_params parameters.
+            The default is {'title':None, 'x_axis':'q', 'xlim':None}.
+            In most cases, this dictionary does not have to be changed.
+
+        Returns
+        -------
+        XRD_polycrystal object
+            The XRD_polycrystal object is identical to PXRDcalculation object.
+            It can use all inherited methods to show/save the calculated data,
+            or use any other methods to work with the object properties,
+            as shown below.
+            
+        Example
+        -------
+        
+        >>> # (0) Import EDIFF
+        >>> import ediff as ed
+        >>>
+        >>> # (1) Calculate PXRD = PXRDcalculation object
+        >>> XRD = ed.pcryst.XRD_polycrystal(
+        >>>    description = 'Au,fcc :: theoretical diffraction pattern',
+        	>>>    structure = r'..\0_DATA\au_9008463.cif',
+        >>>	   wavelength = 0.71, two_theta_range = (5,100))
+        >>>
+        >>> # (2) Show/save/work with the results
+        >>> print(XRD.diffractions)   # use arbitrary methods 
+        >>> XRD.print_diffractions()  # use inherited PXRDcalculation methods
+        '''
+        
+        # Object description
+        self.description = description
+        
+        # Auxiliary sub-objects: Crystal, Experiment, PlotParameters 
+        crystal = Crystal(
+            structure, temp_factors)
+        simu_parameters = SimuParams(
+            wavelength, two_theta_range, peak_profile, peak_profile_sigma)
+        plot_parameters = PlotParams(
+            plot_params['title'], plot_params['x_axis'], plot_params['xlim'])
+
+        # The remaining properties and methods
+        # are inherited from PXRDcalculation object,
+        # which is calculated by means of above-defined sub-objects.
+        PXRDcalculation.__init__(self,  
+            crystal, simu_parameters, plot_parameters, peak_profile_sigma)
+        
+    
+class ELD_polycrystal:
+    '''
+    Class defining *ELD_polycrystal* objects.
+    
+    * *ELD_polycrystal* object = diffractogram + processing-methods + results.
+    * *ELD_polycrystal* offers simle OO-processing (data + functions together).
+    
+    TODO :: this class is under construction.
+
+    Technical note
+    
+    * PO-processing (traditional, kept for compatibility and special cases).
+        - Run funcs one-by-one (you need to save intermediate data/results).
+    * OO-processing (new, simplified interface, better for most cases).
+        - Define object and run methods (data/results are saved in the object).
+    '''
+
+
+    
+    def __init__(self, diffractogram, itype='16bit', description=None):
+        '''
+        Initialize ELD_polycrystal object.
+
+        Parameters
+        ----------
+        diffractogram : array or str or PathLike object 
+            Source 2D diffraction pattern.
+            This diffraction pattern is to be further processed
+            by means of the methods defined in this class.
+        itype : str, optional, default is '16bit'
+            Type of the input image/array.
+            We can work with grayscale images/arrays containing
+            '8bit' or '16bit' values = np.uint8 or np.uint16 integers.
+        description : str, optional, default is None
+            Description of the source diffractogram.
+            Optional, but recommended parameter.
+            It makes the code self-documented and clear.
+
+        Returns
+        -------
+        ELD_polycrystal object
+            The object contains diffractogram (as np.array) + methods for
+            the processing of the diffractogram. When the processing is
+            finished, the results are saved in the object properties,
+            as illustrated below.
+        
+        Example
+        -------
+        
+        >>> # EDIFF :: process powder electron diffration pattern
+        >>> import ediff as ed
+        >>>
+        >>> # (1) Read and show a powder electron diffractogram
+        >>> ELD = ed.pcryst.ELD_polycrystal('diff.png', description='Au ncryst')
+        >>> ELD.show_diffractogram(icut=200)
+        >>>
+        >>> # (2) Find the diffractogram center and show the results
+        >>> ELD.find_center(detection='intensity', refinement='sum')
+        >>> ELD.center.visualize_results()
+        '''
+        
+        self.description = description
+        self.read_diffractogram(diffractogram, itype)
+    
+       
+    def read_diffractogram(self, diffractogram, itype='16bit'):
+        '''
+        Read diffractogram and save it in self.diffractogram object.
+
+        Parameters
+        ----------
+        diffractogram : TYPE
+            DESCRIPTION.
+        itype : TYPE, optional
+            DESCRIPTION. The default is '16bit'.
+
+        Returns
+        -------
+        None.
+        '''
+        
+        self.diffractogram = ediff.io.Diffractogram.read(diffractogram, itype)
+        return(self.diffractogram)
+    
+    
+    def show_diffractogram(self, 
+        title=None, icut=None, origin=None, out_file=None, out_dpi=300):
+        '''
+        Show diffractogram saved in self.diffractogram object.
+
+        Parameters
+        ----------
+        title : str, optional, default is None
+            Title of the plot.
+        icut : int, optional, default is None
+            Intensity cut value.
+            If icut=200, then all intensities >200 are set to 200.
+        origin : str
+            DESCRIPTION. The default is None.
+        out_file : TYPE, optional
+            DESCRIPTION. The default is None.
+        out_dpi : TYPE, optional
+            DESCRIPTION. The default is 300.
+
+        Returns
+        -------
+        None.
+        '''
+        
+        ediff.io.Diffractogram.show(self.diffractogram, 
+            title=title, icut=icut, origin=origin,
+            out_file=out_file, out_dpi=out_dpi)
+    
+    
+    def find_center(self, **kwargs): 
+        '''
+        Find center of the diffractogram.
+
+        Parameters
+        ----------
+        **kwargs
+            All arguments are forwarded to ediff.center.CenterLocator.
+            The only exception is the first argument of CenterLocator
+            (input_image), which is auto-replaced by self.diffractogram.
+            See the documentation ediff.center.CenterLocator 
+            for the full list of options.
+            
+        Selected important parameters
+        -----------------------------
+        * detection : center detection method
+        * refinement : center refinement method
+        * icut : intensity cut; to cut too high intensity of primary beam
+        
+        Returns
+        -------
+        None
+            The results are saved in *self.center*,
+            which is ediff.center.CenterLocator object.
+            Therefore, we can use all props/methods of the
+            ediff.center.CenterLocator object to work with self.center.
+        '''
+        self.center = ediff.center.CenterLocator(self.diffractogram, **kwargs)
+        
+        
+class Comparison:
+    '''
+    Final comparison of processed ELD and XRD powder diffractograms.
+    
+    * We compare the processed ELD-profile and XRD-profile.
+    * ELD-profile - from the processed ediff.pcryst.ELD_polycrystal object.
+    * XRD-profile - from the processed ediff.pcryst.XRD_polycrystal object.
+    
+    TODO :: this class is under construction.
+    '''
+    
+    
+    def __init__(self, ELD, XRD):
+        '''
+        Initialize *Comparison* = object comparing ELD and XRD profiles.
+
+        Parameters
+        ----------
+        ELD : ediff.pcryst.ELD_polycrystal object
+            The processed ELD diffractogram.
+            The object contains ELD.profile, which is used in plotting.
+        XRD : ediff.pcryst.XRD_polycrystal object
+            The processed XRD diffractogram.
+            The object contains XRD.profile, which is used in plotting.
+
+        Returns
+        -------
+        ediff.pcryst.Comparison object
+        '''
+        self.ELD = ELD
+        self.XRD = XRD
+        
+    
+    def show_final_plot(self, fine_tune=1.00, out_file=None, out_dpi=300):
+        '''
+        Show final plot that compares self.ELD and self.XRD profiles.
+
+        Parameters
+        ----------
+        fine_tune : float, optional, default is 1.00
+            The fine tuning constant.
+            It multiplies all X-values in ELD.profile
+            to get perfect fit between ELD and XRD-profiles.
+            The value of *fine_tune* constant should be close to 1.
+        out_file : str or PathLike object, optional, default is None
+            The name of the output file.
+            If out_file = None (default), the plot is just shown, not saved.
+        out_dpi : int, optional, default is 300
+            The DPI of the output file = plot = image of ELD and XRD profiles.
+
+        Returns
+        -------
+        None
+            The result is the plot shown on the screen.
+            If *out_file* parameter is given, the plot is also saved.
+        '''
+        
+        # NOTE 1   : This func should be a wrapper of io.plot_final_eld_and_xrd
+        # Reason 1 : Not to duplicate code!
+        # Reason 2 : To preserve the PO-interface.
+        
+        # NOTE 2 : {fine_tune} constant should be saved to self.fine_tune
+        # Reason : It will be used in the following self.save_final_profiles.
+        self.fine_tune = fine_tune
+        
+        pass
+    
+    
+    def save_final_profiles(self, out_file):
+        '''
+        Save final ELD and XRD profiles for possible future use.
+        
+        * XRD profile is already saved in XRD_polycrystal object,
+          but here we save it together with ELD_profile
+          (convenient for possible future plotting).
+        * ELD profile is already saved in ELD_polycrystal object,
+          but here we save it multiplied by *self.fine_tune*
+          (so that it exactly corresponded to XRD_profile)
+          and together with XRD_profile
+          (convenient for possible future plotting).
+          
+        Returns
+        -------
+        None
+            The final ELD and XRD profiles are saved in *out_file*.
+        '''
+            
+        pass
+
+
+# =============================================================================
+# Additional tool that updates signature of wrapped functions.
+# * __signature__ = function parameters shown in iPython, Spyder, JLab ...
+# * __doc__ = docstring is not updated - intentionally, this is error-prone
+# * additional params (__name__, __module__)
+#   could be updated with existing functools.update_wrapper
+#   BUT we do not use it at the moment - not necessary or even confusing
+# * this tool MUST BE OUTSIDE class definitions
+#   (more info in AI/ChGPT, from which this code was received and adjusted
+
+import inspect
+
+def _update_wrapper_signature(original_function, wrapper_function):
+    sig = inspect.signature(original_function)
+    sig = sig.replace(parameters=list(sig.parameters.values())[1:])
+    wrapper_function.__signature__ = sig
+
+_update_wrapper_signature(
+    ediff.center.CenterLocator, ELD_polycrystal.find_center)        

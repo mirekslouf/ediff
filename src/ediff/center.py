@@ -55,12 +55,10 @@ CPU_COUNT = os.cpu_count()
 
 class CenterLocator:
     '''
-    CenterLocator object : determine and refine the center of a 2D electron 
-    diffraction pattern (diffractogram)
+    CenterLocator object : detect and refine center of 2D-diffractogram.
     
     This class detects the center of diffraction patterns. It offers several 
     automatic or manual methods and optionally refines the center position.
-
 
     Parameters
     ----------
@@ -375,9 +373,17 @@ class CenterLocator:
             self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
                         
         if (self.detection == "curvefit" and self.refinement == "manual"):
-            self.x2, self.y2 = self.convert_coords(self.x2, self.y2) 
+            self.x2, self.y2 = self.convert_coords(self.x2, self.y2)
+        
+        ## (8) Save the coordinates to final properties x,y
+        #      Reason: convenience; simple format + simple access to results.
+        #      (simple format = convert possible np.float... to standard float
+        #      (simple access = logical => final results in self.x, self.y
+        #      (rounding => more than one decimal point does not make sense
+        self.x = round(float(self.x2),1)
+        self.y = round(float(self.y2),1)
                             
-        ## (8) Print the coordinates if required ------------------------------
+        ## (9) Print the coordinates if required ------------------------------
         if self.final_print:
             self.dText=str(self.dText)
             self.rText=str(self.rText)
@@ -388,7 +394,7 @@ class CenterLocator:
             if self.refinement is not None:
                 print(self.rText.format(float(self.x2),float(self.y2)))
                         
-        ## (9) Save results to a .txt file if specified -----------------------
+        ## (10) Save results to a .txt file if specified -----------------------
         if out_file is not None:
             self.save_results()
             if self.verbose==3:
@@ -717,7 +723,8 @@ class CenterLocator:
         return y, x
 
 
-    def visualize_results(self, csquare=None, out_file=None, out_dpi=200):
+    def visualize_results(self, csquare=None, 
+                          axes_off=False, out_file=None, out_dpi=200):
         '''
         Visualize diffractogram and its center after
         center detection + refinement.
@@ -728,6 +735,10 @@ class CenterLocator:
             If csquare argument is given,
             only the central square of the diffractogram will be plotted;
             the size of the central square will be equal to csquare argument.
+        
+        axes_off : bool, optional, default is False
+            If axes_off argument is True,
+            do not show axes (= ticks, ticklabels) around the diffractogram.
         
         out_file : str, optional, default is None
             If out_file is given,
@@ -815,7 +826,7 @@ class CenterLocator:
                   bbox_transform=ax.transAxes)
     
         # Remove axes (= tick and ticklabels) around the diffractogram
-        ax.axis('off')
+        if axes_off is True: ax.axis('off')
         
         # Plot only the central square region if requested
         if csquare is not None:
@@ -831,6 +842,17 @@ class CenterLocator:
         
         # Show the plot on screen
         plt.show(block=False)
+        
+        
+    def print_results(self):
+        '''
+        Simple print of the final results on stdout.
+
+        Returns
+        -------
+        None
+        '''
+        print(f'Center coordinates (x, y) : ({self.x}, {self.y})')
 
 
     def ellipse_distortion(self, img, show=True, method=None):

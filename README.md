@@ -1,5 +1,5 @@
-EDIFF :: processing electron diffraction patterns
--------------------------------------------------
+EDIFF :: processing of electron diffraction patterns
+----------------------------------------------------
 
 * EDIFF package:
 	- processes an experimental 2D electron diffractogram (ELD)
@@ -22,7 +22,7 @@ Principle
 Installation
 ------------
 
-* Requirement: Python with sci-modules: numpy, matplotlib, scipy, pandas, pillow
+* Prerequisite: Python with sci-modules: numpy, matplotlib, scipy, pandas.
 * `pip install scikit-image` = 3rd party package for advanced image processing 
 * `pip install pymatgen` = 3rd package employed in crystallographic calculations
 * `pip install bground` = our package, interactive background subtraction
@@ -66,6 +66,7 @@ Versions of EDIFF
 * Version 0.8 = rewrite: {gcryst}, {pxrd &rArr; pcryst} + new: {mcryst}
 * Version 0.9 = new: {bkg2d} + improved: {calibration} + better documentation
 * Version 1.0 = complete processing of powder diffractograms
+* Version 1.1 = TODO: improved and simplified interface for {pcryst}
 * Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
 
 
