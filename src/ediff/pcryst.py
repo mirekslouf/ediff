@@ -20,15 +20,15 @@ Key classes in this module:
 List of all classes in this module:
 
 * Crystal, SimuParams, PlotParams, PeakProfile
-  = classes that define parameters for PXRDcalculation
-* PXRDcalculation
-  = basic calculation of theoretical XRD difractogram (basic API)
-* PXD_polycrystal
-  = complete calculation of theoretical XRD diffratogram (object API)
-* ELD_polycrystal
-  = complete processing of experimental ELD pattern (object-oriented API)
-* Comparison
-  = final comparison of the processed XRD and ELD profiles.
+  = classes that define parameters for PXRDcalculation.
+* PXRDcalculation = calculation of
+  the theoretical XRD difractogram (basic API).
+* PXD_polycrystal = calculation of
+  the theoretical XRD diffratogram (object-oriented API).
+* ELD_polycrystal = complete processing of
+  the experimental ELD diffractogram (object-oriented API).
+* Comparison = final comparison
+  of the processed XRD and ELD profiles.
 '''
 
 
@@ -914,8 +914,8 @@ class PXRDcalculation:
         Plot diffractions with their dffraction indices.
         
         * This function (usually) creates an interactive plot.
-        * **In CLI** (command line) - the plot is interactive automatically.
-        * **In Spyder or Jupyter** - type the following *magic commands*:
+        * *In CLI* (command line) - the plot is interactive automatically.
+        * *In Spyder or Jupyter* - type the following *magic commands*:
             * BEFORE running (switch on the interactive mode): %matplotlib qt
             * AFTER running (back to non-interactive mode): %matplotlib inline
             * In Spyder, the commands are typed in the Console window.
@@ -1033,18 +1033,36 @@ class XRD_polycrystal(PXRDcalculation):
 
         Parameters
         ----------
-        structure : TYPE
-            DESCRIPTION.
-        temp_factors : TYPE, optional
-            DESCRIPTION. The default is 0.8.
-        description : TYPE, optional
-            DESCRIPTION. The default is None.
-        wavelength : TYPE, optional
-            DESCRIPTION. The default is 0.71.
-        two_theta_range : TYPE, optional
-            DESCRIPTION. The default is (5,100).
-        peak_profile : TYPE, optional
-            DESCRIPTION. The default is PeakProfiles.pseudo_voigt.
+        structure : CIF-file or ediff.io.Structure object
+            Definition of the crystal structure.
+            The crystal structure can be defined by means of
+            CIF-file or Structure object.
+            More info about CIF-files is in ediff.pcryst.Crystal class.
+            The Structure objects are described in ediff.io.Structure class.
+        temp_factors : float, optional, default is 0.8
+            The temperature factor, common for all atoms.
+            The value of 0.8 is a reasonable default.
+            It is possible (but usually not necessary) to specify
+            temperature factors for the invividual atoms in the structure,
+            in the form of dictionary, as described in ediff.io.Crystal class.
+        description : str, optional, default is None 
+            The (short) text description of the crystal structure,
+            from which the powder diffraction pattern is calculated.
+            Non-obligatory, but useful for documentation and clarity.
+        wavelength : float, optional, default is 0.71
+            Wavelength of X-rays (in Angstrem), which is used
+            for the calculation of the powder diffractogram.
+            The default corresponds to commonly used MoKa radiation.
+        two_theta_range : tuple of two floats, optional, default is (5,100)
+            The minimum and maximum value of 2*theta
+            (where theta is the diffraction angle)
+            that are used for the calculation of diffractions
+            (diffractions outside the interval are ignored).
+        peak_profile : ediff.pcryst.PeakProfiles object, optional
+            Profile of the calculated diffraction peaks.
+            The default is ediff.pcryst.PeakProfiles.pseudo_voigt.
+            This default is suitable for all common calculations
+            and does not have to be changed (in great majority of cases).
         peak_profile_sigma : float, optional, default is 0.03
             Width of the calculated diffraction peaks.
             It can be slightly increased in case of non-overlapping peaks.
@@ -1057,11 +1075,15 @@ class XRD_polycrystal(PXRDcalculation):
         Returns
         -------
         XRD_polycrystal object
-            The XRD_polycrystal object is identical to PXRDcalculation object.
-            It can use all inherited methods to show/save the calculated data,
-            or use any other methods to work with the object properties,
-            as shown below.
-            
+            The {XRD_polycrystal} object is identical to
+            the {PXRDcalculation} object.
+            It has the same methods and properties, including two key
+            properties, which are auto-calculated during the initialization
+            = {diffractions} and {profile}.
+            The {XRD_polycrystal} object can use all inherited methods
+            from ediff.pcryst.PXRDcalculation object or employ any other
+            functions to work with the properties, as shown below.
+             
         Example
         -------
         
@@ -1070,9 +1092,9 @@ class XRD_polycrystal(PXRDcalculation):
         >>>
         >>> # (1) Calculate PXRD = PXRDcalculation object
         >>> XRD = ed.pcryst.XRD_polycrystal(
-        >>>    description = 'Au,fcc :: theoretical diffraction pattern',
-        	>>>    structure = r'..\0_DATA\au_9008463.cif',
-        >>>	   wavelength = 0.71, two_theta_range = (5,100))
+        >>>     description = 'Au,fcc :: theoretical diffractogram',
+        >>>     structure = r'../0_DATA/au_9008463.cif',
+        >>>     wavelength = 0.71, two_theta_range = (5,100))
         >>>
         >>> # (2) Show/save/work with the results
         >>> print(XRD.diffractions)   # use arbitrary methods 
@@ -1165,17 +1187,24 @@ class ELD_polycrystal:
     def read_diffractogram(self, diffractogram, itype='16bit'):
         '''
         Read diffractogram and save it in self.diffractogram object.
+        
+        * This method is a wrapper around ediff.io.Diffractogram.read function.
 
         Parameters
         ----------
-        diffractogram : TYPE
-            DESCRIPTION.
-        itype : TYPE, optional
-            DESCRIPTION. The default is '16bit'.
+        diffractogram : string or path-like object or numpy array
+            Image/array, which represent diffractogram
+            that should be read into numpy 2D array.
+        itype : str, optional, default is 16bit
+            Type of the image/array.
+            We accept 8 or 16 bit grayscale images/arrays.
+            This corresponds to numpy.uint8 or numpy.uint16 values.
 
         Returns
         -------
-        None.
+        numpy.ndarray
+            The diffractogram is read into self.diffractogram
+            and returned as numpy.ndarray.
         '''
         
         self.diffractogram = ediff.io.Diffractogram.read(diffractogram, itype)
@@ -1186,24 +1215,33 @@ class ELD_polycrystal:
         title=None, icut=None, origin=None, out_file=None, out_dpi=300):
         '''
         Show diffractogram saved in self.diffractogram object.
+        
+        * This method is a wrapper around ediff.io.Diffractogram.show function.
 
         Parameters
         ----------
-        title : str, optional, default is None
-            Title of the plot.
-        icut : int, optional, default is None
-            Intensity cut value.
-            If icut=200, then all intensities >200 are set to 200.
-        origin : str
-            DESCRIPTION. The default is None.
-        out_file : TYPE, optional
-            DESCRIPTION. The default is None.
-        out_dpi : TYPE, optional
-            DESCRIPTION. The default is 300.
+        title : tr, optional, default is None
+            If given, then it is the title of the plot.
+        icut : integer, optional, default is None
+            Upper limit of intensity shown in the diffractogram.
+            The argument *icut* is used as *vmax* in plt.imshow function.
+            Example: If *icut*=300, then all intensities >300 are set to 300.
+        origin : 'upper' or 'lower' or None, optional, default is None
+            Orientation of the image during final rendering.
+            If the argument is None, we follow the Matplotlib default,
+            which is *origin*='upper' = [0,0] in the upper left corner.
+            Alternative: *origin*='lower' = [0,0] is in the lower left corner.
+        out_file : str, optional, default is None
+            Name of the output file.
+            If the argument is not None, the plot is saved to *output_file*.
+        out_dpi : int, optional, default is 300
+            Resolution of the output file.
 
         Returns
         -------
-        None.
+        None
+            The diffratogram is shown/plotted in the stdout/screen.
+            If {out_file} argument is given, it is also saved in {out_file}.
         '''
         
         ediff.io.Diffractogram.show(self.diffractogram, 
