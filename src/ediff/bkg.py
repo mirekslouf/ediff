@@ -12,19 +12,21 @@ Background subtraction in 1D diffraction profiles.
 # Explanation of the following import commands
 # 
 # The 1st import command = all modules from bground.api to THIS module
-#  - now ediff.background knows the same modules as bground.api
+#   - now ediff.background knows the same modules as bground.api
 #   - but NOT yet the classes within bground.api - these are imported next
-# The following import commands = classes from bground.api to THIS module
-#   - now ediff.bacground contains the three objects from bground.api
+# The 2nd set of import commands = classes from bground.api to THIS module
+#   - now ediff.bacground contains the key objects from bground.api
 #   - THIS module now contains InputData, PlotParams, InteractivePlot ...
 #
 # Final conclusion => the users can do:
 #
 # >>> import ediff.background
-# >>> DATA  = ediff.background.InputData ...
-# >>> PPAR  = ediff.background.PlotParams ...
-# >>> IPLOT = ediff.background.InteractivePlot ...
+# >>> DATA  = ediff.bkg.InputData ...
+# >>> PPAR  = ediff.bkg.PlotParams ...
+# >>> IPLOT = ediff.bkg.InteractivePlot ...
 
 import bground.api
-from bground.api import InputData, PlotParams 
-from bground.api import InteractivePlot, WaveletMethod
+from bground.api import InputData, BkgParams 
+from bground.api import InteractivePlot, RestoreFromPoints
+from bground.api import SimpleFuncs, BaseLines, Wavelets
+from bground.api import Run, Help

@@ -8,7 +8,8 @@ to a 1D powder diffraction pattern = radially averaged intensity distribution.
 import numpy as np
 import ediff.center
 
-def calc_radial_distribution(arr, center=None, output_file=None):
+
+def calc_radial_distribution(arr, center=None, out_file=None):
     """
     Calculate 1D radially averaged distrubution profile
     from 2D diffraction pattern.
@@ -26,9 +27,9 @@ def calc_radial_distribution(arr, center=None, output_file=None):
         without any refinement;
         this is imprecise, especially in case of
         diffraction patterns with a beamstopper.
-    output_file : str, optional, default is None
+    out_file : str, optional, default is None
         Name of the output file.
-        If given, the calculated 1D profile is saved to *output_file*.
+        If given, the calculated 1D profile is saved to {out_file}.
 
     Returns
     -------
@@ -78,10 +79,11 @@ def calc_radial_distribution(arr, center=None, output_file=None):
     
     # (4) Save profile to array, save it to file if requested, and return it
     profile = np.array([radial_distance, intensity])
-    if output_file: save_radial_distribution(profile, output_file)
+    if out_file: save_radial_distribution(profile, out_file)
     return(profile)
 
-def save_radial_distribution(profile, output_file):
+
+def save_radial_distribution(profile, out_file):
     """
     Save 1D radially averaged distrubution profile to output_file.
 
@@ -90,15 +92,16 @@ def save_radial_distribution(profile, output_file):
     profile : 2D numpy array containing two rows [R,I]
         * R = radial_distance = dist. from the diffractogram center [pixels]
         * I = intensity = intensities at given distances [arbitrary units]
-    filename : str
+    out_file : str
         Name of the output file.
 
     Returns
     -------
     None.
-        The output is the radial distribution saved in a file with *filename*. 
+        The output is the radial distribution saved in the {out_file}. 
     """
-    np.savetxt(output_file, np.transpose(profile), fmt='%3d %8.1f')
+    np.savetxt(out_file, np.transpose(profile), fmt='%3d %8.1f')
+
 
 def read_radial_distribution(filename):
     """

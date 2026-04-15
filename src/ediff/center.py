@@ -245,7 +245,7 @@ class CenterLocator:
         if isinstance(input_image, np.ndarray):
             self.image = input_image
         else:
-            self.image = ediff.io.Diffractogram.read(self.input_image)
+            self.image = ediff.io.Diffractogram2D(self.input_image)
         
         ## (2) Correct ellipse ------------------------------------------------
         if self.ellipse:
@@ -384,7 +384,7 @@ class CenterLocator:
         self.y = round(float(self.y2),1)
                             
         ## (9) Print the coordinates if required ------------------------------
-        if self.final_print:
+        if self.final_print is True:
             self.dText=str(self.dText)
             self.rText=str(self.rText)
             
@@ -842,8 +842,8 @@ class CenterLocator:
         
         # Show the plot on screen
         plt.show(block=False)
-        
-        
+            
+    
     def print_results(self):
         '''
         Simple print of the final results on stdout.
@@ -1006,6 +1006,46 @@ class CenterLocator:
             plt.show()
     
         return corrected
+
+
+    def show(self, csquare=None, 
+                          axes_off=False, out_file=None, out_dpi=200):
+        '''
+        This method just calls
+        ediff.center.CenterLocator.visualize_results.
+        
+        >>> # Use of the method within the OO-interface.
+        >>> ELD = ed.pcryst.ELD_polycrystal(...)
+        >>> ELD.diffractogram.show(icut=200)
+        >>> ELD.find_center(...)
+        >>> ELD.center.show(csquare=250)
+        
+        Parameters
+        ----------
+        csquare : int, optional, default is None
+            If csquare argument is given,
+            only the central square of the diffractogram will be plotted;
+            the size of the central square will be equal to csquare argument.
+        
+        axes_off : bool, optional, default is False
+            If axes_off argument is True,
+            do not show axes (= ticks, ticklabels) around the diffractogram.
+        
+        out_file : str, optional, default is None
+            If out_file is given,
+            save the final plot to image named *out_file*.
+        
+        out_dpi : int, optional, default is 200
+            DPI of the output image file;
+            this parameter is relevant only if out_file is given.
+        
+        Returns
+        -------
+        None
+            The output is the image of the diffractogram
+            showing also the central coordinates and refinement ring.  
+        '''
+        self.visualize_results(csquare, axes_off, out_file, out_dpi)
 
 
 class CenterDetection:
@@ -2775,7 +2815,8 @@ class CenterDetection:
             # Special case: if there are exactly 2 peaks, return them
             if len(arr) == 2:
                 if self.parent.verbose==2:
-                    print("Exactly two peaks detected. Returning them as the best pair.")
+                    print("Exactly two peaks detected.", end=" ") 
+                    print("Returning them as the best pair.")
                 return 0, 1
     
             # Find the index of the highest value

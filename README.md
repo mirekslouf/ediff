@@ -66,7 +66,8 @@ Versions of EDIFF
 * Version 0.8 = rewrite: {gcryst}, {pxrd &rArr; pcryst} + new: {mcryst}
 * Version 0.9 = new: {bkg2d} + improved: {calibration} + better documentation
 * Version 1.0 = complete processing of powder diffractograms
-* Version 1.1 = TODO: improved and simplified interface for {pcryst}
+* Version 1.1 = improved and simplified interface for {pcryst}
+* Version 1.2 = TODO: finished background subtraction in 1D {bkg} and 2D {bkg2d}
 * Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
 
 

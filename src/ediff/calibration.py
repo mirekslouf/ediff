@@ -25,56 +25,46 @@ How to determine the `calibration_constant`:
   https://mirekslouf.github.io/ediff/docs
 '''      
 
-import sys
+
 import numpy as np
 import scipy.constants
-import ediff.io
 from dataclasses import dataclass
 
 
-class Calculate:
+class Calibrate:
     '''
-    A class with functions to calculate the *calibration constant*.
-    
-    * The meaning of *calibration constant* is explained
-      above on the top of ediff.calibration module.
-    * The calculation of *calibration constant* by means of
-      ediff.calibration.Calculate functions is shown below.
+    A class with functions that calculate the *calibration constant*.
      
     >>> # EDIFF :: calculation of calibration constant
     >>> import ediff as ed
     >>>
-    >>> # Note: two functions below use ELD and XRD profiles as arguments.
-    >>> # - both ELD and XRD profiles are 1D diffraction patterns
-    >>> # - ELD = experimental electron diffractogram, radially averaged
-    >>> # - XRD = theoretical X-ray diffractogram, calculated in ediff.pcryst 
+    >>> # ELD and XRD are ediff.io.Diffraction1D objects.
+    >>> # const = calibration constant converting Pixels => q-vector values.
     >>>
     >>> # (1) Calibration constant from the whole ELD and XRD profiles.
     >>> # (If the max.peak in ELD corresponds to the max.peak in XRD.
-    >>> calibration_constant = \\
-    >>>     ed.calibration.Calculate.from_max_peaks(ELD, XRD)
+    >>> const = ed.calibration.Calibrate.from_max_peaks(ELD, XRD)
     >>> 
     >>> # (2) Calibration constant from selected parts of ELD and XRD profiles.
     >>> # (If the max.peak in ELD does not correspond to the max.peak in XRD,
     >>> # (we define the peak for calibration in specific ranges/regions. 
-    >>> calibration_constant = \\
-    >>>     ed.calibration.Calculate.from_max_peaks_in_range(
+    >>> const = ed.calibration.Calibrate.from_max_peaks_in_range(
     >>>         ELD, XRD, eld_range=(50,120), xrd_range=(2.0,2.5))
     >>>
-    >>> # (3) Calibration constant from known microscope parameters.
-    >>> # (3a) Simple case - known microscope with default parameters
-    >>> # (more details and examples => ediff.calibration.Microscopes
+    >>> # (3) Calibration constant from a known/calibrated microscope.
+    >>> # (Known microscopes => ediff.calibration.Microscopes.
     >>> my_TEM = ed.calibration.Microscopes.TecnaiVeleta
-    >>> calibration_constant = \\
-    >>>     ed.calibration.Calculate.from_microscope_parameters(my_TEM)
-    >>> # (3b) General case - arbitrary microscope
-    >>> # (the four parameters below must be known for given microscope
-    >>> calibration_constant = \\
-    >>>     ed.calibration.Calculate.from_microscope_parameters(
+    >>> const = ed.calibration.Calibrate.from_microscope(my_TEM)
+    >>>
+    >>> # (4) Calibration constant from an arbitrary microscope.
+    >>> # (The four params below must be known for given {microscope+camera}.
+    >>> const = ed.calibration.Calibrate.from_microscope_params(
     >>>         voltage_kV = 120,
     >>>         camera_length_mm = 170,
-    >>>         camera_pixel_size_um = 13.2, binning = 2)
+    >>>         camera_pixel_size_um = 13.2,
+    >>>         binning = 2)
     '''
+    
     
     def from_max_peaks(eld_profile, xrd_profile, messages=True):
         '''
@@ -112,7 +102,7 @@ class Calculate:
         # Function {Calculate.from_max_peak} is a special case
         # of more general function {Calculate.from_max_peaks_in_range},
         # which we call without specifying the ranges => to use whole ranges.
-        calibration_constant = Calculate.from_max_peaks_in_range(
+        calibration_constant = Calibrate.from_max_peaks_in_range(
             eld_profile, xrd_profile, messages=messages)
         
         # Return calibration constant
@@ -164,94 +154,176 @@ class Calculate:
             The multiplicative constant that converts
             ED-profile X-coordinate-in-pixels
             to X-coordinate-in-q-vectors [1/A].
-
-        Technical notes
-        ---------------
-        * ELD profile = 1D radially averaged
-          powder electron diffraction pattern
-            - in EDIFF, it is obtained from an experimental 2D difractogram
-        * XRD profile = 1D powder X-ray diffraction pattern
-            - in EDIFF, it is calculated from a standard CIF file
-              = Crystallographic Information File
-        * EDIFF format of ELD and XRD profiles employed in EDIFF package
-            - ELD and XRD profiles can come in the form of files or np.arrays
-            - Columns in files <=> rows in np.arrays (we use: *unpack=True*)
-            - ELD profile = 3 cols = pixels, intensity, bkgr-corrected-intsty
-            - XRD profile = 4 cols = 2theta[deg], S[1/A], q[1/A], norm-intsty
-        * EDIFF calculation of ELD and XRD profiles is best seen from examples:
-            - https://mirekslouf.github.io/ediff/docs -> worked example
-           '''
+        '''
         
         # (1) Read ED and XRD diffraction profiles.
-        # * The profiles are supposed to be either filenames or numpy.arrays
-        # * In any case, the filenames or arrays should be in EDIFF format:
-        #   ED  = 3 columns: pixels, intensity, bkgr-corrected intensity
-        #   XRD = 4 columns: 2theta[deg], S[1/A], q[1/A], normalized-intensity
-        eld = ediff.io.Profile.read(eld_profile)
-        xrd = ediff.io.Profile.read(xrd_profile)
+        # ELD and XRD are ediff.io.Diffractogram1D objects.
+        # TODO: more general reading ?
+        eld = eld_profile
+        xrd = xrd_profile
             
         # (2) Determine ranges, in which we search for peaks.
         # (We search peaks either in the whole x-ranges
         # (or in sub-ranges, if the args eld_range and xrd_range are given.
         # ! X-ranges for ED and XRD are given in [pixel] and [q], respectively.
-        if eld_range is None:
-            e_range = eld 
-        else:
+        if eld_range is not None:
             emin,emax = eld_range
-            e_range = eld[:,(emin<=eld[0])&(eld[0]<=emax)]
-        if xrd_range is None:
-            x_range = xrd
-        else:
+            eld = eld[ (emin <= eld.Pixels) & (eld.Pixels <= emax)]
+        if xrd_range is not None:
             xmin,xmax = xrd_range
-            x_range = xrd[:,(xmin<=xrd[2])&(xrd[2]<=xmax)]
+            xrd = xrd[ (xmin <= xrd.q) & (xrd.q <= xmax) ]
         
         # (3) Get the peak/maximum value for ED and XRD.
         # (The ranges where to search for peaks were determined in prev.step.
-        max_eld = float(e_range[0,(e_range[2]==np.max(e_range[2]))])
-        max_xrd = float(x_range[2,(x_range[3]==np.max(x_range[3]))])
-        print(f'Position of max.peak in ELD-profile: {max_eld:6.4f} in d[pix]')
-        print(f'Position of max.peak in XRD-profile: {max_xrd:6.4f} in q[1/A]')
+        max_eld = float( eld.loc[eld.I.idxmax(), 'Pixels'] )
+        max_xrd = float( xrd.loc[xrd.I.idxmax(), 'q'] )
+        if messages is True:
+            print(f'Max.peak in ELD-profile at {max_eld:6.4f} [Pixels]')
+            print(f'Max.peak in XRD-profile at {max_xrd:6.4f} [q(1/A)]')
         
         # (4) Calculate calibration constant
         # (the constant converts d[pixels] to q[1/A]
         calibration_constant = max_xrd/max_eld
-        print(f'Calibration constant: {calibration_constant:.6f}')
+        if messages is True:
+            print(f'Calibration constant: {calibration_constant:.6f}')
         
         # (5) Return the calculated calibration constant
         return(calibration_constant)
+
     
-    
-    def from_microscope_parameters(
-        microscope=None, voltage_kV=None, camera_length_mm=None, 
+    def from_microscope(microscope, voltage_kV=None, 
+        camera_length_mm=None, nominal_camera_length_mm=None,
         camera_pixel_size_um=None, binning=None, verbose=False):
         '''
-        Calibration constant from microscope-specific parameters.
-        
-        * The calibration constant can be estimated from parameters,
-          which are typical of given microscope + camera system.
-        * The parameters we need to know are: (i) accelerating_voltage,
-          (ii) camera_length, (iii) camera_pixel_size, and (iv) binning.
-        * The parameters can be inserted directly OR
-          in the form of microscope object, which contains them.
+        Calibration constant from known {microscope+camera} system.
+         
+        * Known microscopes are in ediff.calibration.Microscopes class.
+        * Each known microscope contains info about four key parameters:
+          voltage_kV, camera_length_mm, camera_pixel_size_um, and binning.
+        * These parameters can be (optionally) modified when calling this func.
+        * This function collects all four arguments,
+          either from the microscope object or from the optional arguments,
+          and then it calls ediff.calibration.Calibrate.from_microscope_params.
         
         Parameters
         ----------
-        microscope : microscope object, optional, default is None
+        microscope : str or microscope object
             One of the microscopes defined in ediff.calibration.Microscopes.
+            We can use either a string with the sub-class name
+            (such as: 'TecnaiVeleta')
+            or a full subclass name
+            (such as: Microscopes.TecnaiVeleta).
         voltage_kV : int, optional, default is None
             Accelerating voltage in [kV].
-            If {None} it is taken from {microscope} argument.
+            If {None}, the value is taken from {microscope} argument.
         camera_length_mm : float, optional, default is None
-            Camera lenght in [mm].
-            If {None} it is taken from {microscope} argument.
-            WARNING: this must be the *real_camera_length*;
-            see the *Note on camera lenght* section below for more details.
+            *Real* camera lenght in [mm].
+            If {None}, the value is taken from {microscope} argument.
+            IMPORTANT: see the {Note on camera length} section below!
+        nominal_camera_length_mm : float, optional, default is None
+            *Nominal* camera lenght in [mm].
+            If {None}, the *real* camera lenght 
+            is calculated from {microscope} argument.
+            IMPORTANT: see the {Note on camera length} section below!
         camera_pixel_size_um : float, optional, default is None
             Camera pixel size in [um].
-            If {None} it is taken from {microscope} argument.
+            If {None}, the value is taken from {microscope} argument.
         binning : int
             Binning=1,2,4,... increases camera_pixel_size (1x,2x,4x,...).
-            If {None} it is taken from {microscope} argument.
+            If {None}, the value is taken from {microscope} argument.
+        verbose : bool, optional, default is False
+            If {True}, the function prints outputs to stdnout.
+             
+        Returns
+        -------
+        calibration constant : float
+            The multiplicative constant that converts
+            (for given electron diffraction experiment/pattern)
+            X-coordinate-in-pixels to X-coordinate-in-q-vectors [1/A].
+             
+        Note on camera length
+        ---------------------
+        * The {camera_length_mm} argument can be:
+            - *nominal camera length* (D) shown by the microscope SW
+            - *real camera length* = real CL, usually different from D
+        * The *nominal camera length* (D) may be different from
+          the *real camera length* (CL) because:
+            - the difference in the position of top x bottom camera
+            - projective lenses (which may change the mag. of diff. pattern)
+        * Conclusions:
+            - For function `Calibrate.from_microscope`,
+              which employs a calibrated microscope from Microscopes class,
+              we can insert both {camera_length_mm} = real camera length
+              or {nominal_camera_length_mm} = nominal camera lenght.
+              calibrated microscope has the constant converting
+              *nominal* to *real* camera length.
+            - For function `Calibrate.from_microscope_params`,
+              which employs an arbitrary/non-calibrated microscope
+              (i.e. a microscope that is not defined in Microscopes class)
+              we have to insert the *real camera length*
+              in order to get the correct result.
+        '''
+        # (0) If the {microscope} name was given as a string,
+        # convert it to the full subclass name.
+        if isinstance(microscope, str):
+            microscope = Microscopes.str_to_class_name(microscope)
+       
+        # (1) Take the params from microscope class if they were not specified.
+        # ... 1st parameter = accelerating voltage
+        if voltage_kV is None: 
+            voltage_kV = microscope.voltage_kV
+        # ... 2nd parameter = camera_length    
+        if (camera_length_mm is None) and (nominal_camera_length_mm is None):
+            camera_length_mm = microscope.D * microscope.D_to_CL_coefficient
+        elif camera_length_mm is not None:
+            pass  # the camera_length_mm was defined as argument, Ok
+        elif nominal_camera_length_mm is not None:
+            camera_length_mm = \
+                nominal_camera_length_mm * microscope.D_to_CL_coefficient
+        # ... 3rd parameter = camera pixel size
+        if camera_pixel_size_um is None:
+            camera_pixel_size_um = microscope.camera_pixel_size_um
+        # ... 4th parameter = binning
+        if binning is None:
+            binning = microscope.binning
+        
+        # (2) Call Calibrate.from_microscope_params funct
+        # (with all arguments collected in the previous step
+        calibration_constant = Calibrate.from_microscope_params(
+            voltage_kV, camera_length_mm,
+            camera_pixel_size_um, binning,
+            verbose)
+        
+        # (3) Return the calculated calibration constant
+        return(calibration_constant)
+        
+        
+    def from_microscope_params(
+        voltage_kV, camera_length_mm, 
+        camera_pixel_size_um, binning, verbose=False):
+        '''
+        Calibration constant from arbitrary {microscope+camera} parameters.
+        
+        * The calibration constant can be estimated from parameters
+          of given microscope + camera system.
+        * The parameters we need to know are: (i) accelerating_voltage,
+          (ii) camera_length, (iii) camera_pixel_size, and (iv) binning.
+        
+        Parameters
+        ----------
+        voltage_kV : float
+            Accelerating voltage in [kV].
+            If {None}, the value is taken from {microscope} argument.
+        camera_length_mm : float
+            Camera lenght in [mm].
+            If {None}, the value is taken from {microscope} argument.
+            IMPORTANT: see the {Note on camera length} section below!
+        camera_pixel_size_um : float
+            Camera pixel size in [um].
+            If {None}, the value is taken from {microscope} argument.
+        binning : int
+            Binning=1,2,4,... increases camera_pixel_size (1x,2x,4x,...).
+            If {None}, the value is taken from {microscope} argument.
         verbose : bool, optional, default is False
             If {True}, the function prints outputs to stdnout.
 
@@ -259,64 +331,31 @@ class Calculate:
         -------
         calibration constant : float
             The multiplicative constant that converts
-            ED-profile X-coordinate-in-pixels
-            to X-coordinate-in-q-vectors [1/A].
-        
-        Technical notes
-        ---------------
-        * This calculation is based on four microscope parameters,
-          namely: (i) accelerating_voltage, (ii) camera_length_mm,
-          (iii) camera_pixel_size, and (iv) binning.
-        * Nevertheless, three of the parameters may change
-          from experiment to experiment:
-            - *accelerating_voltage_kV* for given TEM
-              can be changed by user (although it is not typical).
-            - *camera_length_mm* is routinely adjusted
-              to see the desired range of difractions;
-              the TEM software usually displays some information
-              about the nominal camera length.
-            - *binning* averages the neighboring pixels of the camera;
-              For example, the binning=1,2,4,...
-              increases the pixel size 1x,2x,4x,..
+            (for given electron diffraction experiment/pattern)
+            X-coordinate-in-pixels to X-coordinate-in-q-vectors [1/A].
         
         Note on camera length
         ---------------------
-        * The *nominal camera length* shown by the microscope (*D*)
-          may be different from *real camera length*,
-          which is the argument (camera_lenght_um) used in the calculation.
-            - Possible reasons: Exact amera position (bottom x upper camera),
-              projective lenses (which may change the magnification
-              of the diffraction pattern.
-            - Real-life solution: we need to know real *camera_length_mm*
-              for each theoretical/nominal/TEM-software-displayed
-              cammera length *D*!
-        * Note: For known/calibrated microscopes
-          (that are defined in ediff.calibration.Microscopes)
-          we insert the *nominal camera length*, because we know
-          the conversion coefficient from nominal to real camera length.
-          Here, for the arbitrary microscope, we have to insert
-          the *real camera length* in order to get the correct result.
+        * The {camera_length_mm} argument can be:
+            - *nominal camera length* (D) shown by the microscope SW
+            - *real camera length* = real CL, usually different from D
+        * The *nominal camera length* (D) may be different from
+          the *real camera length* (CL) because:
+            - the difference in the position of top x bottom camera
+            - projective lenses (which may change the mag. of diff. pattern)
+        * Conclusions:
+            - For function `Calibrate.from_microscope`,
+              which employs pre-defined microscopes from the
+              ediff.calibration.Microscopes class
+              we insert the *nominal camera length*, because we know
+              the conversion coefficient from nominal to real camera length.
+            - For function `Calibrate.from_microscope_params`,
+              which employs arbitrary microscope
+              (i.e. microscope that is not defined in the Microscopes class)
+              we have to insert the *real camera length*
+              in order to get the correct result.
         '''
-        
-        # (0) If {microscope} argument was given,
-        # take MISSING parameters for the calculation from {microscope}.
-        if (voltage_kV is None) and (microscope is not None):
-            voltage_kV = microscope.voltage_kV
-        else:
-            sys.exit('Microscope params - missing accelerating voltage!')
-        if (camera_length_mm is None) and (microscope is not None): 
-            camera_length_mm = microscope.D * microscope.D_to_CL_coefficient
-        else:
-            sys.exit('Microscope params - camera length is missing!')
-        if (camera_pixel_size_um is None) and (microscope is not None):
-            camera_pixel_size_um = microscope.camera_pixel_size_um
-        else:
-            sys.exit('Microscope params - camera pixel size is missing!')
-        if (binning is None) and (microscope is not None):
-            binning = microscope.binning
-        else:
-            sys.exit('Microscope params - no info about binning!')
-        
+                
         # (1) Calculate relativistic wavelength of electrons
         # (this is needed to convert CL to CC in the next step
         Lambda = Utils.electron_wavelength(voltage_kV)
@@ -357,16 +396,17 @@ class Calculate:
 
         # (5) Return the calculated calibration constant
         # (We want the calibration constant in q [1/A]
-        return(q_calibration)
+        calibration_constant = q_calibration
+        return(calibration_constant)
 
 
 class Microscopes:
     '''
-    A dataclass containing know/calibrated microscopes.
+    A dataclass containing known/calibrated microscopes.
 
     * The microscopes are defined as subclasses.
     * More precisely, the microscopes are sub-dataclasses.
-    * The calibrated microscopes can be used to determine calibration constant.
+    * A calibrated microscopes can be used to calculate alibration constant.
     
     >>> How to calculate calibration constant for known/calibrated microscope
     >>> import ediff as ed
@@ -375,10 +415,11 @@ class Microscopes:
     >>> # (a) Simple case - all parameters at their default/standard values
     >>> my_TEM = ed.calibration.Microscopes.TecnaiVeleta()
     >>> # (b) Intermediate case - standard values + camera lenght changed
-    >>> my_TEM = ed.calibration.Microscopes.TecnaiVeleta(D=750)
+    >>> my_TEM = ed.calibration.Microscopes.TecnaiVeleta(
+    >>>     nominal_camera_length_mm=750)
     >>> # (c) The most comlex case - multiple parameters have changed
     >>> my_TEM = ed.calibration.Microscopes.TecnaiVeleta(
-    >>>     D=750, voltage_kV=80, binning=4)
+    >>>     nominal_camera_length_mm=750, voltage_kV=80, binning=4)
     >>>
     >>> # (2) Calculate the calibration constant
     >>> const = ed.calibration.Calculate.from_microscope_parameters(my_TEM)
@@ -400,8 +441,10 @@ class Microscopes:
     # * the previous version used dataclasses with a property
     # * the property yielded the calibration constant within the dataclass
     # * the problem was that dataclasses CANNOT use self during initialization
-    # * the solution how to calculate within dataclasses => properties
-    # * the sources/hints/notes how this can be done are given/kept below
+    # * the solution how to calculate within dataclasses can be found in www
+    # * some resources are kept below,
+    #   BUT the current version uses only simple code
+    #   and it can be improved/generalized later, if needed
     #
     # Dataclasses
     #   https://docs.python.org/3/library/dataclasses.html
@@ -414,6 +457,38 @@ class Microscopes:
     #   * @property decorator converts methods to properties.
     #     More precisely, a method can be used as a property ...
     #     ... i.e: class.method() => class.method (without parentheses).
+    
+    def str_to_class_name(str_name):
+        '''
+        Convert microscope name to microscope class name.
+
+        Parameters
+        ----------
+        str_name : str
+            Name of the microscope class.
+            The str_name must match *exactly* the class name.
+            The func converts the str object to the correspondingclass object.
+
+        Raises
+        ------
+        ValueError
+            The error is raised if the microscope name is uknown.
+
+        Returns
+        -------
+        class_name
+            The class corresponding to {str_name} argument.
+        '''
+        
+        # Get the attribute if it exists, otherwise return None
+        class_name = getattr(Microscopes, str_name, None)
+        
+        # Raise an exception for uknown microscope
+        if class_name is None:
+            raise ValueError(f"Unknown microscope: {str_name}")
+        
+        # Return the class_name if everything worked fine
+        return class_name
     
     
     @dataclass
@@ -473,6 +548,31 @@ class Microscopes:
         D_to_CL_coefficient  : float = 1 / 4
         camera_pixel_size_um : float = 9.0
         binning              : int   = 4
+        
+        
+    @dataclass
+    class TalosCeta:
+        '''
+        The default parameters for
+        the microscope/camera = Tecnai/Morada.
+        
+        Parameters
+        ----------
+        voltage_kV : float, default is 120
+            The accelerating voltage, typical of given system.
+        D : float, default is 660
+            The *nominal camera length* from the control software.
+        D_to_CL_coefficient : float, default is 1/4
+            The coefficient to convert
+            *nominal camera lenght* to *real_camera_length*.
+            This coefficient is specific for given system
+            as the *nominal* and *real* camera length may be different.
+        camera_pixel_size_um : float, default is 9.0
+            The camera pixel size = a constant for given camera.
+        binning : int, default is 4
+            The binning, which is typical of given system.
+        '''
+        pass
         
 
 class Utils:
@@ -596,52 +696,3 @@ class Utils:
         print(f'R_calibration = pixel_size   : {R_calibration:.5f} [mm]')
         print(f'S_calibration = pixel_size_S : {S_calibration:.5f} [1/A]')
         print(f'q_calibration = pixel_size_q : {q_calibration:.5f} [1/A]')
-        
-    
-    def calibrate_and_normalize_eld_profile(eld_profile, calibration_constant):
-        '''
-        Calibrate and normalize ELD profile.
-        
-        * Assumption: The ELD profile is in EDIFF format as described below.
-        
-        Parameters
-        ----------
-        eld_profile : numpy.array
-            The original/non-calibrated ELD profile in EDIFF format.
-            The details are in the *Technical notes* section below.
-        calibration_constant : float
-            The calibration constant,
-            which converts *distance-in-pixels* to *distance-in-q-vectors*.
-            The details are in the *Technical notes* section below.
-            
-            
-        Returns
-        -------
-        eld_profile : numpy.array
-            The calibrated and normalized ELD profile (in EDIFF format).
-
-        Technical notes
-        ---------------
-        * ELD profile in EDIFF format
-          = text file with 3 columns + comments (starting with #).
-            - EDIFF file columns
-              = {pixel}, {intensity}, {bkg-corrected-intensity}.
-            - The {pixel} column
-              = {distance-in-pixels-from-the-diffractogram-center}.
-            - More details concerning ELD profiles
-              = the documentation of ediff.io.Profile.read function.
-        * The *calibration constant*
-          = the final constant for the conversion/calibration.
-            - It is explained in more detail at the initial desription
-              of ediff.calibration module.
-        '''
-        
-        # X-data = calibrate = convert [pixels] to [q-vectors]. 
-        eld_profile[0] = eld_profile[0] * calibration_constant
-        
-        # Y-data = normalize to 1 (for both raw and bkgr-correctet intensities)
-        eld_profile[1] = eld_profile[1]/np.max(eld_profile[1])
-        eld_profile[2] = eld_profile[2]/np.max(eld_profile[2])
-        
-        # Return the calibrated profile
-        return(eld_profile)
