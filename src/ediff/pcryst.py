@@ -1028,20 +1028,37 @@ class ELD_polycrystal:
         
         # (2) Run the selected background subtraction method.
         if method == 'InteractivePlot':
-            # If the user did not set bkg_file, we need at least some name.
-            # We need a filename for possible interactive saving of bkg points.
+            # (a) Basic, always working, semi-interactive method
+            #-----
+            # If the user did not set bkg_file, we need at least some name,
+            # which will be used for possible interactive saving of bkg points.
             kwargs.setdefault('bkg_file', 'background.txt')
+            # Now we have bkg_file name and we can run the InteractivPlot.
             SMET = ediff.bkg.Run.InteractivePlot(self.diffractogram, **kwargs)
         elif method == 'RestoreFromPoints':
+            # (b) Supplementary method to InteractivePlot.
+            # (needs a file with bkg-points from a previous InteractivePlot run
             SMET = ediff.bkg.Run.RestoreFromPoints(self.diffractogram,**kwargs)
         elif method == 'SimpleFuncs':
+            # (c) Simple geometric methods of bkg subtraction.
+            # (SimpleFuns METHOD(class) contains several ALGORITHMS
             SMET = ediff.bkg.Run.SimpleFuncs(self.diffractogram, **kwargs)
-        elif method == 'BaseLines':
-            SMET = ediff.bkg.Run.BaseLines(self.diffractogram, **kwargs)
+        elif method == 'Baselines':
+            # (d) Selected classical methods from {pybaselines} package
+            # (Baselines METHOD(class) contains several ALGORITHMS
+            SMET = ediff.bkg.Run.Baselines(self.diffractogram, **kwargs)
+        elif method == 'Wavelets':
+            # (e) Wavelet-based methods
+            # (Wavelets METHOD(class) contains several ALGORITHMS
+            raise NotImplementedError(
+                "Wavelet background subtraction is not implemented yet.")
         elif method is None:
+            # (f) None = add empty background.
+            # Step 1 :: add Ibkg = 0 and I = Iraw
             self.diffractogram['Ibkg'] = \
                 np.zeros_like(self.diffractogram['Iraw'])
             self.diffractogram['I'] = self.diffractogram['Iraw'].copy()
+            # Step 2 :: if xrange is defined, set I = 0 outside xrange
             xrange = kwargs.get("xrange")
             if xrange != None:
                 a, b = xrange
@@ -1049,7 +1066,9 @@ class ELD_polycrystal:
                 df.loc[(df['Pixels'] < a) | (df['Pixels'] > b), 'I'] = 0
             SMET = None
         else:
-            raise TypeError('Background subtraction: uknown method name!')
+            # Unknown bkg-subtraction method - none of the above.
+            raise TypeError(
+                f'Background subtraction: method [{method}] is uknown!')
 
         # (3) Return SMET
         # (SMET = background subtraction method object

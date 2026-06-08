@@ -28,5 +28,5 @@ Background subtraction in 1D diffraction profiles.
 import bground.api
 from bground.api import InputData, BkgParams 
 from bground.api import InteractivePlot, RestoreFromPoints
-from bground.api import SimpleFuncs, BaseLines, Wavelets
+from bground.api import SimpleFuncs, Baselines, Wavelets
 from bground.api import Run, Plots, Help
