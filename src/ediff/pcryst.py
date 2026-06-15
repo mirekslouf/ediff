@@ -25,11 +25,11 @@ from scipy.signal import convolve as spConvolve
 from pymatgen.core.structure import Structure as pmStructure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator as pmXRDCalculator
 
-import ediff.io
-import ediff.center
-import ediff.radial
-import ediff.pcryst
-
+from . import io
+from . import center
+from . import radial
+from . import bkg
+from . import calibration
 
 class CrystParams:
     '''
@@ -405,7 +405,7 @@ class PXRDcalculation:
         # Step 1: PyMatGen structure => pd.DataFrame
         diffractions = self._diffractions_to_dframe(diffractions)
         # Step 2: pd.DataFrame => ediff.io.Diffractions1D
-        diffractions = ediff.io.Diffractions1D(diffractions)
+        diffractions = io.Diffractions1D(diffractions)
         
         # (3) Return calculated diffractions
         # (pandas.DataFrame with cols: TwoTheta, h,k,l, dhkl, S, q, Intensity
@@ -484,7 +484,7 @@ class PXRDcalculation:
 
         # (5) Additional layer: convert DataFrame to ediff.io.Diffractogram1D
         # (ediff.io.Diffractogram1D is a pd.DataFrame + additional methods
-        profile = ediff.io.Diffractogram1D(df)
+        profile = io.Diffractogram1D(df)
         
         # (6) Return diffractogram = the whole diffraction profile
         return(profile)
@@ -730,6 +730,7 @@ class XRD_polycrystal(PXRDcalculation):
     * Main advantage of XRD_polycrystal - simpler API than PXRDcalculation.
     '''
     
+    
     def __init__(self, structure, temp_factors=0.8, description=None, 
                  wavelength = 0.71, two_theta_range = (5,100),
                  peak_profile = PeakProfiles.pseudo_voigt,
@@ -838,8 +839,7 @@ class ELD_polycrystal:
     * OO-processing (new, simplified interface, better for most cases).
         - Define object and run methods (data/results are saved in the object).
     '''
-
-
+    
     
     def __init__(self, diffractogram2D=None, description=None):
         '''
@@ -905,7 +905,7 @@ class ELD_polycrystal:
             and returned as numpy.ndarray.
         '''
         
-        self.diffractogram2D = ediff.io.Diffractogram2D(diffractogram2D)
+        self.diffractogram2D = io.Diffractogram2D(diffractogram2D)
         
     
     def find_center(self, **kwargs): 
@@ -944,7 +944,7 @@ class ELD_polycrystal:
         kwargs['final_print'] = kwargs.get('final_print') or False
         
         # (2) Call the CenterLocator method with all kwargs
-        self.center = ediff.center.CenterLocator(
+        self.center = center.CenterLocator(
             self.diffractogram2D, **kwargs)
         
         
@@ -967,7 +967,7 @@ class ELD_polycrystal:
         
         # (1) Calculate 1D diffractogram/profile
         # (and optionally save the result to {out_file} => if it is not None
-        numpy_diffractogram = ediff.radial.calc_radial_distribution(
+        numpy_diffractogram = radial.calc_radial_distribution(
             arr = self.diffractogram2D, 
             center = (self.center.x, self.center.y),
             out_file = out_file)
@@ -975,7 +975,7 @@ class ELD_polycrystal:
         # (2) Save the calculated diffractogram to self.diffractogram
         # (self profile is a ediff.io.Diffractogram1D object
         # (therefore, we can apply all Diffratogram1D methods to show it
-        self.diffractogram = ediff.io.Diffractogram1D( 
+        self.diffractogram = io.Diffractogram1D( 
             numpy_diffractogram, columns=['Pixels','Iraw'])    
                     
     
@@ -1034,19 +1034,19 @@ class ELD_polycrystal:
             # which will be used for possible interactive saving of bkg points.
             kwargs.setdefault('bkg_file', 'background.txt')
             # Now we have bkg_file name and we can run the InteractivPlot.
-            SMET = ediff.bkg.Run.InteractivePlot(self.diffractogram, **kwargs)
+            SMET = bkg.Run.InteractivePlot(self.diffractogram, **kwargs)
         elif method == 'RestoreFromPoints':
             # (b) Supplementary method to InteractivePlot.
             # (needs a file with bkg-points from a previous InteractivePlot run
-            SMET = ediff.bkg.Run.RestoreFromPoints(self.diffractogram,**kwargs)
+            SMET = bkg.Run.RestoreFromPoints(self.diffractogram,**kwargs)
         elif method == 'SimpleFuncs':
             # (c) Simple geometric methods of bkg subtraction.
             # (SimpleFuns METHOD(class) contains several ALGORITHMS
-            SMET = ediff.bkg.Run.SimpleFuncs(self.diffractogram, **kwargs)
+            SMET = bkg.Run.SimpleFuncs(self.diffractogram, **kwargs)
         elif method == 'Baselines':
             # (d) Selected classical methods from {pybaselines} package
             # (Baselines METHOD(class) contains several ALGORITHMS
-            SMET = ediff.bkg.Run.Baselines(self.diffractogram, **kwargs)
+            SMET = bkg.Run.Baselines(self.diffractogram, **kwargs)
         elif method == 'Wavelets':
             # (e) Wavelet-based methods
             # (Wavelets METHOD(class) contains several ALGORITHMS
@@ -1124,7 +1124,7 @@ class ELD_polycrystal:
             if XRD is None:
                 raise IndexError('XRD polycrystal object not defined!')
             # (b) Run the calibration method => from_max_peaks
-            const = ediff.calibration.Calibrate.from_max_peaks(
+            const = calibration.Calibrate.from_max_peaks(
                 eld_profile = ELD.diffractogram,
                 xrd_profile = XRD.diffractogram,
                 messages = messages)
@@ -1138,7 +1138,7 @@ class ELD_polycrystal:
             if XRD is None: 
                 raise IndexError('XRD polycrystal object not defined!')
             # (b) Run the calibration method => from_max_peaks
-            const = ediff.calibration.Calibrate.from_max_peaks_in_range(
+            const = calibration.Calibrate.from_max_peaks_in_range(
                 eld_profile = ELD.diffractogram,
                 xrd_profile = XRD.diffractogram,
                 eld_range = eld_range,
@@ -1153,12 +1153,12 @@ class ELD_polycrystal:
             # (b) Run the calibration method => from_microscope
             # (microscope was removed from kwargs in the previous step
             # (therefore, there are no issues with double arguments
-            const = ediff.calibration.Calibrate.from_microscope(
+            const = calibration.Calibrate.from_microscope(
                 microscope, **kwargs)
             
         elif method == 'MicroscopeParams':
             # Just send all kwargs to Calibrate.from_microscope_params
-            const = ediff.calibration.Calibrate.from_microscope_params(
+            const = calibration.Calibrate.from_microscope_params(
                 **kwargs)
             
         else:
@@ -1218,7 +1218,7 @@ class ELD_polycrystal:
         xrd_profile = XRD.diffractogram
         
         # (2) Call the plotting function with all args and kwargs
-        ediff.io.Plots.plot_final_eld_and_xrd(
+        io.Plots.plot_final_eld_and_xrd(
             eld_profile, xrd_profile, fine_tune, Xlim, **kwargs)
             
         
@@ -1243,4 +1243,4 @@ def _update_wrapper_signature(original_function, wrapper_function):
 
 # (2) Apply the function to our selected functions
 _update_wrapper_signature(
-    ediff.center.CenterLocator, ELD_polycrystal.find_center)        
+    center.CenterLocator, ELD_polycrystal.find_center)        

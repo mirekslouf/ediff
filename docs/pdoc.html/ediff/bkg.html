@@ -33,6 +33,10 @@
 
 
 
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
+    </ul>
+
 
 
         <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev" target="_blank">
@@ -85,16 +89,23 @@
 </span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="c1">#</span>
 </span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="c1"># Final conclusion =&gt; the users can do:</span>
 </span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="c1">#</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="c1"># &gt;&gt;&gt; import ediff.background</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="c1"># &gt;&gt;&gt; DATA  = ediff.bkg.InputData ...</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="c1"># &gt;&gt;&gt; PPAR  = ediff.bkg.PlotParams ...</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="c1"># &gt;&gt;&gt; IPLOT = ediff.bkg.InteractivePlot ...</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">bground.api</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">BkgParams</span> 
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlot</span><span class="p">,</span> <span class="n">RestoreFromPoints</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleFuncs</span><span class="p">,</span> <span class="n">Baselines</span><span class="p">,</span> <span class="n">Wavelets</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span><span class="p">,</span> <span class="n">Plots</span><span class="p">,</span> <span class="n">Help</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="c1"># &gt;&gt;&gt; import ediff as ed</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="c1"># &gt;&gt;&gt; DATA = ed.bkg.InputData ...</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="c1"># &gt;&gt;&gt; BPAR = ed.bkg.BkgParams ...</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="c1"># &gt;&gt;&gt; SMET = ed.bkg.InteractivePlot ...</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="c1"># &gt;&gt;&gt; SMET.run(DATA, BPAR)</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="kn">import</span><span class="w"> </span><span class="nn">bground.api</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">BkgParams</span> 
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">InteractivePlot</span><span class="p">,</span> <span class="n">RestoreFromPoints</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleFuncs</span><span class="p">,</span> <span class="n">Baselines</span><span class="p">,</span> <span class="n">Wavelets</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">bground.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Run</span><span class="p">,</span> <span class="n">Plots</span><span class="p">,</span> <span class="n">Help</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="c1"># List of all bkg modules and objects, which:</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="c1"># (enables &gt;&gt;&gt; from ediff.bkg import *</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="c1"># (defines all sub-modules clearly and helps tools like VSCode/Pylance</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="nb">all</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InputData&#39;</span><span class="p">,</span> <span class="s1">&#39;BkgParams&#39;</span><span class="p">,</span> <span class="s1">&#39;InteractivePlot&#39;</span><span class="p">,</span> <span class="s1">&#39;RestoreFromPoints&#39;</span><span class="p">,</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>       <span class="s1">&#39;SimpleFuncs&#39;</span><span class="p">,</span> <span class="s1">&#39;Baselines&#39;</span><span class="p">,</span> <span class="s1">&#39;Wavelets&#39;</span><span class="p">,</span> <span class="s1">&#39;Run&#39;</span><span class="p">,</span> <span class="s1">&#39;Plots&#39;</span><span class="p">,</span> <span class="s1">&#39;Help&#39;</span><span class="p">]</span>
 </span></pre></div>
 
 

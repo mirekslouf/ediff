@@ -26,30 +26,30 @@ EDIFF modules:
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
 '''
 
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
-# >>> ed.io.Diffractogram.read...
-import ediff.calibration
-import ediff.center
-import ediff.gcryst
-import ediff.io
-import ediff.pcryst
-import ediff.radial
-
+# >>> ed.io.Diffractogram1D.show...
+from . import calibration
+from . import center
+from . import gcryst
+from . import io
+from . import mcryst
+from . import pcryst
+from . import radial
 
 # This is a slightly special import:
-# * ediff (1) imports ediff.bkg, which (2) imports external bground package
-# * see additional imports in ediff.bkg module to see how it is performed 
-# * this "two-step import" enables us to use the ediff module as follows:
-# >>> import ediff as ed
-# >>> DATA  = ed.bkg.InputData ...
-# >>> PPAR  = ed.bkg.PlotParams ...
-# >>> IPLOT = ed.bkg.InteractivePlot ...
-import ediff.bkg
+# (ediff (1) imports ediff.bkg, which (2) imports external bground package
+# (at the end, we can use all relevant bkg objects like: >>> ed.bkg.any_object
+from . import bkg
 
+# List of all ediff modules, which:
+# (enables >>> from ediff import *
+# (defines all sub-modules clearly and helps tools like VSCode/Pylance
+__all__ = [
+    "bkg", "calibration", "center", "gcryst", "io", "pcryst", "mcryst", "radial"]
 
 # Obligatory acknowledgement -- the development was co-funded by TACR.
 #  TACR requires that the acknowledgement is printed when we run the program.

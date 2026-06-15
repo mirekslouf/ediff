@@ -20,13 +20,20 @@ Background subtraction in 1D diffraction profiles.
 #
 # Final conclusion => the users can do:
 #
-# >>> import ediff.background
-# >>> DATA  = ediff.bkg.InputData ...
-# >>> PPAR  = ediff.bkg.PlotParams ...
-# >>> IPLOT = ediff.bkg.InteractivePlot ...
+# >>> import ediff as ed
+# >>> DATA = ed.bkg.InputData ...
+# >>> BPAR = ed.bkg.BkgParams ...
+# >>> SMET = ed.bkg.InteractivePlot ...
+# >>> SMET.run(DATA, BPAR)
 
 import bground.api
 from bground.api import InputData, BkgParams 
 from bground.api import InteractivePlot, RestoreFromPoints
 from bground.api import SimpleFuncs, Baselines, Wavelets
 from bground.api import Run, Plots, Help
+
+# List of all bkg modules and objects, which:
+# (enables >>> from ediff.bkg import *
+# (defines all sub-modules clearly and helps tools like VSCode/Pylance
+all = ['InputData', 'BkgParams', 'InteractivePlot', 'RestoreFromPoints',
+       'SimpleFuncs', 'Baselines', 'Wavelets', 'Run', 'Plots', 'Help']
