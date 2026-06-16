@@ -25,11 +25,11 @@ from scipy.signal import convolve as spConvolve
 from pymatgen.core.structure import Structure as pmStructure
 from pymatgen.analysis.diffraction.xrd import XRDCalculator as pmXRDCalculator
 
-from . import io
-from . import center
-from . import radial
-from . import bkg
-from . import calibration
+from ediff import io
+from ediff import center
+from ediff import radial
+from ediff import bkg
+from ediff import calibration
 
 class CrystParams:
     '''

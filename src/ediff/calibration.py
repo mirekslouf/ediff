@@ -117,7 +117,7 @@ class Calibrate:
         
         * ELD/XRD profiles represent 1D electron/X-ray diffraction patterns.
         * More info about ELD/XRD profiles in EDIFF
-          => see the docs of the ediff.io.Profile.read function.
+          => see the docs of the ediff.io.Data1D.read function.
         * The peaks are selected using arguments *eld_range* and *xrd_range*.
             - Both arguments are tuples of two floats = x-ranges.
             - Only the maximal peaks in given ranges are considered.

@@ -110,7 +110,7 @@ class Data1D:
         # (1) Check if the column names were defined.
         #  - the column names can be defined/changed when calling this func
         #  - typical column names for XRD profiles: [TwoTheta, S, q, Intensity]
-        #  - typical column names for ELD profiles: [q, Iraw, Ibkg, I] 
+        #  - typical column names for ELD profiles: [Pixels, q, Iraw, Ibkg, I] 
         my_columns  = kwargs.get('columns') or None
         
         # (2) Read XYdata depending on the data type.
@@ -156,7 +156,7 @@ class Data1D:
         elif isinstance(XYdata, np.ndarray):
             # XYdata is an array => convert to Dataframe.
             df = pd.DataFrame(np.transpose(XYdata))
-            if my_columns is not None: df.columns =  my_columns
+            if my_columns is not None: df.columns = my_columns
             return(df)
         elif XYdata is None:
             # XYdata is None => create an empty dataframe with {dcols}
@@ -971,20 +971,18 @@ class Plots:
         
         Parameters
         ----------
-        eld_profile : str or numpy.array
+        eld_profile : str, numpy.array or pandas.DataFrame
             The *eld_profile* (ELD) is
             an electron diffraction profile in EDIFF format.
-            It can come as file (if *eld_profile* = str = filename)
-            or array (if *eld_profile* = numpy.array).
-            More info about ELD profiles in EDIFF
-            => see docs of ediff.calibration.Calculate.from_max_peaks function.
-        xrd_profile : str or numpy.array
+            The *eld_profile* can be {str/file, np.array, or pd.DataFrame},
+            but formats should contain the specific EDIFF-columns,
+            namely: ['Pixels', 'q', 'Iraw', 'Ibkg', 'I'].
+        xrd_profile : str, numpy.array or pandas.DataFrame
             The *xrd_profile* (XRD) is
-            an X-rayd diffraction profile in EDIFF format.
-            It can come as file (if *xrd_profile* = str = filename)
-            or array (if *xrd_profile* = numpy.array).
-            More info about XRD profiles in EDIFF
-            => see docs of ediff.calibration.Calculate.from_max_peaks function.
+            an X-ray diffraction profile in EDIFF format.
+            The *eld_profile* can be {str/file, np.array, or pd.DataFrame},
+            but formats should contain the specific EDIFF-columns,
+            namely: ['TwoTheta', 'S', 'q', 'I'].
         fine_tune : float
             The constant for the final fine-tuning of peak position.
             The *fine_tuning* constant has a starting value of 1.000.
@@ -1025,14 +1023,16 @@ class Plots:
             The plot is shown in the stdout
             and saved to *output_file* if requested.
         '''
-        
+           
         # (1) Read ED and XRD diffraction profiles.
-        # TODO: more general reading of profiles?
-        # => not necessary at the moment
-        eld = eld_profile
-        xrd = xrd_profile
-    
-        # Plot the data
+        # (we suppose data in EDIFF format => eld, xrd with specific columns
+        # (the data can be file, np.array, pd.DataFrame, but cols must be there
+        eld = ediff.io.Data1D.read(
+            eld_profile, columns=['Pixels', 'q', 'Iraw', 'Ibkg', 'I'])
+        xrd = ediff.io.Data1D.read(
+            xrd_profile, columns=['TwoTheta', 'S', 'q', 'I'])
+
+        # (2) Plot the data
         plt.plot(xrd.q, xrd.I, label=xrd_data_label)
         plt.plot(eld.q * fine_tune, eld.I, color='red', label=eld_data_label)
         # Define axis labels
@@ -1053,7 +1053,7 @@ class Plots:
         if transparent == True:
             plt.legend(framealpha=0.0)
         else: plt.legend()
-        # Additional parameters
+        # Final adjustments
         plt.grid()
         plt.tight_layout()
         # Save plot if requested
@@ -1062,7 +1062,8 @@ class Plots:
                 plt.savefig(out_file, dpi=out_dpi, transparent=True)
             else:
                 plt.savefig(out_file, dpi=out_dpi, facecolor='white')
-        # Show the plot
+        
+        # (3) Show the plot
         if CLI == False: plt.show()
     
     @staticmethod    
