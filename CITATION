@@ -4,4 +4,7 @@ Slouf M, Skoupy R, Pavlova E, Krzyzanek V:
 High Resolution Powder Electron Diffraction in Scanning Electron Microscopy
 Materials 14 (2011) 7550. https://doi.org/10.3390/ma14247550
 
-Note: The paper describes {stemdiff} package; {ediff} is a part of it.
+EDIFF is a standalone software package for processing and comparing
+experimental electron-diffraction data and calculated diffraction
+patterns. It can be used independently or together with STEMDIFF
+and BGROUND.
