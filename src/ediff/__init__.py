@@ -33,15 +33,51 @@ __version__ = "1.2.7"
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
 # >>> ed.io.Diffractogram1D.show...
-from ediff import bkg
-from ediff import bkg2d
+# from ediff import bkg
+# from ediff import bkg2d
 from ediff import center
-from ediff import gcryst
-from ediff import gui
+# from ediff import gcryst
+# from ediff import gui
 from ediff import io
 from ediff import mcryst
-from ediff import pcryst
+# from ediff import pcryst
 from ediff import radial
+
+# ediff.bkg, ediff.bkg2d, ediff.gcryst, ediff.pcryst, and ediff.gui are
+# imported LAZILY -- only the first time they're actually accessed (e.g.
+# `ed.bkg.something(...)` or `ed.pcryst.XRD_polycrystal(...)`) -- rather
+# than unconditionally here. Profiling the GUI's interactive worker
+# process (which only ever needs ediff.center/io for manual center
+# detection, ellipse correction, and background point-picking) showed
+# `import ediff` alone cost close to 8 seconds, and the overwhelming
+# majority of that -- about 5.8 seconds, ~70% of the total -- came from
+# ediff.bkg pulling in the external `bground` package (and its own heavy
+# dependency `pybaselines`), completely unconditionally, even for
+# operations that never touch background subtraction at all.
+# ediff.gcryst and ediff.pcryst separately pull in pymatgen (itself a
+# slow import), and ediff.gui pulls in the whole Qt/matplotlib GUI stack
+# -- none of which detect_center or correct_ellipse need either.
+# This is the standard PEP 562 module-level __getattr__ mechanism:
+# `ed.bkg...`, `ed.bkg2d...`, `ed.gcryst...`, `ed.pcryst...`, and
+# `ed.gui...` all keep working exactly as before -- only WHEN the
+# underlying import happens changes. Operations that genuinely need one
+# of these (e.g. subtract_background_interactive genuinely needs
+# ediff.bkg, via pcryst.ELD_polycrystal.subtract_background) still pay
+# that cost, but only when actually used, not on every cold start
+# regardless of which operation is running.
+import importlib
+
+_LAZY_SUBMODULES = {"bkg", "bkg2d", "gcryst", "pcryst", "gui"}
+
+def __getattr__(name):
+    if name in _LAZY_SUBMODULES:
+        module = importlib.import_module(f"ediff.{name}")
+        globals()[name] = module   # cache it, so this only runs once
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__():
+    return sorted(list(globals().keys()) + list(_LAZY_SUBMODULES))
 
 # List of all ediff modules, which:
 # 1) enables >>> from ediff import *
@@ -73,6 +109,13 @@ def acknowledgement():
     print('The development of the package was co-funded by')
     print('the Technology agency of the Czech Republic,')
     print('program NCK, project TN02000020.')
-    
+
+def acknowledgementGUI():
+    print('EDIFF package GUI - process electron diffraction patterns.')
+    print('------')
+    print('The development of the package was co-funded by')
+    print('the Technology agency of the Czech Republic,')
+    print('program NCK, project TN02000020.')
+
 if __name__ == '__main__':
     acknowledgement()
