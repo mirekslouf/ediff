@@ -29,6 +29,8 @@ from matplotlib.legend_handler import HandlerBase
 from math import floor
 from scipy.optimize import curve_fit
 from scipy.ndimage import map_coordinates
+from scipy.ndimage import median_filter
+
 
 import ediff.io 
 import ediff.radial 
@@ -42,7 +44,7 @@ import skimage.feature as skf
 from scipy.ndimage import gaussian_filter
 
 from scipy.signal import find_peaks
-from scipy.fft import _pocketfft, set_backend
+import scipy.fft
 from textwrap import dedent
 
 import sys
@@ -175,6 +177,7 @@ class CenterLocator:
                  out_file = None,
                  sobel = False,
                  masking = True,
+                 normalize_bg=False,
                  ellipse = False,
                  mcorrect = None,
                  heq = False, 
@@ -218,6 +221,7 @@ class CenterLocator:
         self.mcorrect = mcorrect
         self.sobel = sobel
         self.masking = masking
+        self.normalize_bg = normalize_bg
         self.heq = heq
         self.icut = icut
         self.cmap = cmap
@@ -855,69 +859,78 @@ class CenterLocator:
         '''
         print(f'Center coordinates (x, y) : ({self.x}, {self.y})')
 
-
-    def ellipse_distortion(self, img, show=True, cmap="viridis", method=None):
+    def ellipse_distortion(self, img, show=True, cmap="viridis", method=None,
+                           vmax=None):
         """
-        Corrects elliptical distortion in an image by transforming 4 distorted 
+        Corrects elliptical distortion in an image by transforming 4 distorted
         points (which should ideally lie on a circle) to lie on a true circle.
-    
+
         Parameters
         ----------
         img : np.ndarray
-            Input image (2D numpy array) containing an elliptical diffraction 
+            Input image (2D numpy array) containing an elliptical diffraction
             pattern.
-        
+
         show : bool, optional
-            If True, displays the original and corrected images. 
+            If True, displays the original and corrected images.
             Default is True.
-        
+
         method : str, optional
             Point selection method: 'manual' or 'auto'.
             - 'manual': User clicks four points on the image.
-            - 'auto': Automatically detects the four brightest Bragg spots 
+            - 'auto': Automatically detects the four brightest Bragg spots
               (not yet implemented).
-    
+
+        vmax : float, optional
+            Maximum intensity for DISPLAY ONLY (matplotlib's imshow color
+            scale) — has no effect on img itself or on the returned
+            corrected array. Pass this instead of pre-clipping img's
+            actual values, so faint outer rings stay visible for
+            point-picking without destroying the true dynamic range of
+            the data that actually gets transformed and returned. If
+            None, matplotlib auto-scales to img's own min/max.
+
         Returns
         -------
         corrected : np.ndarray
             The distortion-corrected image.
         """
-            
+
         # Helper function
         def refine_to_local_max(img, pt, window=9):
             """
             Refine a point to the local maximum intensity within a neighborhood.
-        
+
             This function searches for the brightest (maximum intensity) pixel
             within a square window centered around a given point. It is typi-
             cally used to improve the accuracy of an estimated center by snap-
             ping it to the nearest local maximum.
-        
+
             Parameters
             ----------
             img : ndarray
                 2D array (grayscale) in which the local maximum is to be found.
-                
+
             pt : array-like of float
-                Initial (x, y) point coordinates around which the local maximum 
+                Initial (x, y) point coordinates around which the local maximum
                 is searched.
-                
+
             window : int, optional
                 Size of the square window for the local search (default is 9).
-                The actual window will be `window x window` pixels, 
+                The actual window will be `window x window` pixels,
                 centered at `pt`.
-        
+
             Returns
             -------
             refined_pt : ndarray of float
-                Refined point coordinates [x, y] corresponding to the brightest 
+                Refined point coordinates [x, y] corresponding to the brightest
                 pixel in the local window.
-        
+
             Notes
             -----
-            - If the window overlaps the image boundaries, it is clipped 
+            - If the window overlaps the image boundaries, it is clipped
               appropriately.
-            - If the window is completely outside the image, the original point 
+            - If the window is completely outside the image, the original point
               is returned.
             - Assumption : `img` uses (row, column) = (y, x) indexing.
             """
@@ -925,89 +938,175 @@ class CenterLocator:
             r = window // 2
             x_min, x_max = max(0, x - r), min(img.shape[1], x + r + 1)
             y_min, y_max = max(0, y - r), min(img.shape[0], y + r + 1)
-    
+
             local = img[y_min:y_max, x_min:x_max]
             if local.size == 0:
                 return np.array([x, y], dtype=np.float32)
-    
+
             dy, dx = np.unravel_index(np.argmax(local), local.shape)
             refined_x = x_min + dx
             refined_y = y_min + dy
             return np.array([refined_x, refined_y], dtype=np.float32)
-        
+
         # Elliptical correction workflow --------------------------------------
         h, w = img.shape
-    
+
         if method != "manual":
             print("Only user-assisted ('manual') correction available.")
             print("Fallback to 'manual' method.")
 
             method = "manual"
-    
+
         if method == 'manual':
             # Manual point selection
-            plt.imshow(img, cmap=cmap, origin="upper")
+            plt.imshow(img, cmap=cmap, origin="upper", vmax=vmax)
             plt.title("Click 4 distorted points (in circular order)")
             raw_pts = np.array(plt.ginput(4, timeout=-1), dtype=np.float32)
             plt.close()
-    
+
             # Refine each point to local max
             distorted_pts = np.array([
                 refine_to_local_max(img, pt, window=9) for pt in raw_pts
             ], dtype=np.float32)
-    
+
+        # Validate the 4 points before attempting the perspective transform.
+        # Duplicate or near-duplicate points — including two points that
+        # both snap to the SAME local intensity maximum after refinement,
+        # even if the original clicks looked distinct — make the transform
+        # mathematically degenerate. cv2.getPerspectiveTransform does not
+        # reliably raise an error for this; it can silently return a
+        # garbage matrix, which then produces a corrupted warped image
+        # that only fails later, confusingly, when matplotlib tries to
+        # display it. Check explicitly here instead, with a clear,
+        # actionable message pointing at the actual problem.
+        n_pts = len(distorted_pts)
+        for i in range(n_pts):
+            for j in range(i + 1, n_pts):
+                dist = np.linalg.norm(distorted_pts[i] - distorted_pts[j])
+                if dist < 5:  # pixels — this close is effectively a duplicate
+                    raise ValueError(
+                        f"Points {i + 1} and {j + 1} are too close together "
+                        f"({dist:.1f} px apart) after snapping to the "
+                        f"nearest local intensity maximum. Click 4 points "
+                        f"that are clearly separated from each other, "
+                        f"spread around a visible diffraction ring."
+                    )
+
         # Compute center and average radius
         center = np.mean(distorted_pts, axis=0)
+
+        # Sort the 4 points by angular position around their own center,
+        # so their correspondence with circle_pts (generated below at
+        # fixed angles, in a fixed counter-clockwise order) is always
+        # consistent — regardless of the order the points were actually
+        # clicked in. cv2.getPerspectiveTransform maps distorted_pts[i] to
+        # circle_pts[i] purely by index; without this sort, clicking 4
+        # perfectly valid, well-separated points in a different order than
+        # that fixed target order silently produces a severely wrong,
+        # scrambled transform — even for points on an already-circular ring.
+        point_angles = np.arctan2(distorted_pts[:, 1] - center[1],
+                                  distorted_pts[:, 0] - center[0])
+        order = np.argsort(point_angles)
+        distorted_pts = distorted_pts[order]
+        point_angles = point_angles[order]  # keep angles in sync with the sort
+
         radii = np.linalg.norm(distorted_pts - center, axis=1)
         avg_radius = np.mean(radii)
-    
-        # Target points evenly on circle
-        angles = np.linspace(0, 2*np.pi, 5)[:-1]
+        if avg_radius < 1.0:
+            raise ValueError(
+                "The 4 selected points are too close to their average "
+                "center to determine a meaningful radius. Click 4 points "
+                "spread around a visible diffraction ring, further from "
+                "the image center."
+            )
+
+        # Target points: the SAME angular positions as the clicked points
+        # (relative to their own center), just normalized to the average
+        # radius. This corrects only the radial (elliptical) distortion —
+        # using a fixed angular grid here instead (e.g. always 0/90/180/
+        # 270 degrees) would force the fitted transform to also rotate
+        # the whole image to align the clicked points with that
+        # arbitrary fixed grid, even though no such rotation is actually
+        # part of the physical distortion being corrected. That's what
+        # produces a properly-shaped-but-needlessly-rotated result with
+        # black corners where the rotated content no longer covers the
+        # original frame.
         circle_pts = np.stack([
-            center[0] + avg_radius * np.cos(angles),
-            center[1] + avg_radius * np.sin(angles)
+            center[0] + avg_radius * np.cos(point_angles),
+            center[1] + avg_radius * np.sin(point_angles)
         ], axis=1).astype(np.float32)
-    
-        # Perspective transform
-        H = cv2.getPerspectiveTransform(distorted_pts, circle_pts)
-        
+
+        # Estimate an affine transform (not projective) from the 4 point
+        # correspondences. Elliptical distortion is mathematically an
+        # affine transform of a circle — scale, shear, rotation,
+        # translation, no perspective/vanishing-point component; every
+        # ellipse is the affine image of a circle. A full projective
+        # transform (cv2.getPerspectiveTransform) has more degrees of
+        # freedom than this problem needs, and those extra (perspective)
+        # parameters are essentially unconstrained by a 4-point ellipse
+        # fit — they can produce wild, unstable distortion everywhere
+        # outside the immediate neighborhood of the 4 clicked points,
+        # even when the transform is technically correct at those exact
+        # points. That's what a "successful" correction that crushes the
+        # whole image into a thin sliver looks like.
+        M, inliers = cv2.estimateAffine2D(distorted_pts, circle_pts)
+        if M is None:
+            raise ValueError(
+                "Could not compute a transform from the 4 selected "
+                "points — they may be collinear or otherwise "
+                "degenerately arranged. Click 4 points spread evenly "
+                "around a visible diffraction ring."
+            )
+        if not np.all(np.isfinite(M)):
+            raise ValueError(
+                "The computed transform is invalid (contains "
+                "non-finite values) — the 4 selected points are likely "
+                "too close together or collinear. Click 4 points "
+                "spread evenly around a visible diffraction ring."
+            )
+
         # Make output square by padding the image to max_dim x max_dim
         max_dim = max(h, w)
-        
-        # Compute offset to center the original image content in the square 
+
+        # Compute offset to center the original image content in the square
         x_offset = (max_dim - w) // 2
         y_offset = (max_dim - h) // 2
-        
-        # Create a translation matrix to shift image content to center
+
+        # Combine the affine transform with the centering translation.
+        # Compose in homogeneous (3x3) form, then drop back to the 2x3
+        # form cv2.warpAffine expects.
+        M_h = np.vstack([M, [0, 0, 1]]).astype(np.float32)
         T = np.array([
             [1, 0, x_offset],
             [0, 1, y_offset],
             [0, 0, 1]
         ], dtype=np.float32)
-        
-        # Combine the original homography with the translation
-        H_total = T @ H  # Matrix multiplication
-        
+        M_total = (T @ M_h)[:2, :]
+
         # Apply the combined transformation
-        corrected = cv2.warpPerspective(
-            img, H_total, (max_dim, max_dim),
+        corrected = cv2.warpAffine(
+            img, M_total, (max_dim, max_dim),
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=0
         )
 
         # Show results
         if show:
-            plt.figure(figsize=(12, 5))
-            plt.subplot(1, 2, 1)
-            plt.title("Original with refined points")
-            plt.imshow(img, cmap=cmap, origin="upper")
-            plt.scatter(*distorted_pts.T, color='cyan', s=40)
-    
-            plt.subplot(1, 2, 2)
-            plt.title("Corrected image")
-            plt.imshow(corrected, cmap=cmap, origin="upper")
-            plt.show()
-    
+            fig = plt.figure(figsize=(12, 5))
+            try:
+                plt.subplot(1, 2, 1)
+                plt.title("Original with refined points")
+                plt.imshow(img, cmap=cmap, origin="upper", vmax=vmax)
+                plt.scatter(*distorted_pts.T, color='cyan', s=40)
+
+                plt.subplot(1, 2, 2)
+                plt.title("Corrected image")
+                plt.imshow(corrected, cmap=cmap, origin="upper", vmax=vmax)
+                plt.show()
+            except Exception:
+                plt.close(fig)
+                raise
+
         return corrected
 
 
@@ -1177,11 +1276,13 @@ class CenterDetection:
         elif detection == "phase":
             self.y, self.x, self.r = self.detection_phase(
                 sobel=self.parent.sobel,
-                masking=self.parent.masking)
+                masking=self.parent.masking,
+                normalize_bg=self.parent.normalize_bg)
          
         elif detection == "ccorr":
             self.y, self.x, self.r = self.detection_crosscorr(
                 sobel=self.parent.sobel,
+                normalize_bg=self.parent.normalize_bg,
                 disp=False)
         
         elif detection == "curvefit":
@@ -1459,88 +1560,101 @@ class CenterDetection:
             plt.show()
         
         return sobel_magnitude
-    
-    
-    def detection_phase(self, normalize_bg=True, sobel=False, 
+
+    def detection_phase(self, normalize_bg=False, sobel=False,
                         disp=False, masking=True):
         """
-        Detects the center of symmetry in a diffraction image using a 
-        combination of weighted intensity averaging and phase cross-correlation.
-    
+        Detects the center of symmetry in a diffraction image using
+        phase cross-correlation against the image's own 180°-rotated copy.
+
         This method performs the following steps:
-            1. Estimates an initial center using a weighted average of pixel 
-               intensities.
+            1. Starts from the image's geometric center as a neutral
+               starting point (see note below for why this replaced a
+               weighted-intensity centroid).
             2. Crops the image to focus on its central region.
-            3. Optionally normalizes the background to mitigate experimental 
+            3. Optionally normalizes the background to mitigate experimental
                artifacts.
-            4. Computes a refined center via inversion symmetry and phase 
+            4. Computes a refined center via inversion symmetry and phase
                cross-correlation.
             5. Returns the final refined center coordinates.
-    
+
+        Note on the starting point: an earlier version of this method used
+        a weighted average of pixel intensities as the initial guess. That
+        biases the estimate whenever something (most commonly a beam stop)
+        cuts asymmetrically into the bright central region: the visible,
+        unmasked part of that bright area becomes lopsided, and its weighted
+        centroid shifts away from the true center, purely as a result of
+        which side is occluded — not the actual pattern symmetry. Masking
+        the excluded region out doesn't fix this either, since those
+        pixels are already dark and contribute little weight either way;
+        it's the shape of what's left that's biased. The geometric center
+        avoids introducing that bias in the first place, and the phase
+        cross-correlation step below is already mask-aware and does the
+        actual work of finding the true center from there.
+
         Parameters
         ----------
         normalize_bg : bool, optional, default=True
             If True, normalize background intensity to reduce artifacts.
-            
+
         sobel : bool, optional, default=False
             If True, applies Sobel filtering (currently unused if not implemented)
-            
+
         disp : bool, optional, default=False
-            If True, displays intermediate processing results. 
-            
+            If True, displays intermediate processing results.
+
         masking : bool, optional, default=True
             If True, applies masking to exclude unwanted regions from analysis
-    
+
         Returns
         -------
         r_final : float
             Estimated row-coordinate of the image center after refinement.
-            
+
         c_final : float
             Estimated column-coordinate of the image center after refinement.
-            
+
         None : NoneType
             Placeholder for future functionality (e.g., radius estimation).
         """
         # (1) Get image  ------------------------------------------------------
         image = np.copy(self.parent.to_refine)
-        
+
         # if Sobel==True, perform Sobel filtration
         # https://doi.org/10.1016/j.ultramic.2016.12.021
         if sobel:
-            image = self.sobel_filt(image,disp)
-        
-        
+            image = self.sobel_filt(image, disp)
+
         # shift the pixel values (smallest value is zero -> non-negative image)
         image -= image.min()
 
-        # (2) Prepare mask and compute weighted center ------------------------
+        # (2) Prepare mask -----------------------------------------------------
         if masking:
-            mask = self.auto_masking(image) 
-        else: mask = np.ones_like(image, dtype=bool) # binary mask
-        
-        weights = image                        # 
-        
-        rr, cc = np.indices(image.shape)       # matrices of row/col indices
+            mask = self.auto_masking(image)
+        else:
+            mask = np.ones_like(image, dtype=bool)  # binary mask
 
-        # Weighted center of mass (brighter pixels contribute more)
-        # This gives an initial estimate of the center (r_, c_).
-        r_ = int(np.average(rr.flatten(), weights=weights.flatten()))
-        c_ = int(np.average(cc.flatten(), weights=weights.flatten()))
+        # Start from the image's plain geometric center rather than a
+        # weighted-intensity centroid — see the docstring note above for
+        # why. Most diffraction patterns are at least roughly centered in
+        # the frame, and the mask-aware phase correlation below is
+        # already equipped to correct from here.
+        r_ = image.shape[0] // 2
+        c_ = image.shape[1] // 2
 
         # (3) Crop the image around the estimated center ----------------------
-        # Some diffraction patterns are not centered, and so there's a lot of 
+        # Some diffraction patterns are not centered, and so there's a lot of
         # image area that cannot be used for registration.
         # Radial inversion becomes simple inversion of dimensions
         side_length = \
-            floor(min([r_,abs(r_-image.shape[0]),c_,abs(c_-image.shape[1])]))
+            floor(min([r_, abs(r_ - image.shape[0]), c_, abs(c_ - image.shape[1])]))
         rs = slice(r_ - side_length, r_ + side_length)
         cs = slice(c_ - side_length, c_ + side_length)
         image = image[rs, cs]
         mask = mask[rs, cs]
-    
+
         # (4) Normalize background intensity (optional) -----------------------
-        # This step removes intensity variations due to experimental artifacts, 
+        # This step removes intensity variations due to experimental artifacts,
         # such as uneven illumination.
         if normalize_bg:
             with warnings.catch_warnings():
@@ -1548,13 +1662,12 @@ class CenterDetection:
                 image = image.astype(np.float64)  # float64 before division
                 image /= gaussian_filter(
                     input=image, sigma=min(image.shape) / 25, truncate=2)
-        
+
         # Replace NaN values with 0s
         image = np.nan_to_num(image, copy=False)
 
-
         # (5) Compute inversion symmetry using Fourier methods ----------------
-        # an inverted copy of the image (im_i) and mask (mask_i), 
+        # an inverted copy of the image (im_i) and mask (mask_i),
         # flipping both horizontally and vertically ::-1
         im_i = image[::-1, ::-1]
         mask_i = mask[::-1, ::-1]
@@ -1563,10 +1676,10 @@ class CenterDetection:
         downsampling = 1
         if min(image.shape) > 1024:
             downsampling = 2
-    
+
         # phase cross-correlation finds the best alignment between the image
         # and its inverted copy
-        # the shift tells us how much the center is offset from perfect 
+        # the shift tells us how much the center is offset from perfect
         # inversion symmetry.
         shift, *_ = self.calc_fft(phase_cross_correlation)(
             reference_image=image[::downsampling, ::downsampling],
@@ -1574,24 +1687,23 @@ class CenterDetection:
             reference_mask=mask[::downsampling, ::downsampling],
             moving_mask=mask_i[::downsampling, ::downsampling],
         )
-        
+
         # The computed shift is rescaled to match the original image resolution.
         correction = shift * downsampling
-
 
         # (6) User information (if required) ----------------------------------
         if (self.parent.verbose or self.parent.final_print):
             self.parent.dText = \
                 "Center detection (PhaseCorrCenter)    : ({:.3f}, {:.3f})"
-        
+
         # Ensure correction is a tuple or list before extracting elements
         correction_r, correction_c = correction \
             if isinstance(correction, (list, tuple, np.ndarray)) \
-                else (correction, correction)
-        
+            else (correction, correction)
+
         r_final = r_ + correction_r / 2
         c_final = c_ + correction_c / 2
-                
+
         return float(r_final), float(c_final), None
     
 
@@ -2180,14 +2292,16 @@ class CenterDetection:
                               im)
             
         # (2) Create a figure and display the image ---------------------------
-        fig, ax = plt.subplots(figsize=(12, 12)) 
+        fig, ax = plt.subplots()
         
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
         plt.rcParams['keymap.forward'].append('right')
- 
-        plt.title("Select 3 points defining one of diffraction circles", 
-                  fontsize = 20)
+
+        plt.title(
+            "Select 3 points defining\none of the diffraction circles",
+            fontsize=14,
+        )
         ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
 
@@ -2515,7 +2629,7 @@ class CenterDetection:
         r = np.copy(self.r)
         termination_flag = False
         
-        plt.title("Manually adjust the center position.", fontsize=20)
+        plt.title("Manually adjust the center position.", fontsize=14)
 
         plt.ion()
           
@@ -2580,7 +2694,7 @@ class CenterDetection:
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
         
-            plt.title("Manually adjust the center position.", fontsize=20)
+            plt.title("Manually adjust the center position.", fontsize=14)
         
             # Update the plot
             plt.draw()
@@ -2982,33 +3096,138 @@ class CenterDetection:
                 axs[1].legend()
                 plt.tight_layout()
                 plt.show()
-        
+
+        # Masked radial distribution method ------------------------------------------
+        elif rtype == 2:
+            mask = self.auto_masking(im)
+            rr_idx, cc_idx = np.indices(im.shape)
+
+            # Distance from (x, y), matching calc_radial_distribution's own
+            # (column, row) convention for this same x, y pair
+            R = np.sqrt((cc_idx-x)**2+(rr_idx-y)**2)
+
+            max_r = int(np.floor(min(x, im.shape[1] - x, y, im.shape[0] - y)))
+            radial_distance = np.arange(1, max(max_r, 2), 1)
+            bin_size = 1
+            intensity = np.full(len(radial_distance), np.nan)
+
+            for idx, i in enumerate(radial_distance):
+                ring = (R>i-bin_size) & (R<i+bin_size)
+                visible_ring = ring & mask
+
+                # Require a reasonable fraction of the ring to actually
+                # be visible before trusting its average -- otherwise a
+                # ring almost entirely covered by the beam stop could
+                # still "win" based on just a handful of stray unmasked
+                # pixels near its edge.
+
+                ring_count = np.count_nonzero(ring)
+                if ring_count > 0 and np.count_nonzero(visible_ring) >=\
+                    max(10, 0.3 * ring_count):
+                    intensity[idx] = np.mean(im[visible_ring])
+
+            valid_tail = ~np.isnan(intensity[50:])
+            if len(intensity) <=50 or not np.any(valid_tail):
+                if self.parent.verbose == 2:
+                    print("[WARNING] No radius bin had enough unmasked "
+                          "pixels for rtype=2. Falling back to default radius.")
+                return 100
+
+            # Pick the first genuine ring-shaped peak, rather than simply
+            # the brightest radius overall. The central beam/diffuse-scattering blob
+            # is usually far brighter than any outer ring, even well past it --
+            # picking the raw brightest radius tends to just landd somewhere on that
+            # blob's still decaying tail rather than on any real ring, since a plain
+            # intensity maximum does not distinguish it. Detrending removes that slow
+            # decay, leaving sharper local bumps from real rings that  apeak search can
+            # reliably find
+            filled = np.nan_to_num(intensity, nan=0.0)
+            baseline = median_filter(filled, size=41, mode='nearest')
+            residual = filled-baseline
+
+            peaks, _ = find_peaks(residual[50:], prominence=0.3)
+            if len(peaks)>0:
+                idx_max = peaks[0]+50 # first (innermost) clear ring
+            else:
+                # no clear ring-shaped bump found -- fallback to the plain brightest
+                # radius approach rather than failing outright
+                idx_max = np.nanargmax(intensity[50:])+50
+                if self.parent.verbose == 2:
+                    print("[WARNING]: rtype=2 found no distinct ring peak; "
+                          "falling back to the brightest visible radius, "
+                          "which may not correspond to a real ring.")
+
+            rx = radial_distance[idx_max]
+            max_val = intensity[idx_max]
+            
+            if disp:
+                fig, axs = plt.subplots(1, 2, figsize=(8, 3))
+                axs[0].imshow(im, cmap=self.parent.cmap, origin="upper")
+                axs[0].add_patch(
+                    Circle(
+                        (y, x), rx,
+                        edgecolor='red',
+                        fill=False,
+                        linewidth=2))
+                axs[0].scatter(y, x, color="red", marker="x")
+                axs[0].set_title("Initial Estimate (masked)")
+                axs[0].axis('off')
+                axs[1].plot(radial_distance, intensity)
+                axs[1].set_ylim(0, np.nanmax(intensity) + 20)
+                axs[1].axvline(rx,
+                               color='red',
+                               linestyle='--',
+                               label='Initial Radius')
+                axs[1].set_title("Masked Radial Profile")
+                axs[1].legend()
+                plt.tight_layout()
+                plt.show()
+
+        else:
+            # any rtype value not handled above (0, 1, 2) would othervise fall
+            # through with rx never assigned, raising an opaque UnboundLocalError
+            # at the return statement below instead of a clear explanation of what
+            # what actually went wrong
+            print(f"[WARNING] rtype={rtype!r} is not a recognized radius "
+                  "method (expected 0, 1, or 2). Falling back to default "
+                  "radius of 100.")
+            rx = 100
+
         # Return found radius
         return rx
 
 
     def backend_fft(f):
         """
-        Decorator to enforce the use of PocketFFTBackend when utilizing the 
-        `scipy.fft` module. This ensures that all FFT computations leverage 
-        the optimized PocketFFT implementation, improving performance, 
-        particularly for multi-threaded execution.
-    
+        Decorator to run FFT-based computations with SciPy's
+        multi-threaded FFT workers enabled.
+
         Parameters
         ----------
         f : callable
-            The function to be wrapped, ensuring it executes within the 
-            PocketFFTBackend context.
-    
+            The function to be wrapped. It must return the FFT-based
+            callable that will actually be invoked (see `calc_fft`
+            below).
+
         Returns
         -------
         callable
-            A wrapped function that forces the use of PocketFFTBackend.
+            A wrapped function that, when called, returns a callable
+            which executes the underlying FFT function with multi-
+            threaded workers enabled.
         """
+
         @wraps(f)
         def newf(*args, **kwargs):
-            with set_backend(PocketFFTBackend):
-                return f(*args, **kwargs)
+            fft_function = f(*args, **kwargs)
+
+            @wraps(fft_function)
+            def wrapped(*inner_args, **inner_kwargs):
+                with scipy.fft.set_workers(CPU_COUNT):
+                    return fft_function(*inner_args, **inner_kwargs)
+
+            return wrapped
+
         return newf
     
     @backend_fft
@@ -3366,7 +3585,7 @@ class CenterRefinement:
             print("Intensity sums during refinement:")
             
         # (3) Create a figure and display the image ---------------------------
-        fig, ax = plt.subplots(figsize=(12, 12))
+        fig, ax = plt.subplots()
         
         # Allow using arrows to move back and forth between view ports
         plt.rcParams['keymap.back'].append('left')
@@ -3380,7 +3599,7 @@ class CenterRefinement:
         center, = ax.plot(px, py, 'rx', markersize=12)
                     
         plt.title('Manually adjust the center position.', 
-                  fontsize=20)
+                  fontsize=14)
 
         ax.imshow(im, cmap = self.parent.cmap, origin="upper")
         ax.axis('off')
@@ -3454,7 +3673,7 @@ class CenterRefinement:
             circle.set_radius(r)               # radius
             center.set_data([xy[0]], [xy[1]])  # center
         
-            plt.title("Manually adjust the center position.", fontsize=20)
+            plt.title("Manually adjust the center position.", fontsize=14)
         
             # Update the plot
             plt.draw()
@@ -4025,61 +4244,6 @@ class HandlerCircle(HandlerBase):
 
         return [marker]
 
-
-class PocketFFTBackend:
-    """
-    High-performance FFT backend leveraging SciPy's PocketFFT with optimized 
-    defaults. This backend enhances the efficiency of Fast Fourier Transforms 
-    (FFT), particularly for 2D transforms, which may experience up to a 50% 
-    speed improvement over standard configurations.
-
-    Attributes
-    ----------
-    __ua_domain__ : str
-        Universal array domain identifier for NumPy's SciPy-based FFT interface.
-
-    Methods
-    -------
-    __ua_function__(method, args, kwargs)
-        Universal array function handler that dispatches FFT operations to the 
-        corresponding PocketFFT implementation with optimized threading
-        settings.
-    """
-
-    __ua_domain__ = "numpy.scipy.fft"
-
-    @staticmethod
-    def __ua_function__(method, args, kwargs):
-        """
-        Dispatches FFT operations to SciPy's PocketFFT with optimized worker 
-        settings. This method dynamically selects the appropriate PocketFFT 
-        function and applies threading optimizations by adjusting the number 
-        of workers.
-
-        Parameters
-        ----------
-        method : callable
-            The FFT function being dispatched.
-        args : tuple
-            Positional arguments passed to the FFT function.
-        kwargs : dict
-            Keyword arguments passed to the FFT function, including
-            the optional "workers" parameter for parallel execution.
-
-        Returns
-        -------
-        result : object
-            The output of the FFT function if supported; 
-            otherwise, returns NotImplemented.
-        """
-        fn = getattr(_pocketfft, method.__name__, None)
-        if fn is None:
-            return NotImplemented
-        
-        workers = kwargs.pop("workers", CPU_COUNT)
-        return fn(*args, workers=workers, **kwargs)
-
-        
 class IntensityCenter: 
     '''
     Simple center detection for a symmetric diffractogram.
