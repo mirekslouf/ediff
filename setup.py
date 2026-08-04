@@ -32,4 +32,27 @@ setuptools.setup(
     package_dir={"":"src"},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.6",
-    include_package_data=True)
+    include_package_data=True,
+    
+    # GUI extras
+    # Keeps the core ediff package lightweight — these are only installed
+    # with `pip install ediff[gui]`, not with a plain `pip install ediff`.
+    extras_require={
+        "gui": ["qtpy", "PyQt6", "matplotlib", "opencv-python"],
+    },
+    
+    # GUI can be run directly as a command after installation,
+    # equivalent to `python -m ediff gui`.
+    entry_points={
+        "console_scripts": [
+            "ediff-gui=ediff.gui.app:main",
+        ],
+    },
+    
+    # The bundled logo/icon images get included in the installed package 
+    # — without this, pip install would succeed but the GUI would show blank 
+    # images, since find_packages() only discovers .py files on its own.
+    package_data={
+        "ediff.gui.resources": ["*.png", "*.ico"],
+    },
+    )
