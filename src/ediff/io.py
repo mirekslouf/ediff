@@ -12,55 +12,73 @@ from pathlib import Path
 
 import ediff.radial
 
-from pymatgen.core import Lattice as pmLattice
-from pymatgen.core import Structure as pmStructure
+# ediff.io.Lattice and ediff.io.Structure are thin, no-logic subclasses of
+# pymatgen.core.Lattice/Structure (see below) -- but pymatgen.core is a
+# notably slow import (often multiple seconds), and only the subset of
+# ediff.io users who actually define crystal structures (CIF-based XRD
+# work) ever touch these two classes. Every other use of ediff.io -- e.g.
+# reading/plotting/saving 2D diffraction patterns via Diffractogram2D,
+# Data1D, Data2D, etc., which is all the GUI's interactive worker process
+# needs -- doesn't need pymatgen at all. Deferring the import (and the
+# class definitions themselves, since they must subclass pymatgen's own
+# classes) via module-level __getattr__ (PEP 562) means `import ediff.io`
+# stays fast for those callers, while `ediff.io.Lattice`/`ediff.io.Structure`
+# still work exactly as before for anyone who does use them -- the import
+# just happens on first actual access instead of unconditionally.
 
+def __getattr__(name):
+    if name == 'Lattice':
+        from pymatgen.core import Lattice as pmLattice
+        class Lattice(pmLattice):
+            '''
+            Lattice object = crystal lattice.
 
-class Lattice(pmLattice):
-    '''
-    Lattice object = crystal lattice.
+            * Lattice object is identical to pymatgen.core.Lattice:
+              https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.lattice
+            * In EDIFF:
+                - Lattice can be defined by all methods of the original object.
+                - Lattice can help to define a crystal structure = ediff.io.Structure.
 
-    * Lattice object is identical to pymatgen.core.Lattice:
-      https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.lattice
-    * In EDIFF:
-        - Lattice can be defined by all methods of the original object.
-        - Lattice can help to define a crystal structure = ediff.io.Structure.
-        
-    >>> # How to define Lattice = crystall lattice using ediff.io
-    >>> import ediff as ed
-    >>> lattice1 = ed.io.Lattice.cubic(a=5.47)
-    >>> lattice2 = ed.io.Lattice.hexagonal(a=5.91, c=3.50)
-    >>> lattice3 = ed.io.Lattice.from_parameters(3, 4, 5, 90, 110, 90) 
-    '''
-    pass
+            >>> # How to define Lattice = crystall lattice using ediff.io
+            >>> import ediff as ed
+            >>> lattice1 = ed.io.Lattice.cubic(a=5.47)
+            >>> lattice2 = ed.io.Lattice.hexagonal(a=5.91, c=3.50)
+            >>> lattice3 = ed.io.Lattice.from_parameters(3, 4, 5, 90, 110, 90)
+            '''
+            pass
+        globals()['Lattice'] = Lattice   # cache so this only runs once
+        return Lattice
+    if name == 'Structure':
+        from pymatgen.core import Structure as pmStructure
+        class Structure(pmStructure):
+            '''
+            Structure object = crystal structure.
 
+            * Structure object is identical to pymatgen.core.Structure:
+              https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.structure
+            * In EDIFF:
+                - Structure can be defined by all methods of the original object.
+                - Structure is employed in calculation of theoretical diffractograms.
 
-class Structure(pmStructure):
-    '''
-    Structure object = crystal structure.
-
-    * Structure object is identical to pymatgen.core.Structure:
-      https://pymatgen.org/pymatgen.core.html#module-pymatgen.core.structure
-    * In EDIFF:
-        - Structure can be defined by all methods of the original object.
-        - Structure is employed in calculation of theoretical diffractograms.
-    
-    >>> # How to define Structure = crystal structure using ediff.io
-    >>>
-    >>> # (0) Standard import of ediff
-    >>> import ediff as ed
-    >>>
-    >>> # (1) Structure from the very beginning
-    >>> sg = 'Fm-3m'
-    >>> lat = ed.io.Lattice.cubic(a=4.08) 
-    >>> atoms = ['Au']
-    >>> coords = [[0,0,0]]
-    >>> structure1 = ed.io.Structure.from_spacegroup(sg, lat, atoms, coords)
-    >>>
-    >>> # (2) Structure from CIF-file
-    >>> struct2 = ed.io.Structure.from_file('au.cif')
-    '''
-    pass
+            >>> # How to define Structure = crystal structure using ediff.io
+            >>>
+            >>> # (0) Standard import of ediff
+            >>> import ediff as ed
+            >>>
+            >>> # (1) Structure from the very beginning
+            >>> sg = 'Fm-3m'
+            >>> lat = ed.io.Lattice.cubic(a=4.08)
+            >>> atoms = ['Au']
+            >>> coords = [[0,0,0]]
+            >>> structure1 = ed.io.Structure.from_spacegroup(sg, lat, atoms, coords)
+            >>>
+            >>> # (2) Structure from CIF-file
+            >>> struct2 = ed.io.Structure.from_file('au.cif')
+            '''
+            pass
+        globals()['Structure'] = Structure
+        return Structure
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class Data1D:
