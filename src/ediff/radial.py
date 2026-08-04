@@ -71,12 +71,31 @@ def calc_radial_distribution(arr, center=None, out_file=None):
     # (Gradual calculation of average intenzity
     # (in circles with increasing distance from the center 
     # (trick 2: to create the circles, we will employ mask from trick 1
-    for i in radial_distance:
-        mask = np.greater(R, i - bin_size) & np.less(R, i + bin_size)
-        values = arr[mask]
-        intensity[index] = np.mean(values)
-        index += 1 
-    
+    # Vectorized equivalent of the previous per-bin loop:
+    # for i in radial_distance:
+    #    mask = np.greater(R, i - bin_size) & np.less(R, i + bin_size)
+    #    values = arr[mask]
+    #    intensity[index] = np.mean(values)
+    #    index += 1
+    R_flat = R.ravel()
+    arr_flat = arr.ravel().astype(float)
+    floor_R = np.floor(R_flat).astype(np.int64)
+
+    sums = np.zeros(len(radial_distance))
+    counts = np.zeros(len(radial_distance))
+    for cand in (floor_R, floor_R + 1):
+        valid = ((cand >= 1) & (cand <= len(radial_distance)) &
+                 (cand - bin_size < R_flat) & (cand + bin_size > R_flat))
+        idx = cand[valid] - 1  # radial_distance[0] (value 1) -> index 0
+        sums += np.bincount(idx, weights=arr_flat[valid],
+                            minlength=len(radial_distance))
+        counts += np.bincount(idx, minlength=len(radial_distance))
+
+    with np.errstate(invalid='ignore'):
+        intensity = np.divide(sums, counts,
+                              out=np.full(len(radial_distance), np.nan),
+                              where=counts > 0)
+
     # (4) Save profile to array, save it to file if requested, and return it
     profile = np.array([radial_distance, intensity])
     if out_file: save_radial_distribution(profile, out_file)
