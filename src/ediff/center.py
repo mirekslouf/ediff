@@ -30,6 +30,7 @@ from math import floor
 from scipy.optimize import curve_fit
 from scipy.ndimage import map_coordinates
 from scipy.ndimage import median_filter
+from scipy.ndimage import label, maximum_filter, center_of_mass
 
 
 import ediff.io 
@@ -82,6 +83,9 @@ class CenterLocator:
           to find the symmetry center.
         - *'ccorr'* : Automatic detection using cross-correlation
           to find the symmetry center.
+        - *'dirbeam'* : Automatic direct-beam detection for spot patterns:
+          candidate spots are scored by the 180° symmetry of the image
+          around them [spot diffractograms only; use with refinement=None].
         - *None* : Skip the center detection;
           it is supposed that the center coordinates
           will be read from *in_file* argument - see below.
@@ -107,7 +111,38 @@ class CenterLocator:
           (fast and simple, but failing for non-powders, historical).
         - 1 : Radial distribution method
           (slower but more universal, new default).
-        
+    
+    rectify : bool, optional, default=False
+        If True, remove the perspective (screen-tilt) distortion before
+        center detection, using the lattice of diffraction spots.
+        Used only with detection='dirbeam'; cannot be combined with
+        ellipse=True. If no lattice can be indexed (e.g. ring patterns),
+        a warning is printed and the raw image is used.
+
+    lattice_steps : int, optional, default=3
+        Index only spots within this many lattice steps of the strongest
+        spot (farther spots have extra, non-projective distortion).
+    
+    db_ncand : int, optional, default=15
+        Number of strongest spots tested as direct-beam candidates.
+    
+    db_R : int, optional, default=180
+        Radius (pixels) of the region compared in the symmetry score.
+        Scale down for small images (e.g. 80 for 256x256 frames).
+    
+    db_rexcl : int, optional, default=20
+        Radius (pixels) of the central disc excluded from the symmetry
+        score. Scale down for small images (e.g. 6 for 256x256 frames).
+    
+    db_snap : bool, optional, default=True
+        If True, refine the direct beam to the centroid of its bright
+        blob (important when the direct beam is saturated).
+    
+    spot_kw : dict or None, optional, default=None
+        Settings for spot detection (bg_sigma, smooth, nsigma, min_dist).
+        None = defaults for ~1000 px images. For 256x256 frames e.g.
+        dict(bg_sigma=6, smooth=1.0, nsigma=5, min_dist=5).
+    
     in_file : str or None, optional, default=None
         Path to a file from which the (previously saved)
         center coordinates will be loaded.
@@ -180,6 +215,13 @@ class CenterLocator:
                  normalize_bg=False,
                  ellipse = False,
                  mcorrect = None,
+                 rectify = False,
+                 lattice_steps = 3,
+                 db_ncand = 15,
+                 db_R = 180,
+                 db_rexcl = 20,
+                 db_snap = True,
+                 spot_kw = None,
                  heq = False, 
                  icut = None,
                  cmap = 'gray',
@@ -219,6 +261,14 @@ class CenterLocator:
         # Image processing parameters
         self.ellipse = ellipse
         self.mcorrect = mcorrect
+        
+        self.rectify = rectify
+        self.lattice_steps = lattice_steps
+
+        self.rect = None
+        self.H = None
+        self.spots_xy = None
+        
         self.sobel = sobel
         self.masking = masking
         self.normalize_bg = normalize_bg
@@ -227,6 +277,13 @@ class CenterLocator:
         self.cmap = cmap
         self.csquare = csquare
         self.cintensity = cintensity
+        
+        # Direct beam detection parameters
+        self.db_ncand = db_ncand
+        self.db_R = db_R
+        self.db_rexcl = db_rexcl
+        self.db_snap = db_snap
+        self.spot_kw = spot_kw
         
         # Process-Information parameters
         self.verbose = verbose
@@ -251,16 +308,43 @@ class CenterLocator:
         else:
             self.image = ediff.io.Diffractogram2D(self.input_image)
         
-        ## (2) Correct ellipse ------------------------------------------------
+        ## (2a) Correct ellipse -----------------------------------------------
         if self.ellipse:
             if self.verbose==3:
                 print("[INFO] Correcting ellipse distortion... ", 
                       end="", flush=True)
             self.image = self.ellipse_distortion(self.image, show=True,
+                                                 icut=self.icut,
                                                  cmap=self.cmap,
                                                  method=self.mcorrect)
             if self.verbose == 3:
                 print(" [DONE]")
+        
+        ## (2b) Rectify (remove screen-tilt perspective distortion) -----------
+        if self.rectify and self.detection != "dirbeam":
+            if self.ellipse:
+                raise ValueError("Use either ellipse=True or rectify=True, "
+                                 "not both (they correct the same distortion).")
+                
+            if self.verbose == 3:
+                print("[INFO] Rectifying pattern... ", end="", flush=True)
+            
+            try:
+                gray = CenterDetection._to_gray(self.image)
+                xy, ij, info = self.find_lattice(gray,
+                                             max_steps=self.lattice_steps,
+                                             **(self.spot_kw or {}))
+                self.rect, self.H = self.rectify_lattice(gray, xy, ij)
+                self.spots_xy = xy
+                if self.verbose == 3:
+                    print(f" [DONE] ({len(xy)} indexed spots)")
+                    
+            except ValueError as e:
+                # No usable lattice (ring pattern, too few spots, ...):
+                # continue without rectification
+                print(f"\n[WARNING] Rectification skipped: {e}")
+                self.rect, self.H, self.spots_xy = None, None, None
+                
                 
         ## (3) Read center coordinates ----------------------------------------
         # The center coordinates may have been determined in a previous run 
@@ -849,6 +933,64 @@ class CenterLocator:
         plt.show(block=False)
             
     
+    def visualize_dirbeam(self, title=None, vmax=None, zoom=250, log=False):
+        """
+        Show the direct-beam result: original image (+ rectified image, if
+        rectification was used) with the DB and the runner-up candidates.
+    
+        Parameters
+        ----------
+        title : str or None, optional, default=None
+            Plot title prefix; None = detection/refinement methods.
+        vmax : float or None, optional, default=None
+            Upper intensity limit of the display; None = 99.5th percentile.
+        zoom : int, optional, default=250
+            Half-width (pixels) of the displayed region around the DB.
+        log : bool, optional, default=False
+            If True, show log intensity (reveals faint spots and rings).
+    
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+        """
+        if self.detection != "dirbeam":
+            raise ValueError(
+                "visualize_dirbeam() requires detection='dirbeam'."
+                )
+        if title is None:
+            title = f"{self.detection}/{self.refinement}"
+    
+        # (name, image, DB position) for each panel; the DB from detection
+        # (x1, y1) is in the original frame, db_rect in the rectified frame
+        panels = [("Original", self.image, (self.x1, self.y1))]
+        if self.H is not None:
+            panels.append(("Rectified", self.rect, tuple(self.db_rect)))
+    
+        fig, axs = plt.subplots(1, len(panels), figsize=(5.5 * len(panels), 5),
+                                layout="constrained", squeeze=False)
+        for a, (name, img, db) in zip(axs[0], panels):
+            img = np.asarray(img, float)
+            if log:
+                img = np.log1p(np.clip(img, 0, None))
+            a.imshow(img, cmap=self.cmap,
+                     vmax=None if log else (vmax or np.percentile(img, 99.5)))
+            a.plot(*db, "r+", ms=18, mew=2, label=f"DB ({db[0]:.1f}, {db[1]:.1f})")
+            a.set_xlim(db[0] - zoom, db[0] + zoom)
+            a.set_ylim(db[1] + zoom, db[1] - zoom)       # image y axis points down
+            a.set_title(f"{title} - {name}")
+            a.legend(loc="upper right")
+    
+        # Candidates (db_table) are in the rectified frame = the last panel
+        a = axs[0][-1]
+        for s, x, y in self.db_table[1:5]:
+            a.plot(x, y, "yo", mfc="none", ms=12)
+            a.annotate(f"{s:.2f}", (x, y), xytext=(8, -8),
+                       textcoords="offset points", color="y")
+        a.annotate(f"{self.db_table[0][0]:.2f}", panels[-1][2], xytext=(10, -10),
+                   textcoords="offset points", color="r")
+        plt.show()
+    
+
     def print_results(self):
         '''
         Simple print of the final results on stdout.
@@ -859,7 +1001,7 @@ class CenterLocator:
         '''
         print(f'Center coordinates (x, y) : ({self.x}, {self.y})')
 
-    def ellipse_distortion(self, img, show=True, cmap="viridis", method=None,
+    def ellipse_distortion(self, img, show=True, cmap="viridis", icut=None, method=None,
                            vmax=None):
         """
         Corrects elliptical distortion in an image by transforming 4 distorted
@@ -895,7 +1037,8 @@ class CenterLocator:
         corrected : np.ndarray
             The distortion-corrected image.
         """
-
+        im = np.where(img > icut, icut, img)
+        
         # Helper function
         def refine_to_local_max(img, pt, window=9):
             """
@@ -959,7 +1102,7 @@ class CenterLocator:
 
         if method == 'manual':
             # Manual point selection
-            plt.imshow(img, cmap=cmap, origin="upper", vmax=vmax)
+            plt.imshow(im, cmap=cmap, origin="upper", vmax=vmax)
             plt.title("Click 4 distorted points (in circular order)")
             raw_pts = np.array(plt.ginput(4, timeout=-1), dtype=np.float32)
             plt.close()
@@ -1104,12 +1247,187 @@ class CenterLocator:
                 plt.imshow(corrected, cmap=cmap, origin="upper", vmax=vmax)
                 plt.show()
             except Exception:
-                plt.close(fig)
+                #plt.close(fig)
                 raise
 
         return corrected
 
+      
+    def find_lattice(self, img, max_steps=3, **spot_kw):
+        """
+        Detect spots and index them on a 2D lattice.
+        
+        Parameters
+        ----------
+        img : ndarray, 2D or 3D
+            Diffraction pattern; RGB(A) is converted to grayscale.
+            
+        max_steps : int, optional, default 3
+            Index only spots within this many lattice steps of the strongest 
+            one.
+            
+        **spot_kw
+            Passed to CenterDetection._find_spots().
+        
+        Returns
+        -------
+        spots_xy : ndarray of shape (N, 2)
+            Indexed spot positions as (x, y).
+            
+        lattice_ij : ndarray of shape (N, 2)
+            Integer lattice steps of each spot (origin = strongest spot).
+            
+        info : dict
+            All detected spots, their strengths, the basis vectors and the
+            number of unindexed spots (for diagnostics).
+        
+        Raises
+        ------
+        ValueError
+            Too few spots found or indexed, or spots collinear.
+        """
+        # Helper functions
+        def _find_basis(xy, n_use=15, tol=0.12, min_angle=25):
+            """
+            Two lattice vectors that repeat most often among the strongest 
+            spots."""
+            p = xy[:n_use]
+            dv = (p[None] - p[:, None]).reshape(-1, 2)
+            dv = dv[np.linalg.norm(dv, axis=1) > 5]
+            L = np.linalg.norm(dv, axis=1)
+            
+            support = np.array(
+                [np.sum(np.linalg.norm(dv-v, axis=1) < tol * np.linalg.norm(v))
+                                for v in dv])
+            
+            # score: prefer frequently repeated, short vectors
+            score = support / (L / L.min())
+            a = dv[np.argmax(score)]
+            ang = np.degrees(
+                np.arccos(
+                    np.clip(
+                        np.abs(dv@a)/(L*np.linalg.norm(a)), 0, 1
+                        )
+                    )
+                )
+            ok = ang > min_angle
+            
+            if not ok.any():
+                raise ValueError("Spots are collinear; no 2D lattice found.")        
+            b = dv[ok][np.argmax(score[ok])]
+            
+            return _gauss_reduce(a.astype(float), b.astype(float))
+        
+        def _gauss_reduce(a, b):
+            while True:
+                if a @ a > b @ b: a, b = b, a
+                m = round((a @ b) / (a @ a))
+                if m == 0: return a, b
+                b = b - m * a
 
+        def _index_spots(xy, a, b, tol=0.25, max_rounds=30, max_steps=3):
+            """Grow the indexed set outward from the strongest spot, refitting 
+            a (affine -> projective) model each round so the distortion is 
+            followed. max_steps limits indexing to the neighbourhood of the 
+            strong spots: far out, the pattern has extra non-projective 
+            distortion (tan(2theta) mapping, which is centrosymmetric about 
+            the direct beam and harmless for centre finding, but it spoils 
+            a single-homography fit)."""
+            origin = xy[0]
+            ij = {0: (0, 0)}
+            model = lambda q: origin + np.atleast_2d(q) @ np.array([a, b])
+            rad = tol * min(np.linalg.norm(a), np.linalg.norm(b))
+            for _ in range(max_rounds):
+                known = set(ij.values()); added = False
+                cand = {(i + di, j + dj) for i, j in known
+                        for di, dj in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)]}
+                cand -= known
+                cand = {c for c in cand if max(abs(c[0]), abs(c[1]), abs(c[0] + c[1])) <= max_steps}
+                for c in sorted(cand):
+                    pred = model(np.array(c, float))[0]
+                    dist = np.linalg.norm(xy - pred, axis=1)
+                    k = int(np.argmin(dist))
+                    if dist[k] < rad and k not in ij:
+                        ij[k] = c; added = True
+                k = np.array(sorted(ij)); model = _fit(np.array([ij[i] for i in k], float), xy[k])
+                if not added: break
+            k = np.array(sorted(ij))
+            return k, np.array([ij[i] for i in k], float)
+
+        def _fit(ij, xy):
+            if len(ij) >= 6:
+                H, _ = cv2.findHomography(ij.astype(np.float64), xy.astype(np.float64), 0)
+                return lambda q: cv2.perspectiveTransform(np.atleast_2d(q).astype(float)[None], H)[0]
+            X = np.c_[ij, np.ones(len(ij))]
+            C, *_ = np.linalg.lstsq(X, xy, rcond=None)
+            return lambda q: np.c_[np.atleast_2d(q), np.ones(len(np.atleast_2d(q)))] @ C
+        
+        # Actual function's body
+        img = CenterDetection._to_gray(img)
+        xy, s = CenterDetection._find_spots(img, **spot_kw)
+        
+        if len(xy) < 6:
+            raise ValueError(f"Only {len(xy)} spots found; need >= 6.")
+            
+        a, b = _find_basis(xy)
+        k, ij = _index_spots(xy, a, b, max_steps=max_steps)
+        if len(k) < 6:
+            raise ValueError(f"Only {len(k)} spots indexed; rectification would be unreliable.")
+        
+        return xy[k], ij, {"all_spots": xy, "strength": s, "basis": (a, b), "n_unindexed": len(xy) - len(k)}
+
+    
+    def rectify_lattice(self, img, spots_xy, lattice_ij):
+        """
+        Remove the perspective distortion of the screen using the spot lattice.
+
+        Parameters
+        ----------
+        img : ndarray, 2D
+            Diffraction pattern (grayscale).
+        spots_xy : ndarray of shape (N, 2)
+            Indexed spot positions as (x, y), from find_lattice().
+        lattice_ij : ndarray of shape (N, 2)
+            Their integer lattice steps, from find_lattice().
+
+        Returns
+        -------
+        rect : ndarray of float32, 2D
+            Rectified image, same shape as img.
+        H : ndarray of shape (3, 3)
+            Homography from img to rect pixel coordinates.
+        """
+        P = np.asarray(spots_xy, float)
+        I = np.asarray(lattice_ij, float)
+
+        # Homography lattice -> screen; its inverse gives the vanishing line
+        Hs, _ = cv2.findHomography(I, P, 0)
+        l = np.linalg.inv(Hs / Hs[2, 2]).T @ [0, 0, 1]
+
+        # Send the vanishing line to infinity, normalised so that the
+        # spot centroid c stays where it is (l.c = 1)
+        c = P.mean(axis=0)
+        l = l / (l @ [c[0], c[1], 1])
+        Hp = np.array([[1, 0, 0], [0, 1, 0], l], float)
+
+        # Undo the first-order (affine) change at c, so the image near the
+        # spots keeps its scale and orientation
+        J = np.array([[1 - c[0] * l[0], -c[0] * l[1]],
+                      [-c[1] * l[0], 1 - c[1] * l[1]]])
+        A = np.linalg.inv(J)
+        T = np.eye(3)
+        T[:2, :2] = A
+        T[:2, 2] = c - A @ c
+        H = T @ Hp
+        H = H / H[2, 2]
+
+        # Warp; (width, height) order for OpenCV, 0 outside the screen
+        rect = cv2.warpPerspective(np.asarray(img, np.float32), H,
+                                   img.shape[:2][::-1],
+                                   flags=cv2.INTER_LINEAR, borderValue=0)
+        return rect, H   
+        
+    
     def show(self, csquare=None, 
                           axes_off=False, out_file=None, out_dpi=200):
         '''
@@ -1180,7 +1498,9 @@ class CenterDetection:
                        the symmetry center.
         - 'ccorr'    : Automatic detection using cross-correlation to find 
                        the symmetry center.
-        - 'curvefit' : Automatic detecting using pseudo-Voigt profile fitting 
+        - 'curvefit' : Automatic detecting using pseudo-Voigt profile fitting
+        - 'dirbeam'  : Automatic detection using Friedel pairs and 
+                       centrosymmetry of a monocrystalline diffraction pattern
         
     in_file : str or None, optional, default=None
         Path to the file from which previously saved coordinates will be loaded.
@@ -1287,6 +1607,9 @@ class CenterDetection:
         
         elif detection == "curvefit":
             self.x, self.y, self.r = self.detection_curvefit()
+        
+        elif detection == "dirbeam":
+            self.x, self.y, self.r = self.detection_dirbeam()
         
         elif detection is None:
             if self.parent.in_file is not None:
@@ -1560,7 +1883,369 @@ class CenterDetection:
             plt.show()
         
         return sobel_magnitude
+    
+    def detection_dirbeam(self):
+        """
+        Direct-beam (DB) detection for spot diffraction patterns.
+        
+        The DB must sit on a lattice node (a spot). Ring-based methods
+        (Hough + intensity-sum refinement) can instead lock onto the middle
+        of a group of bright spots, because a circle there passes through
+        all of them. Here the candidates are restricted to spots, and each
+        is scored by how centrosymmetric the image is around it (inelastic
+        halo, Kikuchi features and the spot lattice all share the DB as
+        their symmetry centre). The winner is then snapped to the centroid
+        of its bright blob (centre of the plateau if the DB is saturated).
+        
+        If the pattern was rectified (``rectify=True`` in CenterLocator),
+        the scoring runs on the rectified image and the indexed spots are
+        used as candidates; otherwise spots are detected in the raw image.
+        
+        Settings are read from the parent CenterLocator:
+        ``db_ncand``, ``db_R``, ``db_rexcl``, ``db_snap`` and ``spot_kw``.
+        
+        Returns
+        -------
+        x, y : float
+            Direct-beam position in ORIGINAL-image coordinates.
+        r : None
+            No radius; it is estimated afterwards by get_radius().
+        
+        Notes
+        -----
+        Also stored on the parent CenterLocator:
+        - ``db_rect`` : DB position (x, y) in the rectified frame
+          (equal to (x, y) if no rectification was done).
+        - ``db_table`` : list of (score, x, y) for all candidates, best
+          first, positions in the rectified frame. A reliable result has a
+          top score clearly above the runner-up (margin > ~0.1).
+        """
+        # Collect the inputs from the parent CenterLocator
+        img = self.parent.image
+        rect = getattr(self.parent, "rect", None)
+        H = getattr(self.parent, "H", None)
+        spots_xy = getattr(self.parent, "spots_xy", None)
+        
+        # Helper functions
+        def _valid_mask(img_shape, H, out_shape):
+            """
+            Mark which pixels of the rectified image contain real detector data.
+        
+            The all-ones image is warped with the same homography as the
+            diffraction pattern; pixels that fall outside the original screen
+            after warping (or mix with the border at its edge) are set to zero.
+        
+            Parameters
+            ----------
+            img_shape : tuple of int
+                Shape of the original, unrectified image, usually ``img.shape``.
+                
+            H : ndarray of shape (3, 3)
+                Homography mapping original-image pixel coordinates (x, y) to
+                rectified-image coordinates. Must be the same matrix used to 
+                warp the image itself; use ``np.eye(3)`` for no rectification.
+                
+            out_shape : tuple of int
+                Shape of the rectified image as (rows, columns), i.e.
+                (height, width), the usual NumPy order.
+        
+            Returns
+            -------
+            mask : ndarray of float32, shape ``out_shape[:2]``
+                1.0 where the rectified pixel comes entirely from real image 
+                data, 0.0 outside the warped screen area. 
+                """
+            ones = np.ones(img_shape[:2], np.float32)
+            mask = cv2.warpPerspective(ones, H, out_shape[:2][::-1]) > 0.99
+            
+            return mask.astype(np.float32)
+        
+        def _symmetry_score(g, valid, c, R=180, r_excl=20):
+            """
+            Measure how well the image matches its own 180° rotation about c.
+        
+            A score near 1 means the pattern is centrosymmetric about c,
+            as expected at the direct beam.
+        
+            Parameters
+            ----------
+            g : ndarray of float32, 2D
+                Image to test for symmetry (typically the log of the rectified
+                image, so that saturated spots do not dominate).
+                
+            valid : ndarray of float32, 2D
+                Mask from _valid_mask(), same shape as g; 1.0 = real data.
+                
+            c : array-like of 2 floats
+                Candidate centre as (x, y), i.e. (column, row).
+                Sub-pixel values are allowed.
+                
+            R : int, optional, default 180
+                Radius of the compared region, in pixels.
+                
+            r_excl : int, optional, default 20
+                Radius of the central disc excluded from the comparison
+                (any spot is symmetric about itself, which would inflate
+                the score of every candidate equally).
+        
+            Returns
+            -------
+            score : float
+                Pearson correlation (-1 to 1) between the region around c and
+                its 180° rotation, using only pixel pairs valid on both sides.
+                NaN if fewer than 100 pixel pairs remain (e.g. c near a corner).
+            """
+            # Build a (2R+1) x (2R+1) grid of offsets from -R to +R
+            # (odd size, so that c lies exactly at the centre of the patch).
+            ys, xs = np.mgrid[-R:R + 1, -R:R + 1].astype(np.float32)
+         
+            # Image coordinates of every grid point, centred on c
+            X = (c[0] + xs).astype(np.float32)
+            Y = (c[1] + ys).astype(np.float32)
+         
+            # Cut out a square patch of g centred on c (bilinear interpolation,
+            # so sub-pixel centres work)
+            a = cv2.remap(g, X, Y, cv2.INTER_LINEAR)
+         
+            # Cut the same patch out of the mask; nearest-neighbour sampling
+            # avoids fractional values, points outside the array become 0
+            v = cv2.remap(valid, X, Y, cv2.INTER_NEAREST) > 0
+         
+            # Select the pixels to compare; a pixel is kept only if it:
+            #   - lies inside the circle of radius R,
+            #   - lies outside the inner disc of radius r_excl,
+            #   - is valid,
+            #   - and its mirror pixel is also valid (stops the screen edge
+            #     from biasing the result).
+            # Flipping both axes of the centred patch = 180° rotation about c.
+            rr = xs ** 2 + ys ** 2
+            m = (rr <= R * R) & (rr >= r_excl ** 2) & v & v[::-1, ::-1]
+         
+            # Too few pixel pairs -> unreliable score; NaN candidates are
+            # ranked last by detection_dirbeam()
+            if m.sum() < 100:
+                return np.nan
+         
+            # Pearson correlation between each kept pixel and its 180°-rotated 
+            # partner
+            return float(np.corrcoef(a[m], a[::-1, ::-1][m])[0, 1])
+        
+        def _snap_to_blob(img, c, radius=20, frac=0.5):
+            """
+            Centroid of the bright blob at or near c.
+        
+            Pixels above ``frac`` of the local maximum (relative to the local
+            median background) are taken in a window around c; the connected
+            component nearest to c is kept, and its centroid is weighted by
+            the intensity above the threshold. For a saturated direct beam
+            this is the centre of the flat plateau, which spot detection
+            (local maxima of a filtered image) tends to place on its edge.
+        
+            Parameters
+            ----------
+            img : ndarray, 2D
+                Image in which the blob is located (same frame as c).
+                
+            c : array-like of 2 floats
+                Starting position as (x, y).
+                
+            radius : int, optional, default 20
+                Half-width of the square search window, in pixels.
+                
+            frac : float, optional, default 0.5
+                Threshold as a fraction between local background (0) and
+                local maximum (1).
+        
+            Returns
+            -------
+            xy : ndarray of 2 floats
+                Blob centroid as (x, y); c unchanged if no blob is found.
+            """
+            x0, y0 = int(round(c[0])), int(round(c[1]))
+            ya, xa = max(0, y0 - radius), max(0, x0 - radius)
+            w = np.asarray(img, float)[ya:y0 + radius + 1, xa:x0 + radius + 1]
+            if w.size == 0:
+                return np.asarray(c, float)
+        
+            # Threshold halfway (frac) between local background and local 
+            # maximum
+            bg = np.median(w)
+            thr = bg + frac * (w.max() - bg)
+            lab, n = label(w > thr)
+            if n == 0:
+                return np.asarray(c, float)
+        
+            # Keep the connected component whose pixel is nearest to c
+            yy, xx = np.nonzero(lab)
+            k = lab[yy, xx][np.argmin((xx+xa-c[0])**2+(yy+ya-c[1])**2)]
+            wt = (w - thr) * (lab == k)
+        
+            # Intensity-weighted centroid, back in image coordinates
+            yy, xx = np.indices(w.shape)
+            return np.array([xa + (xx * wt).sum() / wt.sum(),
+                             ya + (yy * wt).sum() / wt.sum()])      
+        
+        def _DB_finder(img, rect=None, H=None, spots_xy=None,
+               n_candidates=15, R=180, r_excl=20, snap=True):
+            """
+            Find the direct beam among candidate spots by centrosymmetry.
+        
+            Each candidate spot is scored by how well the (rectified) image
+            matches its own 180° rotation about it; the best-scoring spot is
+            the direct beam. Optionally, its position is then refined to the
+            centroid of its bright blob (important for a saturated beam).
+        
+            Parameters
+            ----------
+            img : ndarray, 2D or 3D
+                Original (unrectified) image. RGB(A) is converted to grayscale.
+                
+            rect : ndarray, 2D, optional, default None
+                Rectified image. None means no rectification (use ``img``).
+                Must be given together with ``H``.
+                
+            H : ndarray of shape (3, 3), optional, default None
+                Homography from ``img`` to ``rect`` pixel coordinates.
+                None means the identity (no rectification, e.g. 4D-STEM frames).
+                
+            spots_xy : ndarray of shape (N, 2), optional, default None
+                Candidate spots as (x, y) in ORIGINAL-image coordinates, sorted
+                by strength (strongest first). None means detect them with
+                _find_spots().
+                
+            n_candidates : int, optional, default 15
+                Number of strongest spots to test.
+                
+            R : int, optional, default 180
+                Radius of the region compared by _symmetry_score(), in pixels.
+                
+            r_excl : int, optional, default 20
+                Radius of the central disc excluded by _symmetry_score().
+                For small frames (e.g. 256x256 4D-STEM) scale R and r_excl
+                down, e.g. R=80, r_excl=6.
+                
+            snap : bool, optional, default True
+                Refine the winner to the centroid of its bright blob.
+        
+            Returns
+            -------
+            db : ndarray of 2 floats
+                Direct beam as (x, y) in the RECTIFIED frame.
+                
+            db_screen : ndarray of 2 floats
+                Direct beam as (x, y) in the ORIGINAL-image frame.
+                
+            table : list of tuples (score, x, y)
+                All candidates ranked best first, positions in the RECTIFIED
+                frame (before snapping). A reliable result has a top score
+                clearly above the runner-up (margin > ~0.1).
+        
+            """
+            # Convert the input to a float array; RGB(A) -> grayscale
+            # (average of the colour channels, alpha dropped by [..., :3])
+            img = np.asarray(img, float)
+            if img.ndim == 3:
+                img = img[..., :3].mean(axis=2)
+        
+            # rect and H describe the same transformation: both or neither
+            if (rect is None) != (H is None):
+                raise ValueError("Give both rect and H, or neither.")
+        
+            # No rectification (e.g. 4D-STEM frames): identity mapping
+            if H is None:
+                H = np.eye(3)
+                rect = img
+            rect = np.asarray(rect, float)
+        
+            # Detect candidates if none are given
+            # (_find_spots returns them sorted by strength, strongest first)
+            if spots_xy is None:
+                spots_xy, _ = self._find_spots(
+                    img, 
+                    **(self.parent.spot_kw or {}
+                       )
+                    )
+                
+            spots_xy = np.asarray(spots_xy, float).reshape(-1, 2)
+            if len(spots_xy) == 0:
+                raise ValueError("No candidate spots found.")
+        
+            # Move the candidates into the rectified frame, where the scoring 
+            # runs; OpenCV expects shape (1, N, 2). Keep the strongest 
+            # n_candidates (works because the list is sorted by strength).
+            nodes = cv2.perspectiveTransform(
+                spots_xy[None], H)[0][:n_candidates]
+        
+            # Log of the rectified image: compresses saturated spots, so the 
+            # faint halo and spots also count in the correlation. Negative 
+            # values (from interpolation or background subtraction) are clipped 
+            # first, since the log of a negative number is undefined.
+            g = np.log1p(np.clip(rect, 0, None)).astype(np.float32)
+        
+            # Mask of real-data pixels in the rectified frame
+            valid = _valid_mask(img.shape, H, rect.shape)
+        
+            # Score each candidate
+            scores = np.array(
+                [_symmetry_score(g, valid, n, R, r_excl) for n in nodes]
+                )
+        
+            # Rank best to worst: argsort is ascending, so negate the scores;
+            # NaN -> -9 so it always sorts last (correlations are >= -1)
+            order = np.argsort(-np.nan_to_num(scores, nan=-9))
+            table = [(scores[k], *nodes[k]) for k in order]
+        
+            # The winner is the direct beam (rectified frame)
+            db = nodes[order[0]].copy()
+        
+            # Snap to the centre of its bright blob; repeat until the window
+            # is centred on the blob (a start on the edge of a saturated
+            # plateau converges to its centre in a few iterations)
+            if snap:
+                for _ in range(10):
+                    new = _snap_to_blob(rect, db, radius=max(15, 3 * r_excl))
+                    converged = np.linalg.norm(new - db) < 0.05
+                    db = new
+                    if converged:
+                        break
+        
+            # Map back to original-image coordinates (OpenCV shape (1, 1, 2))
+            db_screen = cv2.perspectiveTransform(
+                db[None, None], np.linalg.inv(H)
+                )[0, 0]
+        
+            return db, db_screen, table
 
+        db, db_screen, table = _DB_finder(
+            img,
+            rect=rect,
+            H=H,
+            spots_xy=spots_xy,
+            n_candidates=self.parent.db_ncand,
+            R=self.parent.db_R,
+            r_excl=self.parent.db_rexcl,
+            snap=self.parent.db_snap
+            )
+        
+        # Keep the details for the user (ranking, both frames)
+        self.parent.db_rect = db
+        self.parent.db_table = table
+        
+        # Warn if the decision is not clear
+        if len(table) > 1 and table[0][0] - table[1][0] < 0.1:
+            print("[WARNING] Direct beam: small score margin "
+                  f"({table[0][0]:.2f} vs {table[1][0]:.2f}); result may be unreliable.")
+
+        # Message for the final printout (same mechanism as other methods)
+        if self.parent.verbose or self.parent.final_print:
+            self.parent.dText = "Center detection (DirectBeam)        : ({:.3f}, {:.3f})"
+
+        # Return (x, y, r) like detection_Hough / detection_intensity
+        return float(db_screen[0]), float(db_screen[1]), None
+
+          
+
+        
     def detection_phase(self, normalize_bg=False, sobel=False,
                         disp=False, masking=True):
         """
@@ -3357,6 +4042,91 @@ class CenterDetection:
         plt.axis('off')
         plt.tight_layout()
         plt.show(block=False)
+    
+    @staticmethod
+    def _to_gray(img):
+        """2D float image; RGB(A) is averaged over the colour channels."""
+        img = np.asarray(img, float)
+        return img[..., :3].mean(axis=2) if img.ndim == 3 else img
+    
+    @staticmethod
+    def _find_spots(img, bg_sigma=15, smooth=1.5, nsigma=6, min_dist=9):
+        """
+        Detect diffraction spots as local maxima of a background-subtracted 
+        image.
+    
+        The image is band-pass filtered (difference of Gaussians), peaks are
+        local maxima above ``nsigma`` times the robust noise level, and each
+        peak is refined to an intensity-weighted sub-pixel centroid.
+    
+        Parameters
+        ----------
+        img : ndarray, 2D or 3D
+            Input image; RGB(A) is converted to grayscale.
+            
+        bg_sigma : float, optional, default 15
+            Sigma of the Gaussian estimating the smooth background, in pixels.
+            Should be clearly larger than a spot (scale down for small frames,
+            e.g. 6 for 256x256).
+            
+        smooth : float, optional, default 1.5
+            Sigma of the Gaussian suppressing pixel noise, in pixels.
+            
+        nsigma : float, optional, default 6
+            Detection threshold in units of the robust noise level.
+            
+        min_dist : int, optional, default 9
+            Size of the local-maximum neighbourhood, in pixels; roughly the
+            minimum distance between two detected spots.
+    
+        Returns
+        -------
+        xy : ndarray of shape (N, 2)
+            Spot positions as (x, y), strongest first.
+            
+        strength : ndarray of shape (N,)
+            Integrated background-subtracted intensity of each spot.
+        """
+        
+        g = CenterDetection._to_gray(img)
+        
+        # Band-pass: lightly smoothed image minus the smooth background
+        d = gaussian_filter(g, smooth) - gaussian_filter(g, bg_sigma)
+        
+        # Robust noise level: median absolute deviation, scaled to the standard
+        # deviation of a Gaussian (1.4826); 1e-9 avoids a zero threshold
+        noise = 1.4826 * np.median(np.abs(d - np.median(d))) + 1e-9
+        
+        # Peaks: pixels equal to the maximum of their neighbourhood and above 
+        # threshold
+        peaks = (d == maximum_filter(d, size=min_dist)) & (d > nsigma * noise)
+        
+        # Merge touching peak pixels (flat tops) into one peak each
+        lab, n = label(peaks)
+        
+        # Guard against finding no spots
+        if n == 0:
+            return np.empty((0, 2)), np.empty(0)
+        
+        rc = np.array(center_of_mass(peaks, lab, range(1, n + 1)))
+        
+        # sub-pixel centroid of each peak, weighted by the positive band-pass 
+        # signal
+        xy, s = [], []
+        r = min_dist // 2 + 1
+        for y, x in rc:                                   
+            y0, x0 = int(round(y)), int(round(x))
+            w = d[max(0, y0 - r):y0 + r + 1, max(0, x0 - r):x0 + r + 1].clip(0)
+            yy, xx = np.indices(w.shape)
+            xy.append([max(0, x0 - r) + (xx * w).sum() / w.sum(),
+                       max(0, y0 - r) + (yy * w).sum() / w.sum()])
+            s.append(w.sum())
+        
+        # Sort strongest first (required by the candidate selection)
+        xy, s = np.array(xy), np.array(s)
+        order = np.argsort(-s)
+        
+        return xy[order], s[order]
 
 
 
