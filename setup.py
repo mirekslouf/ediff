@@ -43,7 +43,20 @@ setuptools.setup(
     extras_require={
         "gui": ["qtpy", "PyQt6", "matplotlib", "opencv-python"],
     },
-    
+
+    install_requires=[
+        "numpy",
+        "scipy",
+        "pandas",
+        "matplotlib",
+        "scikit-image",  # skimage
+        "pillow",  # PIL
+        "opencv-python",  # cv2
+        "bground",  # 1D background subtraction, re-exported by ediff.bkg
+        "pybaselines",  # baseline functions
+        "pymatgen",
+    ],
+
     # GUI can be run directly as a command after installation,
     # equivalent to `python -m ediff gui`.
     entry_points={

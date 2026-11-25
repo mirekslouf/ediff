@@ -63,8 +63,30 @@ def correct_ellipse(eld_path, icut, cmap, out_path):
     # save, amplifying an already-crushed low-contrast signal into a
     # blown-out, mostly-binary-looking result once redisplayed.
     dummy = object.__new__(ed.center.CenterLocator)
-    corrected = dummy.ellipse_distortion(
-        img, show=False, cmap=cmap, method='manual', vmax=icut)
+
+    # ellipse_distortion's signature has changed between ediff versions.
+    # Older ones take the display clip as `vmax` only. Newer ones also take
+    # `icut` (default None) and apply np.where(img > icut, icut, img) to it,
+    # which fails with "'>' not supported between 'float' and 'NoneType'"
+    # when icut is missing. So ask the installed function what it declares,
+    # and pass each parameter it accepts (both if it takes **kwargs).
+    import inspect
+    params = inspect.signature(dummy.ellipse_distortion).parameters
+    takes_any = any(p.kind is inspect.Parameter.VAR_KEYWORD
+                    for p in params.values())
+    call_kwargs = dict(show=False, cmap=cmap, method='manual')
+    if 'vmax' in params or takes_any:
+        # Display-only colour-scale clip, exactly as before.
+        call_kwargs['vmax'] = icut
+    if 'icut' in params or takes_any:
+        # That clip must NOT reach the transform or the saved image (a clip
+        # baked into the data once produced blown-out results - see above),
+        # and we cannot tell from here whether the clipped copy is used only
+        # for display. So give it the image's own maximum: nothing is above
+        # it, which makes the clip a no-op, while `vmax` above still gives
+        # the display clip the user chose.
+        call_kwargs['icut'] = float(np.max(img))
+    corrected = dummy.ellipse_distortion(img, **call_kwargs)
 
     # Save preserving the true dynamic range — no renormalization, just
     # clip to a valid 16-bit range (should already be a no-op for
