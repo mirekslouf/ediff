@@ -321,7 +321,7 @@ class CenterLocator:
                 print(" [DONE]")
         
         ## (2b) Rectify (remove screen-tilt perspective distortion) -----------
-        if self.rectify and self.detection != "dirbeam":
+        if self.rectify and self.detection == "dirbeam":
             if self.ellipse:
                 raise ValueError("Use either ellipse=True or rectify=True, "
                                  "not both (they correct the same distortion).")
@@ -344,7 +344,10 @@ class CenterLocator:
                 # continue without rectification
                 print(f"\n[WARNING] Rectification skipped: {e}")
                 self.rect, self.H, self.spots_xy = None, None, None
-                
+
+        if self.rectify and self.detection != "dirbeam":
+            print("[WARNING] rectify=True is used only with "
+                  "detection='dirbeam'; ignored.")
                 
         ## (3) Read center coordinates ----------------------------------------
         # The center coordinates may have been determined in a previous run 
@@ -4902,54 +4905,65 @@ class CenterRefinement:
         None
             This method produces a matplotlib plot and does not return any value.
         """
-        # Helper functions ----------------------------------------------------
-        def intensity_sum(self, image, cx, cy, r):
-            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
-            return np.sum(pixels)
-        
-        def intensity_std(self, image, cx, cy, r):
-            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
-            return np.std(pixels)
-        
-        def intensity_median(self, image, cx, cy, r):
-            pixels = self.parent.get_circle_pixels(image, cx, cy, r)
-            return np.median(pixels)
+
+        # Helper functions: no `self` argument, they use the method's `self`
+        # through the closure
+        def intensity_sum(image, cx, cy, r):
+            return np.sum(self.parent.get_circle_pixels(image, cx, cy, r))
+
+        def intensity_std(image, cx, cy, r):
+            return np.std(self.parent.get_circle_pixels(image, cx, cy, r))
+
+        def intensity_median(image, cx, cy, r):
+            return np.median(self.parent.get_circle_pixels(image, cx, cy, r))
 
         print(f"Diagnosing landscape around ({px:.1f}, {py:.1f}) with r={pr:.1f}...")
-        
+
         # (0) Select the metric function --------------------------------------
-        metric_map = {'std': intensity_std, 
-                      'median': intensity_median, 
-                      'sum': intensity_sum }
-        metric_func = metric_map.get(metric, intensity_std)
-    
-        # (1) Create a grid of x and y coordinates to test --------------------
+        metric_map = {'std': intensity_std,
+                      'median': intensity_median,
+                      'sum': intensity_sum}
+        if metric not in metric_map:
+            raise ValueError(f"Unknown metric '{metric}'; "
+                             f"use one of {list(metric_map)}.")
+        metric_func = metric_map[metric]
+
+        # (1) Grid of x and y coordinates (odd steps -> centre included) -------
+        steps = int(steps) | 1
         x_range = np.linspace(px - search_range, px + search_range, steps)
         y_range = np.linspace(py - search_range, py + search_range, steps)
         score_grid = np.zeros((steps, steps))
-    
-        # (2) Calculate the metric score at each point on the grid ------------
+
+        # (2) Metric at each grid point (rows = y, columns = x) ----------------
         for i, y in enumerate(y_range):
             for j, x in enumerate(x_range):
                 score_grid[i, j] = metric_func(self.parent.image, x, y, pr)
-    
-        # (3) Plot the results ------------------------------------------------
-        plt.figure(figsize=(4, 4))
-        plt.imshow(
-            score_grid, 
-            origin='upper', 
-            extent=[x_range[0], x_range[-1], y_range[0], y_range[-1]]
-            )
-        plt.colorbar(label=f"Metric Score ('{metric}')")
-        plt.contour(x_range, y_range, score_grid, colors='white', alpha=0.5)
-        
-        # Mark the starting point
-        plt.plot(px, py, 'r+', markersize=15, label='Initial Guess')
-        plt.title("Optimization Landscape")
-        plt.xlabel("X-coordinate")
-        plt.ylabel("Y-coordinate")
-        plt.legend()
+
+        # (3) Plot: extent runs y from top (y_range[0]) to bottom, so row 0
+        # is drawn at the top, consistent with image coordinates and contours
+        step = x_range[1] - x_range[0]
+        fig, ax = plt.subplots(figsize=(4.5, 4))
+        im = ax.imshow(score_grid, origin='upper',
+                       extent=[x_range[0] - step / 2, x_range[-1] + step / 2,
+                               y_range[-1] + step / 2, y_range[0] - step / 2])
+        fig.colorbar(im, ax=ax, label=f"Metric score ('{metric}')")
+        ax.contour(x_range, y_range, score_grid, colors='white', alpha=0.5)
+
+        # Starting point, and the best grid point for metrics with an optimum
+        # direction (sum: maximum, std: minimum)
+        ax.plot(px, py, 'r+', markersize=15, label='Initial guess')
+        if metric in ('sum', 'std'):
+            best = np.argmax(score_grid) if metric == 'sum' else np.argmin(score_grid)
+            bi, bj = np.unravel_index(best, score_grid.shape)
+            ax.plot(x_range[bj], y_range[bi], 'wx', markersize=10,
+                    label=f"Best ({x_range[bj]:.1f}, {y_range[bi]:.1f})")
+        ax.set_title("Optimization landscape")
+        ax.set_xlabel("x (pixels)")
+        ax.set_ylabel("y (pixels)")
+        ax.legend(fontsize=8)
         plt.show()
+
+        return score_grid
         
 
 class HandlerCircle(HandlerBase):
