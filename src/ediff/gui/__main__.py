@@ -17,10 +17,11 @@ from pathlib import Path
 # lazy-loaded core modules), so this buys the worker extra head start
 # equal to however long app.py's own imports take, on top of the
 # pre-warm already happening at the very start of main().
-from ediff.gui.pipeline import EdiffPipeline
+from ediff.gui.pipeline import EdiffPipeline, default_workdir
 
-_workdir = Path.home() / ".ediff_workdir"
-_workdir.mkdir(exist_ok=True)
+# Start in the user's own directory (the one place that is decided: see
+# ediff.gui.pipeline.default_workdir).
+_workdir = default_workdir()
 _prewarmed_pipeline = EdiffPipeline(_workdir)
 
 from ediff.gui.app import main

@@ -62,6 +62,28 @@ def _capture_fig():
     return buf
 
 
+def default_workdir():
+    """Return the folder EDIFF uses as its working directory when it starts.
+
+    This is the user's own directory - their home folder (for example
+    ``C:/Users/<name>`` on Windows) - rather than a hidden folder inside it.
+    Every place that needs the starting working directory (``main``,
+    ``EdiffWindow`` and ``ediff.gui.__main__``) asks this one function, so
+    the choice is made in a single place. Change the return value here to
+    start somewhere else (for example the user's Documents folder).
+
+    The working directory is where EDIFF writes its output files and where
+    the "Save session" / "Load session" dialogs start. The user can still
+    pick another folder at any time with "Change..." in Step 1.
+
+    Returns
+    -------
+    pathlib.Path
+        The user's home directory.
+    """
+    return Path.home()
+
+
 class EdiffPipeline:
     """
     Stateful wrapper around the EDIFF processing workflow.
@@ -243,18 +265,16 @@ class EdiffPipeline:
         if getattr(sys, 'frozen', False):
             # Frozen application:
             # look for a bundled helper executable.
-            exe_name = f'{module_name}.exe'
             exe_dir  = Path(sys.executable).parent
-
+            # Windows builds name the helper 'interactive_worker.exe'; Linux and
+            # macOS builds have no extension. Accept either, on any system.
+            names = [f'{module_name}.exe', module_name]
             # PyInstaller layouts can differ depending on build options,
             # so search the common possible locations.
-            candidates = [
-                exe_dir / '_internal' / exe_name,
-                exe_dir / exe_name,
-                Path(sys._MEIPASS) / exe_name,
-            ]
-
-            exe_path = next((p for p in candidates if p.exists()), None)
+            candidates = [d / n
+                          for n in names
+                          for d in (exe_dir / '_internal', exe_dir, Path(sys._MEIPASS))]
+            exe_path = next((p for p in candidates if p.is_file()), None)
 
             if exe_path is None:
                 searched = '\n  '.join(str(p) for p in candidates)
@@ -356,6 +376,12 @@ class EdiffPipeline:
             # Start the worker in text mode with line buffering.
             # stdin/stdout/stderr are all piped because communication happens
             # through these streams.
+            # In a packaged build the worker is a console program (it talks over
+            # pipes) started by a windowed parent that has no console: without
+            # this flag Windows opens a black console window each time it starts.
+            # Source runs (python -m ediff gui) are left exactly as they were.
+            flags = (subprocess.CREATE_NO_WINDOW
+                     if os.name == 'nt' and getattr(sys, 'frozen', False) else 0)
             proc = subprocess.Popen(
                 full_cmd,
                 stdin=subprocess.PIPE,
@@ -366,7 +392,8 @@ class EdiffPipeline:
                 text=True,
                 bufsize=1,
                 encoding='utf-8',
-                errors='replace'
+                errors='replace',
+                creationflags=flags
             )
 
         except (FileNotFoundError, PermissionError, OSError) as e:
@@ -1423,7 +1450,110 @@ class EdiffPipeline:
             pass  #
 
     # ── Step 6: Background ────────────────────────────────────────────────────
-    def subtract_background(self, method, bkg_file):
+    @staticmethod
+    def _resolve_xrange(xrange, px_min, px_max):
+        """Turn a possibly half-specified (start, end) pixel range into a
+        concrete one, or None for "use the whole profile".
+
+        A missing side (None) is filled in from the actual data range, so
+        e.g. (40, None) means "from pixel 40 to the end of the profile".
+        Raises ValueError if the resulting range is empty or reversed.
+        """
+        if xrange is None:
+            return None
+        lo, hi = xrange
+        if lo is None and hi is None:
+            return None
+        lo = px_min if lo is None else lo
+        hi = px_max if hi is None else hi
+        if lo >= hi:
+            raise ValueError(
+                f"Background range start ({lo}) must be smaller than "
+                f"its end ({hi}).")
+        return (lo, hi)
+
+    @staticmethod
+    def _check_baseline_params(algorithm, params):
+        """Reject Baselines parameter names the algorithm doesn't have.
+
+        Why this exists: some pybaselines algorithms (currently `snip` and
+        `rubberband`) declare a catch-all ``**kwargs`` and silently ignore
+        unknown names, so a typo such as ``lamm=1000`` would run happily
+        with the default value and give no hint that the input was
+        dropped. Their ``**kwargs`` is documented as empty (the real
+        padding options go through the explicit ``pad_kwargs``), so
+        checking against the explicitly named parameters never rejects
+        anything valid. Uses introspection, so it follows whatever
+        pybaselines version is installed.
+
+        Parameters
+        ----------
+        algorithm : str or None
+            pybaselines algorithm name; None means bground's default,
+            ``peak_filling``.
+        params : dict
+            Algorithm-specific keyword arguments only (NOT bground-level
+            ones such as xlim / xrange / algorithm).
+
+        Raises
+        ------
+        ValueError
+            If `algorithm` is not a pybaselines algorithm, or `params`
+            contains a name it does not accept (the message lists the
+            valid names).
+        """
+        try:
+            import inspect
+            from pybaselines import Baseline
+        except ImportError:
+            return  # can't introspect - let bground/pybaselines decide
+        name = algorithm or 'peak_filling'
+        fn = getattr(Baseline(x_data=np.arange(2.0)), name, None)
+        if not callable(fn):
+            raise ValueError(f"'{name}' is not a pybaselines algorithm.")
+        if not params:
+            return  # nothing further to check
+        kinds = (inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                 inspect.Parameter.KEYWORD_ONLY)
+        valid = {n for n, p in inspect.signature(fn).parameters.items()
+                 if p.kind in kinds} - {'data'}
+        bad = sorted(set(params) - valid)
+        if bad:
+            raise ValueError(
+                f"'{name}' has no parameter {', '.join(repr(b) for b in bad)}."
+                f"\nValid parameters: {', '.join(sorted(valid))}")
+
+    def _run_baselines(self, kwargs):
+        """Run the Baselines background method, tolerating ediff versions
+        whose ElectronDiffractogram.subtract_background() has no
+        'Baselines' branch.
+
+        The normal route is eld.subtract_background('Baselines', ...).
+        Some ediff releases only dispatch InteractivePlot,
+        RestoreFromPoints and SimpleFuncs there, and raise a TypeError
+        ("... method name!") for anything else. Only that specific failure
+        triggers the fallback, which calls bground's Run.Baselines
+        directly on the same diffractogram - exactly what the wrapper
+        does for the methods it does know. Any other TypeError (e.g. a
+        mistyped extra parameter) is re-raised untouched, so genuine
+        errors are never masked.
+        """
+        try:
+            return self.eld.subtract_background('Baselines', **kwargs)
+        except TypeError as e:
+            if 'method name' not in str(e):
+                raise
+        import bground.api as _bk
+        run = getattr(_bk.Run, 'Baselines', None) or _bk.Run.BaseLines
+        # The wrapper defaults saveTXT to False for non-interactive
+        # methods (results stay in the diffractogram); match that here,
+        # since there is no output file for this method.
+        kwargs = dict(kwargs)
+        kwargs.setdefault('saveTXT', False)
+        return run(self.eld.diffractogram, **kwargs)
+
+    def subtract_background(self, method, bkg_file, algorithm=None,
+                            xrange=None, params=None):
         """
         Subtract background from the 1D ELD diffractogram.
 
@@ -1442,9 +1572,13 @@ class EdiffPipeline:
             Restores background points from ``bkg_file`` and subtracts
             the background.
 
-        Other methods
-            Treated as non-interactive SimpleFuncs/Baselines methods.
-            These do not use ``bkg_file``.
+        ``SimpleFuncs`` / ``Baselines``
+            Automatic, non-interactive methods. These do not use
+            ``bkg_file``. The ``algorithm``, ``xrange`` and ``params``
+            arguments below select and tune the algorithm (SimpleFuncs:
+            RollingBall, TopHat; Baselines: peak_filling, snip,
+            pspline_iasls, irsqr, rubberband). Note that the corrected
+            intensity is set to zero outside ``xrange``.
 
         Implementation note
         -------------------
@@ -1462,6 +1596,24 @@ class EdiffPipeline:
             Background-point file path used by ``InteractivePlot`` and
             ``RestoreFromPoints``.
 
+        algorithm : str or None, optional, default=None
+            Algorithm within ``SimpleFuncs`` or ``Baselines``. None lets
+            bground use its own default. Ignored by the point-based
+            methods.
+
+        xrange : (start, end) or None, optional, default=None
+            Pixel range in which the background is calculated. Either
+            side may be None and is then filled in from the data; None
+            means the whole profile. Ignored by the point-based methods.
+
+        params : dict or None, optional, default=None
+            Algorithm-specific keyword arguments (e.g. ``{'radius': 70}``
+            for RollingBall, ``{'lam': 1000}`` for irsqr), passed through
+            to the algorithm. For ``Baselines`` the names are checked
+            against the algorithm's real parameters first (see
+            ``_check_baseline_params``). Ignored by the point-based
+            methods.
+
         Returns
         -------
         None
@@ -1473,9 +1625,9 @@ class EdiffPipeline:
         # unavailable or malformed.
         try:
             px = self.eld.diffractogram['Pixels']
-            px_max = int(px.max())
+            px_min, px_max = int(px.min()), int(px.max())
         except Exception:
-            px_max = 500
+            px_min, px_max = 0, 500
 
         # Interactive background selection needs the accepted center.
         # Write it to center.txt so the interactive background worker
@@ -1506,8 +1658,21 @@ class EdiffPipeline:
             # SimpleFuncs / Baselines methods.
             # Pass a concrete xlim to avoid the backend bug caused
             # by xlim=None.
-            self.smet = self.eld.subtract_background(
-                method, xlim=[0, px_max])
+            kwargs = dict(xlim=[0, px_max])
+            if algorithm:
+                kwargs['algorithm'] = algorithm
+            rng = self._resolve_xrange(xrange, px_min, px_max)
+            if rng is not None:
+                kwargs['xrange'] = rng
+            if params:
+                kwargs.update(params)
+            if method == 'Baselines':
+                # Validate names first: some pybaselines algorithms
+                # silently swallow unknown keywords (see the helper).
+                self._check_baseline_params(algorithm, params)
+                self.smet = self._run_baselines(kwargs)
+            else:
+                self.smet = self.eld.subtract_background(method, **kwargs)
 
     def plot_background(self, xlim=(0, 500), ylim=None):
         """

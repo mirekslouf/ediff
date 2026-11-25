@@ -4,7 +4,7 @@ PySide6 - whichever is available in the current environment)
 Run with: python -m ediff gui
 """
 
-import sys, os, shutil, json, math
+import sys, os, shutil, json, math, ast
 from pathlib import Path
 
 # No QT_API override here on purpose: qtpy auto-detects whichever Qt
@@ -36,7 +36,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavToolbar
 from matplotlib.figure import Figure
 
-from ediff.gui.pipeline import EdiffPipeline
+from ediff.gui.pipeline import EdiffPipeline, default_workdir
 
 # The app bunddles a handful of image files that need to be loaded as QPixmap
 # regardless of how is the GUI/app/ediff running. A naive implementation breaks
@@ -364,6 +364,7 @@ DETECTION_OPTIONS = {
     "ccorr  - auto (cross-correlation)":    "ccorr",
     "hough  - auto (Hough transform)":      "hough",
     "intensity - auto (intensity center)":  "intensity",
+    "dirbeam - auto (direct beam)":         "dirbeam",
     "curvefit - auto (curve fit)":          "curvefit",
     "manual - interactive (click 3 pts)":   "manual",
     "from file - read saved center":        None,
@@ -387,6 +388,60 @@ CAL_METHODS = [
     "MaxPeaks", "MaxPeaksInRange", "Microscope", "MicroscopeParams"
     ]
 
+# Algorithms available inside the two automatic background methods, and the
+# dedicated parameter(s) each one exposes in the GUI. Each parameter is
+# (name, kind, default, tooltip): `name` is the exact keyword passed to
+# bground; `kind` is "int" / "float" / "bool". Defaults are the values
+# recommended in bground's own documentation (verified to run correctly),
+# NOT the library defaults - e.g. pybaselines' own `lam` default differs
+# per algorithm (10 / 1e6 / None), which is why the default is stored
+# per algorithm here rather than once per parameter.
+#
+# TopHat deliberately has no dedicated parameter: it exists only in the
+# development version of bground.sfunc and its keyword arguments are not
+# documented, so none are invented here. Anything it (or any algorithm)
+# needs beyond these fields can be given in the "Extra parameters" line.
+BKG_ALGORITHMS = {
+    "SimpleFuncs": {
+        "RollingBall": [
+            ("radius", "int", 70,
+             "Radius of the rolling ball, in pixels (default 70).\n"
+             "Smaller values follow the background more closely; larger "
+             "values give a smoother background. Judge it on the "
+             "'With background' plot."),
+        ],
+        "TopHat": [],
+    },
+    "Baselines": {
+        "peak_filling": [
+            ("half_window", "int", 1,
+             "Half-size of the moving-average window "
+             "(window = 2 x half_window + 1). Recommended: 1."),
+        ],
+        "snip": [
+            ("decreasing", "bool", True,
+             "True iterates the window from large to small, which gives a "
+             "smoother baseline (recommended). False goes small to large."),
+        ],
+        "pspline_iasls": [
+            ("lam", "float", 5.0,
+             "Smoothing parameter - larger values give a smoother "
+             "baseline. Recommended: 5."),
+        ],
+        "irsqr": [
+            ("lam", "float", 1000.0,
+             "Smoothing parameter - larger values give a smoother "
+             "baseline. Recommended: 1000."),
+        ],
+        "rubberband": [
+            ("lam", "float", 2.0,
+             "Smoothing used when interpolating between the baseline "
+             "points. Set to 0 for plain linear interpolation. "
+             "Recommended: 2."),
+        ],
+    },
+}
+
 # (b) Tooltips — the app's tooltip text library, indexed by key
 #        - a single dictionary holding every tooltip string used across the 
 #          entire sidebar, keyed by a short identifier ("wavelength", "icut",
@@ -406,6 +461,14 @@ TOOLTIPS = {
     "px_max":     "End of the pixel range shown in the 1D profile",
     "bkg_method": "Background subtraction algorithm",
     "bkg_file":   "File storing the background control points",
+    "bkg_algo":   "Algorithm used to calculate the background",
+    "bkg_range":  "Pixel range in which the background is calculated. 'auto' "
+                  "uses the start / end of the profile. NOTE: the corrected "
+                  "intensity is set to zero outside this range.",
+    "bkg_extra":  "Optional extra algorithm parameters as name=value pairs, "
+                  "e.g.  size=50, max_half_window=40\n"
+                  "Values are numbers, True/False, None or quoted text. They "
+                  "override the fields above if both set the same name.",
     "cal_method": "Calibration method to convert pixels to q values",
     "cal_ref":    "CIF phase used as the reference for calibration",
     "finetune":   "Small multiplicative correction applied to the q axis after calibration",
@@ -422,6 +485,50 @@ TOOLTIPS = {
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def parse_extra_params(text):
+    """Parse a "name=value, name=value" line into a dict of keyword arguments.
+
+    Used for the free-form "Extra parameters" field of the background step,
+    so any algorithm keyword that has no dedicated field (e.g. an option of
+    TopHat, or of a pybaselines algorithm) can still be passed through.
+
+    Values are parsed with ast.literal_eval, so only Python literals are
+    accepted: numbers, True/False, None, quoted strings, and tuples/lists/
+    dicts of those. Nothing is ever executed, so a stray or malicious entry
+    cannot run code. Commas inside brackets or quotes are handled correctly
+    (e.g. ``bounds=(1, 5), size=50``).
+
+    Parameters
+    ----------
+    text : str
+        The raw text. Blank / whitespace-only returns an empty dict.
+
+    Returns
+    -------
+    dict
+        Parameter name -> parsed value.
+
+    Raises
+    ------
+    ValueError
+        If the text is not a valid list of ``name=value`` pairs, or a value
+        is not a plain literal.
+    """
+    text = (text or "").strip()
+    if not text:
+        return {}
+    msg = ("Extra parameters must be written as  name=value, name=value  "
+           "(for example:  size=50, decreasing=True).")
+    try:
+        call = ast.parse(f"dict({text})", mode="eval").body
+        # Reject positional arguments and **unpacking - only name=value
+        if call.args or any(k.arg is None for k in call.keywords):
+            raise ValueError(msg)
+        return {k.arg: ast.literal_eval(k.value) for k in call.keywords}
+    except (SyntaxError, ValueError):
+        raise ValueError(msg) from None
+
+
 def divider():
     """ 
     Create a thin horizontal separator line.
@@ -1149,7 +1256,7 @@ class RunPanel(QWidget):
         # Top bar: toolbar + "Close others" + "Use this run"
         # a horizontal strip across the top of the panel
         top = QWidget()
-        top.setStyleSheet("background:#ffffff; border-bottom:1px solid #e5e5ea;")
+        top.setStyleSheet("background:#ffffff;")
         top_lay = QHBoxLayout(top); top_lay.setContentsMargins(8, 4, 8, 4); top_lay.setSpacing(8)
         
         # embedded matplotlib figure 
@@ -1157,8 +1264,7 @@ class RunPanel(QWidget):
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.toolbar = NavToolbar(self.canvas, self)
-        self.toolbar.setStyleSheet(
-            "background:transparent; border:none; padding:0px;")
+        self._style_toolbar()
         top_lay.addWidget(self.toolbar, stretch=1)
 
         # "Close others" — same size/shape as "Use this run", neutral color
@@ -1200,7 +1306,10 @@ class RunPanel(QWidget):
             "}"
         )
         self._use_btn.clicked.connect(lambda: self.use_requested.emit(self))
-        self._use_btn.setVisible(show_use_button)
+        # The run card on the right carries the "Use this run" button now; this
+        # one stays only so the old code that reads it keeps working.
+        self._show_use = show_use_button
+        self._use_btn.setVisible(False)
         top_lay.addWidget(self._use_btn)
         
         # Stacks the top bar above the canvas, and initializes the "am I the 
@@ -1209,12 +1318,59 @@ class RunPanel(QWidget):
         lay.addWidget(self.canvas)
         self._active = False
 
+    def _style_toolbar(self):
+        """Make matplotlib's navigation toolbar small, flat and light.
+
+        Smaller icons in a soft grey (instead of heavy black ones) with a
+        rounded highlight on hover / when pressed or checked, and without the
+        two buttons that mean little here ("Subplots" and "Customize" - the card's
+        "Axis limits" control covers the useful part). Separators left next to
+        each other by the hidden buttons are hidden too. If tinting the icons
+        fails for any reason the original icons are kept.
+        """
+        tb = self.toolbar
+        tb.setStyleSheet(
+            "QToolBar { background:transparent; border:none; padding:0px; spacing:2px; }"
+            "QToolButton { background:transparent; border:none; border-radius:7px;"
+            "  padding:5px; }"
+            "QToolButton:hover { background:#eef1f6; }"
+            "QToolButton:checked { background:#dfeafb; }"
+            "QToolButton:pressed { background:#d3e1f7; }")
+        tb.setIconSize(QSize(18, 18))
+        for act in tb.actions():
+            if act.text() in ("Subplots", "Customize"):
+                act.setVisible(False)
+        was_separator = True          # also hides a separator that would come first
+        for act in tb.actions():
+            if not act.isVisible():
+                continue
+            if act.isSeparator():
+                if was_separator:
+                    act.setVisible(False)
+                was_separator = True
+            else:
+                was_separator = False
+        try:
+            for act in tb.actions():
+                icon = act.icon()
+                if icon.isNull():
+                    continue
+                pm = icon.pixmap(QSize(36, 36))
+                painter = QPainter(pm)
+                painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+                painter.fillRect(pm.rect(), QColor("#5a6270"))
+                painter.end()
+                act.setIcon(QIcon(pm))
+        except Exception:
+            pass
+
     def set_close_others_visible(self, visible: bool):
         """
         PlotCard calls this on every panel whenever the number of tabs changes, 
         to keep "Close others" shown/hidden consistently across all of them.
         """
-        self._close_others_btn.setVisible(visible)
+        # The sidebar's "Close others" link replaces this button (it stays hidden).
+        pass
 
     def set_active(self, active: bool):
         """Mark this run as the currently active/selected one.
@@ -1284,6 +1440,188 @@ class RunPanel(QWidget):
             
         self.fig.tight_layout(pad=1.5)
         self.canvas.draw()
+
+
+# ── Modern plot card: run cards + runs sidebar ────────────────────────────────
+# (names are imported here, next to the classes that use them)
+from qtpy.QtCore import QPoint, QSize
+from qtpy.QtGui import QColor, QIcon, QPainter
+from qtpy.QtWidgets import (QFrame, QGridLayout, QGraphicsDropShadowEffect,
+                            QScrollArea, QToolButton)
+
+
+class RunCard(QFrame):
+    """One finished run, drawn as a card in the runs list beside the plot.
+
+    It replaces a tab. The card shows the run's name and the time it finished,
+    a close button, and either a "Use this run" button or - for the run that
+    the next steps will use - a green "In use" chip. Clicking the card itself
+    makes the plot show that run.
+
+    The card holds no state of its own. ``PlotCard`` rebuilds all cards from its
+    tab widget whenever anything changes, so the cards can never disagree with
+    the tabs.
+
+    Signals
+    -------
+    clicked, use_clicked, close_clicked : Signal(object)
+        Each carries the ``RunPanel`` this card stands for.
+    """
+    clicked       = Signal(object)
+    use_clicked   = Signal(object)
+    close_clicked = Signal(object)
+
+    STYLE = (
+        "QFrame#runCard { background:#ffffff; border:1px solid #e5e5ea;"
+        "  border-radius:10px; }"
+        "QFrame#runCard:hover { border-color:#c7c7cc; }"
+        "QFrame#runCard[current='true'] { background:#f4f8ff; border:1px solid #0071e3; }"
+        "QFrame#runCard[inuse='true'] { border-left:4px solid #34c759; }"
+        "QFrame#runCard QLabel { background:transparent; border:none; }"
+    )
+
+    def __init__(self, panel, title, stamp, in_use, current, can_use, parent=None):
+        """
+        Parameters
+        ----------
+        panel : RunPanel
+            The run this card stands for (passed back in every signal).
+        title : str
+            Run name, e.g. ``"phase / sum  icut=200"``.
+        stamp : str
+            Time the run finished (may be empty).
+        in_use : bool
+            This is the run the next steps use.
+        current : bool
+            This is the run the plot is showing right now.
+        can_use : bool
+            Show a "Use this run" button (some steps have nothing to choose).
+        """
+        super().__init__(parent)
+        self._panel = panel
+        self.setObjectName("runCard")
+        self.setStyleSheet(self.STYLE)
+        self.setProperty("current", "true" if current else "false")
+        self.setProperty("inuse", "true" if in_use else "false")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(f"{title}\nfinished {stamp}" if stamp else title)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(12, 10, 8, 10); lay.setSpacing(6)
+
+        top = QHBoxLayout(); top.setSpacing(4)
+        name = QLabel(title); name.setWordWrap(True)
+        name.setStyleSheet("font-size:12px; font-weight:600; color:#1d1d1f;")
+        close = QToolButton(); close.setText("\u2715")
+        close.setToolTip("Close this run")
+        close.setCursor(Qt.CursorShape.PointingHandCursor)
+        close.setStyleSheet(
+            "QToolButton { border:none; background:transparent; color:#aeaeb2;"
+            "  font-size:11px; padding:2px 5px; border-radius:5px; }"
+            "QToolButton:hover { background:#f0f0f3; color:#ff3b30; }")
+        # `_=False` absorbs the bool that clicked() passes
+        close.clicked.connect(lambda _=False: self.close_clicked.emit(self._panel))
+        top.addWidget(name, 1); top.addWidget(close, 0, Qt.AlignmentFlag.AlignTop)
+        lay.addLayout(top)
+
+        meta = QHBoxLayout(); meta.setSpacing(6)
+        when = QLabel(stamp); when.setStyleSheet("font-size:11px; color:#86868b;")
+        meta.addWidget(when); meta.addStretch()
+        if in_use:
+            chip = QLabel("\u2713 In use")
+            chip.setStyleSheet(
+                "font-size:11px; font-weight:600; color:#1e8e3e; background:#e6f6ea;"
+                "border-radius:9px; padding:2px 9px;")
+            meta.addWidget(chip)
+        elif can_use:
+            use = QPushButton("Use this run")
+            use.setCursor(Qt.CursorShape.PointingHandCursor)
+            use.setStyleSheet(
+                "QPushButton { background:#0071e3; color:#ffffff; border:none; min-height:24px; max-height:24px;"
+                "  border-radius:12px; padding:0px 12px; font-size:11px; font-weight:600; }"
+                "QPushButton:hover { background:#0077ed; }"
+                "QPushButton:pressed { background:#005bb5; }")
+            use.setFixedHeight(24)
+            use.clicked.connect(lambda _=False: self.use_clicked.emit(self._panel))
+            meta.addWidget(use)
+        lay.addLayout(meta)
+
+    def mousePressEvent(self, ev):
+        """A click anywhere on the card (not on its buttons) shows this run."""
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit(self._panel)
+        super().mousePressEvent(ev)
+
+
+class RunsSidebar(QFrame):
+    """The column of run cards on the right of a plot card.
+
+    A header ("Runs", a count, and a "Close others" link) above a scrolling list
+    of ``RunCard`` widgets. It only displays: ``PlotCard`` fills it (``clear_cards``
+    then ``add_card`` per run) and decides when it is visible.
+
+    Signals
+    -------
+    close_others_clicked : Signal()
+        The "Close others" link was clicked.
+    """
+    close_others_clicked = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("runsSidebar")
+        self.setFixedWidth(250)
+        self.setStyleSheet(
+            "QFrame#runsSidebar { background:#f7f8fa; border-left:1px solid #e5e5ea; }")
+        lay = QVBoxLayout(self); lay.setContentsMargins(0, 0, 0, 0); lay.setSpacing(0)
+
+        head = QWidget(); hl = QHBoxLayout(head)
+        hl.setContentsMargins(14, 12, 10, 6)
+        self._title = QLabel("RUNS")
+        self._title.setStyleSheet("font-size:11px; font-weight:700; color:#86868b;")
+        self._others = QPushButton("Close others")
+        self._others.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._others.setToolTip("Close every run except the one being shown")
+        self._others.setStyleSheet(
+            "QPushButton { border:none; background:transparent; color:#0071e3; min-height:0px;"
+            "  font-size:11px; padding:2px 4px; }"
+            "QPushButton:hover { text-decoration:underline; }")
+        self._others.clicked.connect(lambda _=False: self.close_others_clicked.emit())
+        self._others.setVisible(False)
+        hl.addWidget(self._title); hl.addStretch(); hl.addWidget(self._others)
+        lay.addWidget(head)
+
+        scroll = QScrollArea(); scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet(
+            "QScrollArea { background:transparent; border:none; }"
+            "QScrollArea > QWidget > QWidget { background:transparent; }")
+        inner = QWidget(); inner.setObjectName("runsInner")
+        self._list = QVBoxLayout(inner)
+        self._list.setContentsMargins(10, 2, 10, 12); self._list.setSpacing(8)
+        self._list.addStretch()
+        scroll.setWidget(inner)
+        lay.addWidget(scroll, 1)
+
+    def clear_cards(self):
+        """Remove every card (the trailing stretch stays)."""
+        while self._list.count() > 1:
+            item = self._list.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None); w.deleteLater()
+
+    def add_card(self, card):
+        """Append a card above the trailing stretch."""
+        self._list.insertWidget(self._list.count() - 1, card)
+
+    def set_count(self, n):
+        """Show how many runs there are in the header."""
+        self._title.setText(f"RUNS  \u00b7  {n}")
+
+    def set_close_others_visible(self, visible):
+        """Show the "Close others" link (only useful with more than one run)."""
+        self._others.setVisible(visible)
 
 
 class PlotCard(QWidget):
@@ -1362,124 +1700,134 @@ class PlotCard(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0); outer.setSpacing(0)
         
-        # optional subtitle bar (only built at all if a subtitle string was 
-        # actually passed in)
-        if subtitle:
-            sb = QWidget()
-            sb.setStyleSheet("background:#ffffff; border-bottom:1px solid #e5e5ea;")
-            sb.setFixedHeight(32)
-            sbl = QHBoxLayout(sb); sbl.setContentsMargins(16, 0, 16, 0)
-            lbl = QLabel(subtitle)
-            lbl.setStyleSheet("font-size:12px; color:#86868b;")
-            sbl.addWidget(lbl)
-            outer.addWidget(sb)
+        # ── Header: the subtitle on the left, the axis-limits control on the right ──
+        self._header = QFrame()
+        self._header.setObjectName("plotHeader")
+        self._header.setStyleSheet(
+            "QFrame#plotHeader { background:#ffffff; border:none;"
+            "  border-bottom:1px solid #f0f0f3; }")
+        self._header.setFixedHeight(46)
+        hl = QHBoxLayout(self._header)
+        hl.setContentsMargins(18, 0, 14, 0); hl.setSpacing(8)
+        self._subtitle_lbl = QLabel(subtitle)
+        self._subtitle_lbl.setStyleSheet("font-size:12px; color:#86868b; background:transparent;")
+        hl.addWidget(self._subtitle_lbl); hl.addStretch()
+        self._view_btn = QPushButton("\u2699  Axis limits")
+        self._view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._view_btn.setToolTip(
+            "Set the X / Y range of the plot (highlighted when custom limits are set)")
+        self._view_btn.setStyleSheet(
+            "QPushButton { background:#f5f5f7; color:#3a3a3c; border:none; min-height:30px; max-height:30px;"
+            "  border-radius:15px; padding:0px 14px; font-size:12px; font-weight:600; }"
+            "QPushButton:hover { background:#e8e8ed; }"
+            "QPushButton[custom='true'] { background:#e8f0fe; color:#0071e3; }")
+        self._view_btn.setFixedHeight(30)
+        self._view_btn.clicked.connect(self._toggle_axis_popover)
+        self._view_btn.setVisible(False)       # shown once a refresh callback is set
+        hl.addWidget(self._view_btn)
+        self._header.setVisible(bool(subtitle))
+        outer.addWidget(self._header)
 
-        # Axis limits row — lets the user set an exact numeric view range
-        # on whichever plot is currently shown, rather than only the
-        # drag-to-zoom in the matplotlib toolbar. Hidden until a plot
-        # with a refresh callback is shown (see set_refresh_callback).
-        self._axis_row = QWidget()
-        self._axis_row.setStyleSheet("background:#ffffff; border-bottom:1px solid #e5e5ea;")
-        axis_lay = QHBoxLayout(self._axis_row)
-        axis_lay.setContentsMargins(16, 6, 16, 6); axis_lay.setSpacing(6)
-        axis_label_style = "font-size:11px; color:#6e6e73; font-weight:600;"
+        # ── Axis-limits popover: floats under the button, closes on a click outside ──
+        # (it keeps the old name _axis_row; the same fields and buttons as before)
+        self._axis_row = QFrame(self, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+        self._axis_row.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        # so a click on the button that closes the popover does not instantly reopen it
+        self._axis_row.setAttribute(Qt.WidgetAttribute.WA_NoMouseReplay, True)
+        pop_lay = QVBoxLayout(self._axis_row)
+        pop_lay.setContentsMargins(12, 6, 12, 18)      # room for the shadow
+        pop = QFrame(); pop.setObjectName("axisCard")
+        pop.setStyleSheet(
+            "QFrame#axisCard { background:#ffffff; border:1px solid #e0e0e5;"
+            "  border-radius:14px; }"
+            "QFrame#axisCard QLabel { background:transparent; border:none; }")
+        shadow = QGraphicsDropShadowEffect(pop)
+        shadow.setBlurRadius(28); shadow.setOffset(0, 6); shadow.setColor(QColor(0, 0, 0, 55))
+        pop.setGraphicsEffect(shadow)
+        pop_lay.addWidget(pop)
+        grid = QGridLayout(pop)
+        grid.setContentsMargins(18, 16, 18, 16)
+        grid.setHorizontalSpacing(8); grid.setVerticalSpacing(10)
 
         def _mini_field(placeholder):
-            """ Helper function, builds one small text-entry box: 70px wide max, 
-            small font, and a placeholder ("min" or "max") — the gray hint text 
-            shown when the field is empty.
-            """
+            """A small, rounded numeric box for one axis limit."""
             w = QLineEdit()
             w.setPlaceholderText(placeholder)
-            w.setMaximumWidth(70)
-            w.setStyleSheet("font-size:11px; padding:3px 6px;")
+            w.setFixedWidth(92)
+            w.setStyleSheet(
+                "QLineEdit { font-size:12px; padding:6px 9px; border:1px solid #d1d1d6;"
+                "  border-radius:8px; background:#ffffff; }"
+                "QLineEdit:focus { border:1px solid #0071e3; }")
             return w
-        
-        # build labels plus their four input boxes (min/max for each axis),
-        # using the _mini_field() helper
-        # these 4 fields are stored as instance attributes specifically, 
-        # so other methods on this class (_parse_axis_fields, set_axis_fields) 
-        # can read from or write to them later.
-        
-        xl = QLabel("X:"); xl.setStyleSheet(axis_label_style)
+
+        axis_title = QLabel("Axis limits")
+        axis_title.setStyleSheet("font-size:13px; font-weight:700; color:#1d1d1f;")
+        axis_label_style = "font-size:12px; color:#6e6e73; font-weight:600;"
+        xl = QLabel("X"); xl.setStyleSheet(axis_label_style)
         self._axis_xmin = _mini_field("min")
         self._axis_xmax = _mini_field("max")
-        
-        yl = QLabel("Y:"); yl.setStyleSheet(axis_label_style)
+        yl = QLabel("Y"); yl.setStyleSheet(axis_label_style)
         self._axis_ymin = _mini_field("min")
         self._axis_ymax = _mini_field("max")
-        
-        # two buttons for setting the axis limits, each directly wired to its 
-        # handler method
+        hint = QLabel("Fill both min and max to limit an axis;\nan axis left empty auto-scales.")
+        hint.setStyleSheet("font-size:11px; color:#86868b;")
         self._axis_apply_btn = QPushButton("Apply")
         self._axis_apply_btn.setToolTip(
-            "Re-render the current plot with these axis limits. "
-            "Leave a field blank to auto-scale that side.")
+            "Re-render the current plot with these axis limits. An axis is "
+            "limited only when both its min and max are filled; otherwise it auto-scales.")
         self._axis_apply_btn.setStyleSheet(
-            "QPushButton { background:#f5f5f7; color:#0071e3; border:1px solid #d1d1d6;"
-            "border-radius:6px; padding:4px 12px; font-size:11px; font-weight:600; }"
-            "QPushButton:hover { background:#e8f0fe; }")
+            "QPushButton { background:#0071e3; color:#ffffff; border:none; min-height:32px; max-height:32px;"
+            "  border-radius:10px; padding:0px 20px; font-size:12px; font-weight:600; }"
+            "QPushButton:hover { background:#0077ed; }"
+            "QPushButton:pressed { background:#005bb5; }")
         self._axis_reset_btn = QPushButton("Reset")
+        self._axis_reset_btn.setToolTip("Clear all four limits (auto-scale) and redraw")
         self._axis_reset_btn.setStyleSheet(
-            "QPushButton { background:#f5f5f7; color:#6e6e73; border:1px solid #d1d1d6;"
-            "border-radius:6px; padding:4px 12px; font-size:11px; }"
+            "QPushButton { background:#f5f5f7; color:#3a3a3c; border:none; min-height:32px; max-height:32px;"
+            "  border-radius:10px; padding:0px 18px; font-size:12px; font-weight:600; }"
             "QPushButton:hover { background:#e8e8ed; }")
+        self._axis_apply_btn.setFixedHeight(32); self._axis_reset_btn.setFixedHeight(32)
+        # the original handlers do the work; the extra ones tidy the popover afterwards
         self._axis_apply_btn.clicked.connect(self._on_apply_axis_limits)
         self._axis_reset_btn.clicked.connect(self._on_reset_axis_limits)
-        
-        # layout of the axis limits panel
-        # x-axis
-        axis_lay.addWidget(xl)
-        axis_lay.addWidget(self._axis_xmin)
-        axis_lay.addWidget(self._axis_xmax)
-        
-        # gap
-        axis_lay.addSpacing(12)
-        
-        # y-xis
-        axis_lay.addWidget(yl)
-        axis_lay.addWidget(self._axis_ymin)
-        axis_lay.addWidget(self._axis_ymax)
-        
-        # an expanding spacer that consumes all remaining horizontal room
-        axis_lay.addStretch()
-        axis_lay.addWidget(self._axis_reset_btn)
-        axis_lay.addWidget(self._axis_apply_btn)
-        
-        # the row only becomes visible once a step calls set_refresh_callback() 
-        # with an actual callback, since without one there's nothing meaningful 
-        # for "Apply" to do.
-        self._axis_row.setVisible(False)
-        outer.addWidget(self._axis_row)
-        
-        # The three-state stack
-        # QStackedWidget holds multiple child widgets but only ever shows one 
-        # at a time (switched via setCurrentIndex) — this is the actual 
-        # mechanism implementing the "empty / computing / results" state 
-        # machine described in the class docstring
+        self._axis_apply_btn.clicked.connect(self._after_axis_action)
+        self._axis_reset_btn.clicked.connect(self._after_axis_action)
+        for _f in (self._axis_xmin, self._axis_xmax, self._axis_ymin, self._axis_ymax):
+            _f.textChanged.connect(lambda _t: self._refresh_view_badge())
+        grid.addWidget(axis_title, 0, 0, 1, 3)
+        grid.addWidget(xl, 1, 0); grid.addWidget(self._axis_xmin, 1, 1); grid.addWidget(self._axis_xmax, 1, 2)
+        grid.addWidget(yl, 2, 0); grid.addWidget(self._axis_ymin, 2, 1); grid.addWidget(self._axis_ymax, 2, 2)
+        grid.addWidget(hint, 3, 0, 1, 3)
+        btn_row = QHBoxLayout(); btn_row.setSpacing(8)
+        btn_row.addStretch(); btn_row.addWidget(self._axis_reset_btn); btn_row.addWidget(self._axis_apply_btn)
+        grid.addLayout(btn_row, 4, 0, 1, 3)
+
+        # ── Body: the plot area (empty / spinner / runs) with the runs sidebar on its right ──
+        body = QWidget()
+        body_lay = QHBoxLayout(body)
+        body_lay.setContentsMargins(0, 0, 0, 0); body_lay.setSpacing(0)
         self._stack = QStackedWidget()
         self._empty   = EmptyState()
         self._spinner = SpinnerWidget()
-        
-        # QTabWidget, where each tab holds one RunPanel
+        # The tab widget stays the single source of truth for the runs (pages, order,
+        # labels, current run); only its tab bar is hidden, because the cards on the
+        # right replace it.
         self._run_tabs = QTabWidget()
-        self._run_tabs.setTabsClosable(True) # add close icon to each tab
+        self._run_tabs.setTabsClosable(True)
         self._run_tabs.setDocumentMode(True)
-        self._run_tabs.setStyleSheet(
-            "QTabBar::tab { padding:5px 14px; font-size:11px; }"
-            "QTabBar::tab:selected { color:#0071e3; font-weight:600; }"
-            "QTabBar::tab[active='true'] { color:#34c759; font-weight:700; }")
+        self._run_tabs.tabBar().hide()
         self._run_tabs.tabCloseRequested.connect(self._close_run)
-        
-        # add all three states to the stack in a fixed order
+        self._run_tabs.currentChanged.connect(lambda _i: self._refresh_cards())
         self._stack.addWidget(self._empty)    # 0
         self._stack.addWidget(self._spinner)  # 1
         self._stack.addWidget(self._run_tabs) # 2
-        
-        # defaults to showing the empty state (index 0) since nothing has run 
-        # yet, and adds the whole stack to the card's layout.
         self._stack.setCurrentIndex(0)
-        outer.addWidget(self._stack)
+        self._runs_bar = RunsSidebar()
+        self._runs_bar.setVisible(False)      # shown once there is at least one run
+        self._runs_bar.close_others_clicked.connect(lambda: self._close_other_runs())
+        body_lay.addWidget(self._stack, 1)
+        body_lay.addWidget(self._runs_bar)
+        outer.addWidget(body, 1)
 
         # The compatibility placeholders
         self.fig    = None
@@ -1554,6 +1902,7 @@ class PlotCard(QWidget):
             self._panels.clear()
             self._active_idx = -1
         self._refresh_close_others_visibility()
+        self._refresh_cards()
 
     def _refresh_close_others_visibility(self):
         """ Show or hide "Close others" on every panel based on tab count.
@@ -1609,6 +1958,72 @@ class PlotCard(QWidget):
         for idx in reversed(range(self._run_tabs.count())):
             if idx != keep_idx:
                 self._close_run(idx)
+
+    def _refresh_cards(self):
+        """Rebuild the run cards on the right from the tab widget.
+
+        The tab widget is the single source of truth (which runs exist, their
+        order and labels, which one is shown); the "in use" run is
+        ``_active_idx``. Rebuilding everything is cheap (a handful of cards) and
+        means the cards can never be out of step with the tabs. Safe to call at
+        any time, including while widgets are being torn down.
+        """
+        try:
+            bar = self._runs_bar
+            bar.clear_cards()
+            shown = self._run_tabs.currentIndex()
+            for i, panel in enumerate(self._panels):
+                card = RunCard(
+                    panel,
+                    self._run_tabs.tabText(i).lstrip("\u2713 "),
+                    self._run_tabs.tabToolTip(i),
+                    in_use=(i == self._active_idx),
+                    current=(i == shown),
+                    can_use=getattr(panel, "_show_use", True))
+                card.clicked.connect(self._on_card_clicked)
+                card.use_clicked.connect(self._on_use_requested)
+                card.close_clicked.connect(self._on_card_close)
+                bar.add_card(card)
+            bar.set_count(len(self._panels))
+            bar.set_close_others_visible(len(self._panels) > 1)
+            bar.setVisible(len(self._panels) > 0)
+        except RuntimeError:
+            pass      # a widget was already deleted (window closing)
+
+    def _on_card_clicked(self, panel):
+        """Show the run whose card was clicked."""
+        if panel in self._panels:
+            self._run_tabs.setCurrentIndex(self._panels.index(panel))
+
+    def _on_card_close(self, panel):
+        """Close the run whose card's x was clicked."""
+        if panel in self._panels:
+            self._close_run(self._panels.index(panel))
+
+    def _toggle_axis_popover(self):
+        """Open the axis-limits popover under its button, or close it."""
+        pop = self._axis_row
+        if pop.isVisible():
+            pop.hide()
+            return
+        pop.adjustSize()
+        btn = self._view_btn
+        pop.move(btn.mapToGlobal(QPoint(btn.width() - pop.width() + 12, btn.height() - 2)))
+        pop.show()
+        self._axis_xmin.setFocus()
+
+    def _after_axis_action(self, _checked=False):
+        """After Apply or Reset: close the popover and update the button's highlight."""
+        self._axis_row.hide()
+        self._refresh_view_badge()
+
+    def _refresh_view_badge(self):
+        """Highlight the "Axis limits" button while any limit is set."""
+        custom = any(f.text().strip() for f in (
+            self._axis_xmin, self._axis_xmax, self._axis_ymin, self._axis_ymax))
+        self._view_btn.setProperty("custom", "true" if custom else "false")
+        self._view_btn.style().unpolish(self._view_btn)
+        self._view_btn.style().polish(self._view_btn)
 
     def show_spinner(self, msg="Computing..."):
         """ Switch this card to the loading/spinner state.
@@ -1722,6 +2137,7 @@ class PlotCard(QWidget):
         
         # refresh visibility across all panels
         self._refresh_close_others_visibility()
+        self._refresh_cards()
         
         # immediately marks this run as the accepted one via _select_panel
         if auto_select:
@@ -1746,7 +2162,12 @@ class PlotCard(QWidget):
         # actually given — exactly matching what was described when this 
         # feature was designed.
         self._refresh_callback = callback
-        self._axis_row.setVisible(callback is not None)
+        # The axis limits live behind the header's button; it only makes sense
+        # once there is something to redraw.
+        self._view_btn.setVisible(callback is not None)
+        self._header.setVisible(bool(self._subtitle_lbl.text()) or callback is not None)
+        if callback is None:
+            self._axis_row.hide()
 
     def set_axis_fields(self, xlim, ylim):
         """Pre-fill the axis-limit input boxes without triggering a refresh.
@@ -1993,6 +2414,7 @@ class PlotCard(QWidget):
         if not tab_text.startswith("✓"):
             self._run_tabs.setTabText(idx, f"✓ {tab_text}")
         self._run_tabs.setCurrentIndex(idx)
+        self._refresh_cards()
         self.run_selected.emit(panel)
         
     # Read only status properties; accessed like plain attributes
@@ -2013,6 +2435,7 @@ class PlotCard(QWidget):
         self._run_count  = 0
         self._active_idx = -1
         self._stack.setCurrentIndex(0)
+        self._refresh_cards()
 
 
 class SaveSummaryCard(QWidget):
@@ -2050,11 +2473,11 @@ class SaveSummaryCard(QWidget):
         if subtitle:
             sb = QWidget()
             sb.setStyleSheet(
-                "background:#ffffff; border-bottom:1px solid #e5e5ea;"
+                "background:#ffffff; border-bottom:1px solid #f0f0f3;"
             )
-            sb.setFixedHeight(32)
+            sb.setFixedHeight(46)
             sbl = QHBoxLayout(sb)
-            sbl.setContentsMargins(16, 0, 16, 0)
+            sbl.setContentsMargins(18, 0, 14, 0)
             lbl = QLabel(subtitle)
             lbl.setStyleSheet("font-size:12px; color:#86868b;")
             sbl.addWidget(lbl)
@@ -3076,10 +3499,16 @@ class EdiffWindow(QMainWindow):
     # added or removed.
     N_STEPS = 7
 
+    # Interface sizes: UI_SCALES is what Ctrl+= / Ctrl+- step through, and
+    # UI_SCALE_PRESETS is what the "Size" menu offers directly (see
+    # _choose_ui_scale). 1.0 = the original size.
+    UI_SCALES = (0.75, 0.9, 1.0, 1.15, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0)
+    UI_SCALE_PRESETS = (1.0, 1.25, 1.5, 1.75, 2.0, 2.5)
+
     def __init__(self, pipeline=None):
         """Construct the window: state, pipeline, UI, then shortcuts.
 
-        Initializes thse working directory (defaulting to `~/.ediff_workdir`,
+        Initializes thse working directory (defaulting to the user's home folder,
         later changeable via Step 1's workdir picker) and the EdiffPipeline
         instance, all session-tracking state (loaded files, axis-limit memory,
         busy-step tracking, etc.), then builds every widget via `_build_ui`,
@@ -3113,8 +3542,7 @@ class EdiffWindow(QMainWindow):
             self.pipeline = pipeline
             self.workdir = pipeline.workdir
         else:
-            self.workdir = Path.home() / ".ediff_workdir"
-            self.workdir.mkdir(exist_ok=True)
+            self.workdir = default_workdir()
             self.pipeline = EdiffPipeline(self.workdir)
 
         # The three pieces of file-loading state
@@ -3146,6 +3574,21 @@ class EdiffWindow(QMainWindow):
         # return something usable (an empty dict at worst) rather than ever 
         # raising)
         self._cfg      = load_config()
+
+        # Every start begins in the user's own directory. Folders remembered
+        # from earlier sessions are not used: the "last folder" settings the
+        # load/save dialogs read are set to the starting directory instead.
+        # Within this session they update as usual (each dialog opens where
+        # the previous one ended).
+        _start_dir = str(default_workdir())
+        for _key in ("last_cif_dir", "last_eld_dir", "last_center_dir",
+                     "last_save_dir"):
+            self._cfg[_key] = _start_dir
+        # When this session began. "Save all results" and "Download results"
+        # copy only files created or changed since then, because the working
+        # directory is now the user's own folder, full of unrelated files.
+        import time
+        self._session_started = time.time()
         
         # Session state:
         # (1) whether the ellipse-correction preview has been shown yet
@@ -3196,6 +3639,18 @@ class EdiffWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+N"), self).activated.connect(
             self._on_new_session
             )
+
+        # Interface size: larger / smaller / reset. "Ctrl+=" is the same
+        # key as "Ctrl++" without Shift, which is how most keyboards type it.
+        # These only save the size; use the Size menu to restart and apply.
+        for seq in (QKeySequence.StandardKey.ZoomIn, "Ctrl+="):
+            QShortcut(QKeySequence(seq), self).activated.connect(
+                lambda: self._change_ui_scale(+1))
+        for seq in (QKeySequence.StandardKey.ZoomOut, "Ctrl+-"):
+            QShortcut(QKeySequence(seq), self).activated.connect(
+                lambda: self._change_ui_scale(-1))
+        QShortcut(QKeySequence("Ctrl+0"), self).activated.connect(
+            lambda: self._set_ui_scale(DEFAULT_UI_SCALE))
 
     # ── Build UI ──────────────────────────────────────────────────────────────
     def _build_ui(self):
@@ -3532,6 +3987,9 @@ class EdiffWindow(QMainWindow):
             "}"
             "QPushButton:hover { background: #dce4ed; border-color: #b0b8c4; }"
             "QPushButton:pressed { background: #cdd6e0; }"
+            # The menu buttons (Session, Size) already show a "\u25be" in their
+            # label; hide the second arrow Qt draws for any button with a menu.
+            "QPushButton::menu-indicator { image: none; width: 0px; }"
         )
         
         # Session menu -- a button with a dropdown, not a click handler
@@ -3581,6 +4039,49 @@ class EdiffWindow(QMainWindow):
         self._btn_mode.setStyleSheet(pill_style)
         self._btn_mode.clicked.connect(self._on_change_mode)
         lay.addWidget(self._btn_mode)
+        lay.addSpacing(6)
+
+        # Interface size menu (also Ctrl+= / Ctrl+- / Ctrl+0). Qt can only
+        # change its scale factor at startup, so a new size is applied by
+        # restarting EDIFF - the menu offers to do that (see _choose_ui_scale).
+        self._btn_zoom = QPushButton("Size  \u25be")
+        self._btn_zoom.setToolTip(
+            "Make the whole interface larger or smaller.\n"
+            "EDIFF restarts to apply the new size.")
+        self._btn_zoom.setStyleSheet(pill_style)
+        zoom_menu = QMenu(self._btn_zoom)
+        zoom_menu.setStyleSheet(
+            "QMenu { background:#ffffff; color:#1d1d1f; "
+            "border:1px solid #d1d1d6; border-radius:6px; padding:4px; }"
+            "QMenu::item { background:#ffffff; color:#1d1d1f; "
+            "padding:6px 20px; border-radius:4px; }"
+            "QMenu::item:selected { background:#e8f0fe; color:#0071e3; }"
+            "QMenu::item:disabled { color:#86868b; }"
+            "QMenu::separator { height:1px; background:#e5e5ea; margin:4px 8px; }"
+        )
+        # First line: what is running now / what is saved (filled in when
+        # the menu opens, see _refresh_size_menu).
+        self._size_info = zoom_menu.addAction("")
+        self._size_info.setEnabled(False)
+        zoom_menu.addSeparator()
+        # Direct choices. `checked=False` absorbs the bool that QAction's
+        # triggered signal passes, so it cannot overwrite the bound `s`.
+        self._size_actions = []
+        for s in self.UI_SCALE_PRESETS:
+            act = zoom_menu.addAction(
+                f"{round(s * 100)}%" + ("  (default)" if s == DEFAULT_UI_SCALE else ""),
+                lambda checked=False, s=s: self._choose_ui_scale(s))
+            act.setCheckable(True)
+            self._size_actions.append((s, act))
+        zoom_menu.addSeparator()
+        zoom_menu.addAction("Larger\tCtrl++", lambda: self._change_ui_scale(+1))
+        zoom_menu.addAction("Smaller\tCtrl+-", lambda: self._change_ui_scale(-1))
+        zoom_menu.addSeparator()
+        self._size_restart = zoom_menu.addAction(
+            "Restart EDIFF to apply...", self._restart_from_menu)
+        zoom_menu.aboutToShow.connect(self._refresh_size_menu)
+        self._btn_zoom.setMenu(zoom_menu)
+        lay.addWidget(self._btn_zoom)
         lay.addSpacing(6)
         
         # (2) About :: displays the acknowledgment
@@ -4904,87 +5405,249 @@ class EdiffWindow(QMainWindow):
         return b
 
     def _build_step6(self):
-        """Build Step 6: background subtraction method and file.
+        """Build Step 6: background subtraction method and its options.
 
-        Constructs the Method dropdown (one of BKG_METHODS —
-        InteractivePlot, RestoreFromPoints, SimpleFuncs, Baselines), the
-        background control-points file field (default extension .bp,
-        distinct from the resulting 1D profile file), the
-        Subtract/Stop button pair wired to `_on_bkg`, and a tutorial button
-        shown only for the InteractivePlot method (the one method with an
-        actual interactive, keyboard-driven workflow to explain).
-    
-        Wires the Method dropdown to `_update_bkg_fields` and calls it once
-        immediately, so the tutorial button's visibility is correct from
-        construction rather than only after the user first changes the
-        dropdown.
-    
+        Constructs the Method dropdown (one of BKG_METHODS) and, below it,
+        controls that appear depending on that choice:
+
+        - InteractivePlot / RestoreFromPoints: the background-points file
+          field (the only methods that read or write one), plus - for
+          InteractivePlot - the tutorial button.
+        - SimpleFuncs / Baselines: an Algorithm dropdown (see
+          BKG_ALGORITHMS), the dedicated parameter field(s) of the chosen
+          algorithm (e.g. ball radius, smoothing lam), an optional pixel
+          range, and a free-form "Extra parameters" line for anything
+          without a dedicated field. These methods ignore the points file,
+          so its field is hidden for them rather than left looking
+          meaningful.
+
+        One widget is created per distinct parameter name (radius,
+        half_window, decreasing, lam) and shared by every algorithm that
+        uses it; `_update_bkg_algo_fields` shows the relevant one(s) and
+        resets them to the chosen algorithm's recommended default.
+
+        Wires the Method dropdown to `_update_bkg_fields` and the Algorithm
+        dropdown to `_update_bkg_algo_fields`, and calls the former once at
+        construction so the correct controls show from the start.
+
         Returns
         -------
         StepBlock
             The fully constructed Step 6 block, ready to add to the
             sidebar.
         """
+        from qtpy.QtWidgets import QGridLayout
         b = StepBlock(6, "Background subtraction")
-        self._bkg_method = QComboBox()
-        self._bkg_method.addItems(BKG_METHODS)
-        
-        # no label-translation dictionary needed here, since these method names
-        # are used directly as both the display text and the actual value 
-        # passed to pipeline.subtract_background(method=...)
-        
+        self._bkg_method = QComboBox(); self._bkg_method.addItems(BKG_METHODS)
         self._bkg_method.setStyleSheet(COMBO_FIX)
-        self._bkg_file   = QLineEdit("background.txt.bp")
-        b.add(field("Method",          self._bkg_method, "bkg_method"))
-        b.add(field("Background file", self._bkg_file,   "bkg_file"))
-        
-        # Buttons
-        # standard Calculate/Stop pair, plus the tutorial button for the one 
-        # interactive method this step has 
-        self._btn_bkg = make_btn(
-            "Subtract background", 
-            tip="Remove background from 1D diffractogram"
-            )
+        b.add(field("Method", self._bkg_method, "bkg_method"))
+
+        # ── Algorithm (SimpleFuncs / Baselines only) ──────────────────────
+        # Items are filled in by _update_bkg_fields, since they depend on
+        # which of the two methods is selected.
+        self._bkg_algo = QComboBox()
+        self._bkg_algo.setStyleSheet(COMBO_FIX)
+        self._f_bkg_algo = field("Algorithm", self._bkg_algo, "bkg_algo")
+        b.add(self._f_bkg_algo)
+
+        # ── Dedicated parameter widgets: one per distinct name ───────────
+        # Shared across algorithms (e.g. `lam` serves three of them);
+        # which is visible, its tooltip and its default are set per
+        # algorithm in _update_bkg_algo_fields.
+        labels = {"radius": "Ball radius [px]", "half_window": "Half-window",
+                  "decreasing": "Decreasing window", "lam": "Smoothing (lam)"}
+        kinds = {}
+        for algos in BKG_ALGORITHMS.values():
+            for plist in algos.values():
+                for name, kind, _default, _tip in plist:
+                    kinds[name] = kind
+        self._bkg_param_widgets = {}
+        self._bkg_param_fields  = {}
+        for name, kind in kinds.items():
+            if kind == "int":
+                w = QSpinBox(); w.setRange(1, 100000)
+            elif kind == "float":
+                # min 0: rubberband treats lam=0 as plain linear interpolation
+                w = QDoubleSpinBox(); w.setDecimals(2)
+                w.setRange(0.0, 1e12)
+            else:  # bool - a dropdown, like the other True/False options
+                w = QComboBox(); w.addItems(["True", "False"])
+                w.setStyleSheet(COMBO_FIX)
+            self._bkg_param_widgets[name] = w
+            f = field(labels.get(name, name), w)
+            self._bkg_param_fields[name] = f
+            b.add(f)
+
+        # ── Pixel range (SimpleFuncs / Baselines only) ────────────────────
+        # -1 is the minimum, shown as "auto": the start / end of the profile.
+        self._bkg_xmin = QSpinBox(); self._bkg_xmax = QSpinBox()
+        for sb in (self._bkg_xmin, self._bkg_xmax):
+            sb.setRange(-1, 99999); sb.setValue(-1)
+            sb.setSpecialValueText("auto")
+            sb.setMaximumWidth(100)
+            sb.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self._f_bkg_range = QWidget()
+        self._f_bkg_range.setStyleSheet("background:transparent;")
+        gl_rg = QGridLayout(self._f_bkg_range)
+        gl_rg.setContentsMargins(0, 0, 0, 0); gl_rg.setSpacing(6)
+        gl_rg.addWidget(_glabel2("Range start", "[px]", TOOLTIPS["bkg_range"]), 0, 0)
+        gl_rg.addWidget(self._bkg_xmin,                                          0, 1)
+        gl_rg.addWidget(_glabel2("Range end",   "[px]", TOOLTIPS["bkg_range"]), 0, 2)
+        gl_rg.addWidget(self._bkg_xmax,                                          0, 3)
+        gl_rg.setColumnStretch(1, 1); gl_rg.setColumnStretch(3, 1)
+        b.add(self._f_bkg_range)
+
+        # ── Extra, free-form algorithm parameters ─────────────────────────
+        self._bkg_extra = QLineEdit()
+        self._bkg_extra.setPlaceholderText("optional - e.g. size=50")
+        self._f_bkg_extra = field("Extra parameters", self._bkg_extra, "bkg_extra")
+        b.add(self._f_bkg_extra)
+
+        # ── Points file (InteractivePlot / RestoreFromPoints only) ────────
+        self._bkg_file = QLineEdit("background.txt.bp")
+        self._f_bkg_file = field("Background file", self._bkg_file, "bkg_file")
+        b.add(self._f_bkg_file)
+
+        self._btn_bkg = make_btn("Subtract background", tip="Remove background from 1D diffractogram")
         self._btn_bkg.clicked.connect(self._on_bkg); b.add(self._btn_bkg)
         self._btn_stop6 = make_btn("Stop", obj_name="stop")
         self._btn_stop6.setVisible(False)
-        self._btn_stop6.clicked.connect(
-            lambda: self._stop_step(
-                6, 
-                self._btn_bkg, 
-                self._btn_stop6, 
-                self._card_bkg
-                )
-            )
+        self._btn_stop6.clicked.connect(lambda: self._stop_step(6, self._btn_bkg, self._btn_stop6, self._card_bkg))
         b.add(self._btn_stop6)
-        
-        # the tutorial button is added to the layout unconditionally here, same 
-        # as every tutorial button — its actual visibility is controlled 
-        # separately, next
         self._btn_tutorial_bkg = make_tutorial_btn("interactive_bkg")
         b.add(self._btn_tutorial_bkg)
-        
-        # wire up the reactive handler, then call it once immediately
-        # without that immediate call, the tutorial button would incorrectly 
-        # show regardless of the initially-selected method until the user first 
-        # touched the dropdown.
         self._bkg_method.currentTextChanged.connect(self._update_bkg_fields)
+        self._bkg_algo.currentTextChanged.connect(self._update_bkg_algo_fields)
         self._update_bkg_fields(self._bkg_method.currentText())
         return b
 
     def _update_bkg_fields(self, method):
-        """Show the interactive-background tutorial button only when relevant.
+        """Show the Step 6 controls that apply to the selected method.
+
+        Connected to the Method dropdown's currentTextChanged signal, and
+        also called once at construction.
+
+        For SimpleFuncs and Baselines (the methods listed in
+        BKG_ALGORITHMS) this repopulates the Algorithm dropdown with that
+        method's algorithms and shows the algorithm, pixel-range and
+        extra-parameter controls. For InteractivePlot and RestoreFromPoints
+        it hides those and shows the background-points file field instead -
+        the only methods that actually use a points file. The interactive
+        tutorial button is shown for InteractivePlot only.
 
         Parameters
         ----------
         method : str
             The currently selected background-subtraction method (one of
-            BKG_METHODS). The tutorial button is shown only when this is
-            "InteractivePlot" — the sole method with an interactive,
-            keyboard-shortcut-driven workflow; the other methods are fully
-            automatic and have no corresponding tutorial content.
+            BKG_METHODS).
         """
+        algos = list(BKG_ALGORITHMS.get(method, {}))
+        automatic = bool(algos)
+        self._f_bkg_algo.setVisible(automatic)
+        self._f_bkg_range.setVisible(automatic)
+        self._f_bkg_extra.setVisible(automatic)
+        self._f_bkg_file.setVisible(not automatic)
         self._btn_tutorial_bkg.setVisible(method == "InteractivePlot")
+        # Repopulate silently, then update the parameter fields once
+        # explicitly - otherwise they'd update for a half-built list.
+        self._bkg_algo.blockSignals(True)
+        self._bkg_algo.clear()
+        self._bkg_algo.addItems(algos)
+        self._bkg_algo.blockSignals(False)
+        self._update_bkg_algo_fields(self._bkg_algo.currentText())
+
+    def _update_bkg_algo_fields(self, algo):
+        """Show the parameter field(s) of the chosen algorithm, at their defaults.
+
+        Connected to the Algorithm dropdown's currentTextChanged signal,
+        and called by `_update_bkg_fields` whenever the algorithm list is
+        rebuilt. Shows only the parameter widgets that `algo` uses (per
+        BKG_ALGORITHMS), gives each the algorithm-specific tooltip, and
+        resets it to that algorithm's recommended default.
+
+        The reset is intentional: the same widget (e.g. `lam`) serves
+        several algorithms whose sensible values differ by orders of
+        magnitude (5 / 1000 / 2), so carrying a value across a switch would
+        be wrong. Callers restoring saved values (session loading) must
+        therefore set the algorithm FIRST and the parameter values after.
+
+        Parameters
+        ----------
+        algo : str
+            The selected algorithm name, or "" when the current method has
+            no algorithms (all parameter fields are then hidden).
+        """
+        method = self._bkg_method.currentText()
+        spec = BKG_ALGORITHMS.get(method, {}).get(algo, [])
+        active = {name for name, _k, _d, _t in spec}
+        for name, f in self._bkg_param_fields.items():
+            f.setVisible(name in active)
+        for name, kind, default, tip in spec:
+            w = self._bkg_param_widgets[name]
+            w.setToolTip(tip)
+            if kind == "bool":
+                w.setCurrentText("True" if default else "False")
+            else:
+                w.setValue(default)
+
+    def _read_bkg_params(self):
+        """Read the dedicated parameter fields of the current algorithm.
+
+        Returns
+        -------
+        dict
+            Parameter name -> value, for the parameters the selected
+            algorithm uses (e.g. {"radius": 70}, {"decreasing": True},
+            {"lam": 1000.0}). Empty for an algorithm with none (TopHat) or
+            a method with no algorithms. Values are typed correctly for the
+            library: int for spin boxes, float for the lam box, bool for
+            True/False dropdowns.
+        """
+        method = self._bkg_method.currentText()
+        algo = self._bkg_algo.currentText()
+        out = {}
+        for name, kind, _default, _tip in BKG_ALGORITHMS.get(method, {}).get(algo, []):
+            w = self._bkg_param_widgets[name]
+            out[name] = (w.currentText() == "True") if kind == "bool" else w.value()
+        return out
+
+    def _bkg_algorithm_args(self):
+        """Collect the SimpleFuncs/Baselines options, validated, for a run.
+
+        Must be called on the main (GUI) thread, before any background
+        thread starts, because it reads live widgets - and so that bad
+        input is reported before the step is marked as running.
+
+        Returns
+        -------
+        (algorithm, xrange, params) : (str, tuple or None, dict)
+            For SimpleFuncs/Baselines: the algorithm name; the pixel range
+            as (start, end) with None for an "auto" side, or None if both
+            are auto; and all algorithm keyword arguments - the dedicated
+            fields overlaid with the "Extra parameters" line (extras win on
+            a name clash). For the point-based methods: (None, None, None),
+            since they use none of this.
+
+        Raises
+        ------
+        ValueError
+            If the Extra parameters text is malformed (see
+            `parse_extra_params`), or the range start is not smaller than
+            its end.
+        """
+        if self._bkg_method.currentText() not in BKG_ALGORITHMS:
+            return None, None, None
+        params = self._read_bkg_params()
+        params.update(parse_extra_params(self._bkg_extra.text()))
+        lo, hi = self._bkg_xmin.value(), self._bkg_xmax.value()
+        lo = None if lo < 0 else lo
+        hi = None if hi < 0 else hi
+        if lo is not None and hi is not None and lo >= hi:
+            raise ValueError(
+                f"Background range start ({lo}) must be smaller than its "
+                f"end ({hi}).")
+        xrange = None if (lo is None and hi is None) else (lo, hi)
+        return self._bkg_algo.currentText(), xrange, params
 
     def _build_step7(self):
         """
@@ -6526,6 +7189,15 @@ class EdiffWindow(QMainWindow):
                     # Path/name of background file, if the chosen method
                     # uses one.
                     "bkg_file": self._bkg_file.text(),
+
+                    # SimpleFuncs/Baselines options: the algorithm, the
+                    # active algorithm's dedicated parameters, the pixel
+                    # range (-1 = "auto") and the free-form extras.
+                    "algorithm": self._bkg_algo.currentText(),
+                    "params": self._read_bkg_params(),
+                    "range_start": self._bkg_xmin.value(),
+                    "range_end": self._bkg_xmax.value(),
+                    "extra": self._bkg_extra.text(),
                 },
 
                 # Step 7: calibration/comparison parameters
@@ -6583,6 +7255,14 @@ class EdiffWindow(QMainWindow):
         # box or status message after loading the session.
         notes = []
 
+        # NOTE: this must come BEFORE the display block below, which reads
+        # `p`; it used to follow it, so loading any session raised
+        # UnboundLocalError.
+        # Step parameters are grouped under "params".
+        # Missing "params" is allowed, in which case defaults remain
+        # unchanged.
+        p = data.get("params", {})
+
         # Global display settings
         disp = p.get("display", {})
         if "icut" in disp:
@@ -6590,10 +7270,6 @@ class EdiffWindow(QMainWindow):
         if "cmap" in disp:
             self._cmap.setCurrentText(disp["cmap"])
 
-        # Step parameters are grouped under "params".
-        # Missing "params" is allowed, in which case defaults remain
-        # unchanged.
-        p = data.get("params", {})
 
         # Step 2: restore XRD parameters
         xrd = p.get("xrd", {})
@@ -6708,6 +7384,30 @@ class EdiffWindow(QMainWindow):
 
         if method:
             self._bkg_method.setCurrentText(method)
+
+        # Order matters: selecting the algorithm resets the parameter
+        # fields to that algorithm's defaults, so it must come BEFORE the
+        # saved parameter values are applied (else they'd be overwritten).
+        # Older session files lack all of these keys - each is optional.
+        if bkg.get("algorithm"):
+            self._bkg_algo.setCurrentText(bkg["algorithm"])
+        for pname, pval in (bkg.get("params") or {}).items():
+            w = self._bkg_param_widgets.get(pname)
+            if w is None:
+                continue
+            try:
+                if isinstance(w, QComboBox):
+                    w.setCurrentText("True" if pval in (True, "True") else "False")
+                else:
+                    w.setValue(pval)
+            except (TypeError, ValueError):
+                pass  # hand-edited / corrupt value: keep the default
+        if "range_start" in bkg:
+            self._bkg_xmin.setValue(bkg["range_start"])
+        if "range_end" in bkg:
+            self._bkg_xmax.setValue(bkg["range_end"])
+        if "extra" in bkg:
+            self._bkg_extra.setText(bkg["extra"])
 
         if method == "InteractivePlot":
             # Interactive background selection cannot be fully restored
@@ -7093,6 +7793,92 @@ class EdiffWindow(QMainWindow):
         # Re-evaluate which workflow steps can now run.
         self._check_files_ready()
 
+    def _image_problems(self, path):
+        """Check whether a chosen file can really be used as a diffraction image.
+
+        The file dialog now lets any file be picked, but ediff's image reader
+        has rules of its own, and several kinds of file look fine yet fail
+        later with a confusing error - or, worse, load as the wrong data. This
+        runs the same reader ediff will use and reports, in plain words, what
+        is wrong or worth knowing, before the file is accepted.
+
+        Blocking problems (the file would not work):
+
+        - the file type is not an image format the reader supports;
+        - the pixel type is not 8-bit or 16-bit unsigned integer (ediff's own
+          rule - float and 32-bit images, for example, are rejected);
+        - it is read as something other than a single 2-D image (such as a
+          GIF, which comes back as a 4-D array).
+
+        Notes (the file works, but the user should know):
+
+        - it holds several pages/frames (a multi-page TIFF): ediff reads only
+          the first one, silently;
+        - JPEG is lossy, so pixel intensities are altered;
+        - a colour image whose channels differ: only the first (red) channel
+          is used.
+
+        If the reader cannot be called at all (a different ediff version),
+        nothing is reported, and the load itself decides.
+
+        Parameters
+        ----------
+        path : str
+            Path of the chosen file.
+
+        Returns
+        -------
+        (problems, notes) : (list of str, list of str)
+            Plain-language sentences; both empty when the file looks fine.
+        """
+        import numpy as np
+        problems, notes = [], []
+        try:
+            arr = self.pipeline.ed.io.Data2D.read(path)
+        except AttributeError:
+            return problems, notes
+        except Exception as e:
+            text = str(e)
+            if "8bit and 16bit" in text:
+                problems.append(
+                    "its pixel type is not supported - EDIFF accepts only "
+                    "8-bit and 16-bit integer images (float and 32-bit "
+                    "images, for example, cannot be used)")
+            elif "backend" in text:
+                problems.append("this file type is not a supported image format")
+            else:
+                problems.append(f"it could not be read as an image ({type(e).__name__}: {text})")
+            return problems, notes
+        if arr.ndim != 2:
+            problems.append(
+                f"it was read as {arr.ndim} dimensions {tuple(arr.shape)} "
+                "instead of a single 2-D image (an animated GIF, or another "
+                "multi-frame file?)")
+        frames, mode = 1, ""
+        try:
+            from PIL import Image
+            with Image.open(path) as im:
+                frames, mode = getattr(im, "n_frames", 1), im.mode
+            if mode in ("RGB", "RGBA"):
+                full = np.asarray(Image.open(path))
+                if full.ndim == 3 and not (
+                        np.array_equal(full[..., 0], full[..., 1])
+                        and np.array_equal(full[..., 0], full[..., 2])):
+                    notes.append(
+                        "it is a colour image whose channels differ - only "
+                        "the first (red) channel is used")
+        except Exception:
+            pass
+        if arr.ndim == 2 and frames > 1:
+            notes.append(
+                f"the file holds {frames} pages/frames - only the first one "
+                "is used")
+        if Path(path).suffix.lower() in (".jpg", ".jpeg", ".jpe"):
+            notes.append(
+                "JPEG uses lossy compression, which changes pixel intensities - "
+                "PNG or TIFF is safer for quantitative analysis")
+        return problems, notes
+
     def _browse_eld(self):
         """
         Let the user select an ELD image file and add it
@@ -7114,16 +7900,41 @@ class EdiffWindow(QMainWindow):
         last = self._cfg.get("last_eld_dir", "")
 
         # Select one diffraction-pattern image.
-        # Currently the GUI filter allows PNG and TIFF images.
+        # The first filter lists the common image formats ediff's reader
+        # handles (each one tested); "All files" lets ANY file be picked.
+        # _image_problems() then explains, before the file is accepted, if a
+        # chosen file cannot be used (unsupported type or pixel type, GIF,
+        # ...) or deserves a warning (JPEG, colour, multi-page TIFF).
         path, _ = QFileDialog.getOpenFileName(
             self,
             "Select ELD image",
             last,
-            "Images (*.png *.tif *.tiff)"
+            "Images (*.png *.tif *.tiff *.bmp *.jpg *.jpeg *.webp "
+            "*.ppm *.pgm *.tga *.pcx *.jp2);;All files (*)"
         )
 
         # User cancelled the dialog.
         if not path: return
+
+        # Say so, in plain words, if this file cannot be used (or needs a
+        # warning) - and let the user decide. Default is No for a file that
+        # would not work, Yes for one that merely needs a note.
+        problems, notes = self._image_problems(path)
+        if problems or notes:
+            text = f"{Path(path).name}\n\n"
+            if problems:
+                text += ("This file may not be usable as a diffraction image:\n- "
+                         + "\n- ".join(problems) + "\n\n")
+            if notes:
+                text += "".join(f"Note: {n}.\n" for n in notes) + "\n"
+            yes, no = (QMessageBox.StandardButton.Yes,
+                       QMessageBox.StandardButton.No)
+            reply = QMessageBox.question(
+                self, "Check the image file",
+                text + ("Use it anyway?" if problems else "Use this file?"),
+                yes | no, no if problems else yes)
+            if reply != yes:
+                return
 
         # Store the selected diffraction image path.
         self.eld_path = path
@@ -8903,7 +9714,9 @@ class EdiffWindow(QMainWindow):
         1. Check whether a previous background-subtraction worker is still
            running.
         2. Resolve the selected background method and output/background-file
-           path.
+           path, and - for SimpleFuncs/Baselines - read and validate the
+           algorithm, pixel range and parameters (a bad entry is reported
+           before anything is started).
         3. For interactive background selection, ask before overwriting
            an existing background file.
         4. Put Step 6 into running GUI state.
@@ -8931,6 +9744,28 @@ class EdiffWindow(QMainWindow):
         # Capture selected method and the background file path.
         method   = self._bkg_method.currentText()
         bkg_file = str(self.workdir / self._bkg_file.text().strip())
+
+        # Read + validate the SimpleFuncs/Baselines options now, on the main
+        # thread: do() runs on a worker thread and must not touch widgets,
+        # and a bad entry should be reported before the step is marked as
+        # running (so a typo doesn't leave the step looking busy).
+        try:
+            algorithm, bkg_xrange, bkg_params = self._bkg_algorithm_args()
+        except ValueError as e:
+            QMessageBox.warning(self, "EDIFF", str(e))
+            return
+
+        # Tab label identifying exactly what this run used, built from the
+        # captured values (not live widgets) so it can't drift if the user
+        # edits a field while the calculation is running.
+        bkg_label = method
+        if algorithm:
+            shown = self._read_bkg_params()
+            bkg_label = algorithm + "".join(
+                f" {k}={v if isinstance(v, bool) else format(v, 'g')}"
+                for k, v in shown.items())
+            if bkg_params and set(bkg_params) - set(shown):
+                bkg_label += " +extra"
 
         # InteractivePlot writes clicked background points to bkg_file.
         # Ask before overwriting an existing file because this can destroy
@@ -8980,7 +9815,10 @@ class EdiffWindow(QMainWindow):
             # This may mutate pipeline.eld.diffractogram in place.
             self.pipeline.subtract_background(
                 method=method,
-                bkg_file=bkg_file
+                bkg_file=bkg_file,
+                algorithm=algorithm,
+                xrange=bkg_xrange,
+                params=bkg_params
             )
 
             # Plot original data, estimated background, and corrected
@@ -9018,7 +9856,7 @@ class EdiffWindow(QMainWindow):
                         ["Original","With background","Without background"],
                         bufs)
                 ),
-                run_label=method,
+                run_label=bkg_label,
                 auto_select=False,
                 show_use_button=True
             )
@@ -9760,7 +10598,7 @@ class EdiffWindow(QMainWindow):
 
             # Copy generated PNG and TXT outputs from the working directory
             # to the user-selected destination folder.
-            for f in list(self.workdir.glob("*.png"))+list(self.workdir.glob("*.txt")):
+            for f in self._result_files("*.png", "*.txt"):
                 shutil.copy(f, out_path / f.name)
 
             self.statusBar().showMessage(f"Saved to {out_dir}")
@@ -9788,6 +10626,37 @@ class EdiffWindow(QMainWindow):
             busy_key='save'
         )
 
+
+    def _result_files(self, *patterns):
+        """List result files in the working directory made during this session.
+
+        "Save all results" and "Download results" used to copy every
+        ``*.png`` / ``*.txt`` / ``*.bp`` file in the working directory. That
+        was fine for a private folder, but the working directory is now the
+        user's own directory, which holds many unrelated files, so only files
+        created or modified since this session began (``_session_started``)
+        are returned. A two-second allowance covers file systems with coarse
+        timestamps.
+
+        Parameters
+        ----------
+        *patterns : str
+            Glob patterns relative to the working directory, e.g. ``"*.png"``.
+
+        Returns
+        -------
+        list of pathlib.Path
+            Regular files that match and are new in this session.
+        """
+        found = []
+        for pattern in patterns:
+            for f in self.workdir.glob(pattern):
+                try:
+                    if f.is_file() and f.stat().st_mtime >= self._session_started - 2:
+                        found.append(f)
+                except OSError:
+                    pass
+        return found
 
     def _on_download(self):
         """
@@ -9828,10 +10697,7 @@ class EdiffWindow(QMainWindow):
 
         # Collect supported result files from the working
         # directory.
-        files = (list(self.workdir.glob("*.png"))
-               + list(self.workdir.glob("*.txt"))
-               + list(self.workdir.glob("*.bp"))
-                 )
+        files = self._result_files("*.png", "*.txt", "*.bp")
 
         if not files:
             QMessageBox.warning(
@@ -9931,6 +10797,187 @@ class EdiffWindow(QMainWindow):
             QMessageBox.information(self, "EDIFF",
                 "Monocrystal mode is not yet implemented.")
             self.show()
+
+    def _ui_scale_state(self):
+        """Describe the interface size: running now, saved, and who set it.
+
+        Returns
+        -------
+        (applied, saved, external) : (float, float, bool)
+            ``applied``: the scale this run is using (from ``QT_SCALE_FACTOR``,
+            1.0 if unset). ``saved``: the size stored for the next start
+            (defaults to ``DEFAULT_UI_SCALE``, 150%, when nothing is saved yet). ``external``: True when
+            ``QT_SCALE_FACTOR`` came from the user's own environment rather
+            than from ``apply_saved_ui_scale`` - it then overrides the saved
+            size, so changing it here has no effect.
+        """
+        try:
+            applied = float(os.environ.get("QT_SCALE_FACTOR") or 1.0)
+        except ValueError:
+            applied = 1.0
+        saved = float(self._cfg.get("ui_scale", DEFAULT_UI_SCALE))
+        external = (bool(os.environ.get("QT_SCALE_FACTOR"))
+                    and not os.environ.get("EDIFF_UI_SCALE_FROM_CONFIG"))
+        return applied, saved, external
+
+    def _set_ui_scale(self, new):
+        """Save `new` as the interface size to use from the next start.
+
+        The size is stored as ``ui_scale`` in the config file and applied by
+        ``apply_saved_ui_scale`` on the next launch - Qt cannot change its
+        scale factor while the application is running, so nothing on screen
+        changes immediately; the status bar says so.
+
+        Parameters
+        ----------
+        new : float
+            The scale factor, e.g. 1.0 for the original size or 1.5 for 150%.
+        """
+        applied, _saved, external = self._ui_scale_state()
+        self._cfg["ui_scale"] = float(new)
+        save_config(self._cfg)
+        pct = f"{round(new * 100)}%"
+        if external:
+            msg = (f"Interface size saved ({pct}), but the QT_SCALE_FACTOR "
+                   "environment variable is set and overrides it.")
+        elif abs(new - applied) < 1e-6:
+            msg = f"Interface size: {pct} (this is the current size)."
+        else:
+            msg = (f"Interface size saved ({pct}) - restart EDIFF to apply it "
+                   "(Size menu > Restart EDIFF to apply).")
+        self.statusBar().showMessage(msg)
+
+    def _confirm_restart(self, pct):
+        """Ask whether to restart EDIFF now; True if the user agrees."""
+        reply = QMessageBox.question(
+            self, "Interface size",
+            f"EDIFF has to restart to use {pct}.\n\n"
+            "Restart now? Anything not saved (results, session) will be lost.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+        return reply == QMessageBox.StandardButton.Yes
+
+    def _choose_ui_scale(self, new):
+        """Handle picking a size in the menu: save it and offer to restart.
+
+        Used by the menu's direct size entries. (The Ctrl+= / Ctrl+- / Ctrl+0
+        shortcuts call `_set_ui_scale` / `_change_ui_scale` instead and never
+        interrupt with a dialog; the menu's "Restart EDIFF to apply" entry
+        applies whatever they saved.) No question is asked when the chosen
+        size is the one already running, or when the user's own
+        ``QT_SCALE_FACTOR`` would override it.
+
+        Parameters
+        ----------
+        new : float
+            The scale factor chosen.
+        """
+        self._set_ui_scale(new)
+        applied, _saved, external = self._ui_scale_state()
+        if external or abs(new - applied) < 1e-6:
+            return
+        if self._confirm_restart(f"{round(new * 100)}%"):
+            self._restart_now()
+
+    def _change_ui_scale(self, direction):
+        """Step the saved interface size to the next larger or smaller one.
+
+        Steps through ``UI_SCALES`` starting from the listed size nearest to
+        the saved one, and stops at either end of the list. Only saves the
+        size (status bar message, no dialog).
+
+        Parameters
+        ----------
+        direction : int
+            +1 for the next larger size, -1 for the next smaller one.
+        """
+        scales = self.UI_SCALES
+        _applied, current, _external = self._ui_scale_state()
+        i = min(range(len(scales)), key=lambda k: abs(scales[k] - current))
+        self._set_ui_scale(scales[max(0, min(len(scales) - 1, i + direction))])
+
+    def _refresh_size_menu(self):
+        """Update the "Size" menu each time it opens.
+
+        Ticks the saved size, shows what is running now versus what is saved
+        in the menu's first line, and enables "Restart EDIFF to apply" only
+        when a restart would actually change something.
+        """
+        applied, saved, external = self._ui_scale_state()
+        for scale, act in self._size_actions:
+            act.setChecked(abs(scale - saved) < 0.005)
+        pct = lambda v: f"{round(v * 100)}%"
+        if external:
+            info = f"Running at {pct(applied)} (set by QT_SCALE_FACTOR)"
+        elif abs(saved - applied) < 1e-6:
+            info = f"Running at {pct(applied)}"
+        else:
+            info = f"Running at {pct(applied)}  -  {pct(saved)} after restart"
+        self._size_info.setText(info)
+        self._size_restart.setEnabled(
+            not external and abs(saved - applied) >= 1e-6)
+
+    @staticmethod
+    def _relaunch_spec():
+        """Build the command line and environment to start EDIFF again.
+
+        Returns
+        -------
+        (cmd, env) : (list of str, dict) or None
+            ``cmd`` repeats how this process was started (``sys.orig_argv``,
+            e.g. ``python -m ediff gui``). None if that is unavailable
+            (Python older than 3.10).
+
+        Notes
+        -----
+        ``QT_SCALE_FACTOR`` and its marker are removed from ``env`` when
+        ``apply_saved_ui_scale`` set them: they describe THIS run, and
+        leaving them would make the new process keep the old size instead
+        of reading the newly saved one. A ``QT_SCALE_FACTOR`` from the
+        user's own environment is kept - it always wins.
+        """
+        orig = getattr(sys, "orig_argv", None)
+        if not orig or len(orig) < 2:
+            return None
+        env = dict(os.environ)
+        if env.pop("EDIFF_UI_SCALE_FROM_CONFIG", None):
+            env.pop("QT_SCALE_FACTOR", None)
+        return [sys.executable] + list(orig[1:]), env
+
+    def _restart_from_menu(self):
+        """Menu entry "Restart EDIFF to apply...": confirm, then restart."""
+        _applied, saved, _external = self._ui_scale_state()
+        if self._confirm_restart(f"{round(saved * 100)}%"):
+            self._restart_now()
+
+    def _restart_now(self):
+        """Start a new EDIFF process, then close this one.
+
+        The new process is started first, with the same command line and
+        working directory; only if that succeeds is this window closed. If
+        the restart is impossible (no ``sys.orig_argv``, or the process
+        cannot be started) a message says so and EDIFF keeps running, so
+        nothing is lost.
+        """
+        import subprocess
+        spec = self._relaunch_spec()
+        if spec is None:
+            QMessageBox.information(
+                self, "EDIFF",
+                "EDIFF cannot restart itself with this version of Python.\n"
+                "Please close it and start it again.")
+            return
+        cmd, env = spec
+        try:
+            subprocess.Popen(cmd, env=env, cwd=os.getcwd())
+        except Exception as e:
+            QMessageBox.warning(
+                self, "EDIFF",
+                f"Could not restart automatically:\n{e}\n\n"
+                "Please close EDIFF and start it again.")
+            return
+        self.close()
+        QApplication.quit()
 
     def _on_about(self):
         """
@@ -10086,6 +11133,8 @@ class EdiffWindow(QMainWindow):
         self._current_step_n = None
         self._btn_abort.setEnabled(False)
         self._busy_keys = set()
+        import time
+        self._session_started = time.time()   # earlier results are not part of the new session
         self._auto_run_queue = None
         self._axis_memory = {}
 
@@ -10326,6 +11375,52 @@ def fix_tooltips(widget):
             w.setStyleSheet(existing + TT)
 
 
+# Interface size used when the user has not chosen one yet (1.5 = 150%).
+# The "Size" menu overrides it, and an explicitly chosen 100% is respected.
+DEFAULT_UI_SCALE = 1.5
+
+
+def apply_saved_ui_scale():
+    """Apply the interface size by setting ``QT_SCALE_FACTOR``.
+
+    The GUI's text and widgets are sized in fixed pixels, so on a large or
+    high-resolution screen at 100% display scaling everything looks small.
+    Qt can only change its global scale factor when the application starts,
+    so this runs first thing in ``main`` and sets ``QT_SCALE_FACTOR`` - Qt
+    then scales fonts, widgets and stylesheet pixel sizes uniformly.
+
+    The size is the one saved by the GUI's "Size" menu as ``ui_scale`` in the
+    config file, or ``DEFAULT_UI_SCALE`` (150%) when none has been saved or
+    the saved value is unusable (not a number, or outside 0.5-4.0). A saved
+    1.0 means 100% and applies nothing.
+
+    Must be called BEFORE the ``QApplication`` is created. An explicit
+    ``QT_SCALE_FACTOR`` already in the environment always wins and is left
+    untouched.
+
+    Returns
+    -------
+    float or None
+        The scale that was applied, or None if nothing was changed (the
+        environment already sets one, or the size is 100%).
+    """
+    if os.environ.get("QT_SCALE_FACTOR"):
+        return None
+    try:
+        scale = float(load_config().get("ui_scale", DEFAULT_UI_SCALE))
+    except Exception:
+        scale = DEFAULT_UI_SCALE
+    if not (0.5 <= scale <= 4.0):
+        scale = DEFAULT_UI_SCALE
+    if scale == 1.0:
+        return None
+    os.environ["QT_SCALE_FACTOR"] = repr(scale)
+    # Remember that WE set it, so the GUI can tell this apart from a value
+    # the user put in their own environment (which would override the menu).
+    os.environ["EDIFF_UI_SCALE_FROM_CONFIG"] = "1"
+    return scale
+
+
 def main(prewarmed_pipeline=None):
     """
     Application entry point for the EDIFF GUI.
@@ -10347,6 +11442,10 @@ def main(prewarmed_pipeline=None):
         the app closes.
     """
 
+    # Apply the saved interface size FIRST: Qt reads QT_SCALE_FACTOR only
+    # when the QApplication is created.
+    apply_saved_ui_scale()
+
     # Create the Qt application object from command-line a
     # rguments.
     app = QApplication(sys.argv)
@@ -10360,9 +11459,11 @@ def main(prewarmed_pipeline=None):
     # only launches a subprocess (near-instant); it does not block
     # waiting for that subprocess's own imports to finish.
     if prewarmed_pipeline is None:
-        workdir = Path.home() / ".ediff_workdir"
-        workdir.mkdir(exist_ok=True)
-        prewarmed_pipeline = EdiffPipeline(workdir)
+        prewarmed_pipeline = EdiffPipeline(default_workdir())
+    else:
+        # A pipeline made earlier (by ediff.gui.__main__) may still point at
+        # an older default folder: start in the user's own directory.
+        prewarmed_pipeline.workdir = default_workdir()
 
     # Use the Fusion style for consistent cross-platform widget
     # rendering.
