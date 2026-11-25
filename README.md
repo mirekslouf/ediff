@@ -22,11 +22,11 @@ Principle
 Installation
 ------------
 
-* Prerequisite: Python with sci-modules: numpy, matplotlib, scipy, pandas.
-* `pip install scikit-image` = 3rd party package for advanced image processing 
-* `pip install pymatgen` = 3rd package employed in crystallographic calculations
-* `pip install bground` = our package, interactive background subtraction
-* `pip install ediff` = EDIFF package itself (uses all packages above)
+* Installation of ediff:
+	- `pip install ediff`
+* Additional packages (auto-installed with ediff if not present):
+	- Standard sci-libraries: `numpy`, `matplotlib`, `scipy`, `pandas`
+	- Additional libraries: `bground`, `scikit-image`, `pymatgen`
 
 
 Quick start

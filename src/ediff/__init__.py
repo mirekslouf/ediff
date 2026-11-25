@@ -27,7 +27,7 @@ EDIFF modules:
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
 '''
 
-__version__ = "1.2.7"
+__version__ = "1.2.8"
 
 
 # Import of modules so that we could use the package as follows:

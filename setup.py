@@ -31,7 +31,10 @@ setuptools.setup(
     license='MIT',
     package_dir={"":"src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.6",
+    python_requires=">=3.11",
+    install_requires= [
+        "numpy", "matplotlib", "scipy", "pandas",
+        "bground", "scikit-image", "pymatgen"],
     include_package_data=True,
     
     # GUI extras
