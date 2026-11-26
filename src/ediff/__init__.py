@@ -27,22 +27,50 @@ EDIFF modules:
 * ediff.radial = calculate the 1D-radial profile from a 2D-diffraction pattern
 '''
 
-__version__ = "1.2.8"
-
+__version__ = "1.2.9"
 
 # Import of modules so that we could use the package as follows:
 # >>> import ediff as ed
-# >>> ed.io.Diffractogram1D.show...
-# from ediff import bkg
-# from ediff import bkg2d
+# >>> ed.io.Diffractogram2D.read...
+
+# List of all ediff modules, which:
+# 1) enables >>> from ediff import *
+# 2) defines all sub-modules clearly and helps tools like VSCode/Pylance
+__all__ = [
+    "bkg", "bkg2d", "calibration", "center", "gcryst",
+    "gui", "io", "mcryst", "pcryst", "radial"]
+
+# Direct imports
+
 from ediff import center
-# from ediff import gcryst
-# from ediff import gui
 from ediff import io
 from ediff import mcryst
-# from ediff import pcryst
 from ediff import radial
 
+# Lazy imports
+
+import importlib
+
+_LAZY_SUBMODULES = {"bkg", "bkg2d", "gcryst", "pcryst", "gui"}
+
+def __getattr__(name):
+    if name in _LAZY_SUBMODULES:
+        module = importlib.import_module(f"ediff.{name}")
+        globals()[name] = module   # cache it, so this only runs once
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__():
+    return sorted(list(globals().keys()) + list(_LAZY_SUBMODULES))
+
+# Technical notes :: special imports (Mirek)
+# ------------------------------------------
+# 1) ediff.bkg => imports external bground package
+# 2) ediff.bkg2d => under development - call funcs in auxiliary IDIFF package
+# 3) ediff.gui => graphical user interface - sub-package in its own subdir 
+
+# Technical notes :: lazy imports (Pavlina)
+# -----------------------------------------
 # ediff.bkg, ediff.bkg2d, ediff.gcryst, ediff.pcryst, and ediff.gui are
 # imported LAZILY -- only the first time they're actually accessed (e.g.
 # `ed.bkg.something(...)` or `ed.pcryst.XRD_polycrystal(...)`) -- rather
@@ -65,33 +93,9 @@ from ediff import radial
 # ediff.bkg, via pcryst.ELD_polycrystal.subtract_background) still pay
 # that cost, but only when actually used, not on every cold start
 # regardless of which operation is running.
-import importlib
 
-_LAZY_SUBMODULES = {"bkg", "bkg2d", "gcryst", "pcryst", "gui"}
 
-def __getattr__(name):
-    if name in _LAZY_SUBMODULES:
-        module = importlib.import_module(f"ediff.{name}")
-        globals()[name] = module   # cache it, so this only runs once
-        return module
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-def __dir__():
-    return sorted(list(globals().keys()) + list(_LAZY_SUBMODULES))
-
-# List of all ediff modules, which:
-# 1) enables >>> from ediff import *
-# 2) defines all sub-modules clearly and helps tools like VSCode/Pylance
-__all__ = [
-    "bkg", "bkg2d", "calibration", "center", "gcryst",
-    "gui", "io", "pcryst", "mcryst", "radial"]
-
-# Technical notes - special imports
-# ----------------------------------
-# 1) ediff.bkg => imports external bground package
-# 2) ediff.bkg2d => under development - call funcs in auxiliary IDIFF package
-# 3) ediff.gui => graphical user interface - sub-package in its own subdir 
-
+# ==============================================================================
 # Obligatory acknowledgement -- the development was co-funded by TACR
 # -------------------------------------------------------------------
 #  TACR requires that the acknowledgement is printed when we run the program.

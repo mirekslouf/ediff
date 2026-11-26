@@ -22,11 +22,11 @@ Principle
 Installation
 ------------
 
-* Installation of ediff:
+* Installation of `ediff` is simple:
 	- `pip install ediff`
 * Additional packages (auto-installed with ediff if not present):
 	- Standard sci-libraries: `numpy`, `matplotlib`, `scipy`, `pandas`
-	- Additional libraries: `bground`, `scikit-image`, `pymatgen`
+	- Additional libs: `bground`, `scikit-image`, `python-opencv`, `pymatgen`
 
 
 Quick start
@@ -68,11 +68,13 @@ Versions of EDIFF
 * Version 1.0 = complete processing of powder diffractograms
 * Version 1.1 = improved and simplified interface for {pcryst}
 * Version 1.2 = automated background subtraction in 1D {bkg}
-* Version 1.3 = TODO: automated background subtraction in 2D {bkg2d}
-* Version 1.4 = TODO: automated peak detection in 2D {peaks} 
-* Version 1.5 = TODO: automated peak identification in 2D, ELD-XRD {mcryst}
-* Version 2.0 = TODO: complete processing of powder + monocrystal diffractograms
-
+* Version 1.3 = optional GUI interface
+* TODO (upcomming versions):
+	- automated background subtraction in 2D {bkg2d}
+	- automated peak detection in 2D {peaks} 
+	- automated peak identification in 2D, ELD-XRD {mcryst}
+	- complete processing of monocrystal diffraction patterns
+	
 
 Acknowledgement
 ---------------

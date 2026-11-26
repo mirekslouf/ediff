@@ -34,19 +34,9 @@ setuptools.setup(
     python_requires=">=3.11",
     install_requires= [
         "numpy", "matplotlib", "scipy", "pandas",
-        "bground", "scikit-image", "pymatgen"],
+        "bground", "scikit-image", "opencv-python", "pymatgen"],
     include_package_data=True,
 
-    install_requires=[
-        "numpy",
-        "scipy",          # calibration.py, center.py, pcryst.py
-        "pandas",         # io.py, pcryst.py
-        "matplotlib",     # center.py, io.py, pcryst.py
-        "scikit-image",   # center.py, io.py
-        "opencv-python",  # center.py
-        "pymatgen",       # gcryst.py, io.py, pcryst.py
-        "bground",        # re-exported by bkg.py as the public 1D interface
-    ],
     extras_require={
         "gui": ["qtpy", "PyQt6", "pillow", "pybaselines"],
     },
