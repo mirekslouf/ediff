@@ -33,26 +33,20 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.6",
     include_package_data=True,
-    
-    # GUI extras
-    # Keeps the core ediff package lightweight — these are only installed
-    # with `pip install ediff[gui]`, not with a plain `pip install ediff`.
-    extras_require={
-        "gui": ["qtpy", "PyQt6", "matplotlib", "opencv-python"],
-    },
 
     install_requires=[
         "numpy",
-        "scipy",
-        "pandas",
-        "matplotlib",
-        "scikit-image",  # skimage
-        "pillow",  # PIL
-        "opencv-python",  # cv2
-        "bground",  # 1D background subtraction, re-exported by ediff.bkg
-        "pybaselines",  # baseline functions
-        "pymatgen",
+        "scipy",          # calibration.py, center.py, pcryst.py
+        "pandas",         # io.py, pcryst.py
+        "matplotlib",     # center.py, io.py, pcryst.py
+        "scikit-image",   # center.py, io.py
+        "opencv-python",  # center.py
+        "pymatgen",       # gcryst.py, io.py, pcryst.py
+        "bground",        # re-exported by bkg.py as the public 1D interface
     ],
+    extras_require={
+        "gui": ["qtpy", "PyQt6", "pillow", "pybaselines"],
+    },
 
     # GUI can be run directly as a command after installation,
     # equivalent to `python -m ediff gui`.
