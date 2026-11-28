@@ -35,5 +35,5 @@ from bground.api import Run, Plots, Help
 # List of all bkg modules and objects, which:
 # (enables >>> from ediff.bkg import *
 # (defines all sub-modules clearly and helps tools like VSCode/Pylance
-all = ['InputData', 'BkgParams', 'InteractivePlot', 'RestoreFromPoints',
-       'SimpleFuncs', 'Baselines', 'Wavelets', 'Run', 'Plots', 'Help']
+__all__ = ['InputData', 'BkgParams', 'InteractivePlot', 'RestoreFromPoints',
+           'SimpleFuncs', 'Baselines', 'Wavelets', 'Run', 'Plots', 'Help']

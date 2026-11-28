@@ -31,10 +31,17 @@ setuptools.setup(
     license='MIT',
     package_dir={"":"src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.11",
+    python_requires=">=3.11,<3.15",
     install_requires= [
-        "numpy", "matplotlib", "scipy", "pandas",
-        "bground", "scikit-image", "opencv-python", "pymatgen"],
+        "numpy",
+        "matplotlib",
+        "scipy",
+        "pandas",
+        "sympy",
+        "bground",
+        "scikit-image",
+        "opencv-python",
+        "pymatgen"],
     include_package_data=True,
 
     extras_require={
